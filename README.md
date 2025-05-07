@@ -28,7 +28,7 @@ Clone the repository and `cd` into the repository folder, then
 pip install -e .
 ```
 
-See the [ioos/compliance-checker](https://github.com/ioos/compliance-checker#installation) for 
+See the [ioos/compliance-checker](https://github.com/ioos/compliance-checker#installation) for
 additional Installation notes if problems arise with the dependencies.
 
 ## Usage
@@ -38,7 +38,7 @@ $ ccqa [-h] [-r <RESULT_DIR>] [-t <TEST>] [-i <INFO>] <parent_dir>
 ```
 
 - positional arguments:
-  - `parent_dir`: Parent directory to scan for files
+  - `parent_dir`: Parent directory to scan for netCDF-files to check
 - options:
   - `-h, --help`: show this help message and exit
   - `-r RESULT_DIR, --result_dir`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
@@ -47,4 +47,6 @@ $ ccqa [-h] [-r <RESULT_DIR>] [-t <TEST>] [-i <INFO>] <parent_dir>
 
 ## Displaying the check results
 
-The results will be stored in a single `json` file which can be displayed via the following website: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html). The website is based on Javascript and thus runs in the users browser. Alternatively you can open the included `display_qc_results.html` with your browser.
+The results will be stored in a single `json` file which can be displayed via the following website: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
+The website is based on Javascript and thus runs in the users browser without interacting with the webserver.
+Alternatively you can open the included `display_qc_results.html` with your browser.
