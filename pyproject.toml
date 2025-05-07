@@ -1,0 +1,122 @@
+[build-system]
+requires = [
+  "setuptools>=42",
+  "wheel",
+  "setuptools_scm[toml]>=3.4"
+]
+
+[project]
+name = "cc-qa"
+description = "QA based on compliance-checker"
+readme = "README.md"
+keywords = ["compliance checker", "plugin", "cordex", "cordex-cmip6"]
+license = {file = "LICENSE"}
+authors = [
+  {name = "Martin Schupfner", email = "schupfner@dkrz.de"},
+]
+maintainers = [
+  {name = "Martin Schupfner", email = "schupfner@dkrz.de"}
+]
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13"
+]
+dependencies = [
+  "cftime",
+  "cf_xarray",
+  "compliance-checker>=5.3.0",
+  "netCDF4",
+  "pandas",
+  "xarray",
+  "cc-plugin-cc6"
+]
+dynamic = [
+  "version"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black",
+  "bump2version",
+  "isort",
+  "flake8",
+  "flake8-builtins",
+  "flake8-comprehensions",
+  "flake8-mutable",
+  "flake8-print",
+  "pre-commit",
+  "pytest>=7.0.0",
+  "pytest-flake8",
+  "ruff>=0.1.0"
+]
+
+[project.urls]
+homepage = "https://gitlab.dkrz.de/udag/cc-qa"
+repository = "https://gitlab.dkrz.de/udag/cc-qa"
+
+[project.scripts]
+ccqa = "cc_qa.run_qa:main"
+
+[tool.black]
+target-version = [
+  "py310",
+  "py311",
+  "py312",
+  "py313"
+]
+
+[tool.check-manifest]
+ignore = [
+  "*.yml",
+  ".coveragerc",
+  "Makefile",
+  "docs",
+  "docs/*",
+  "notebooks",
+  "notebooks/*",
+  "tests",
+  "tests/*"
+]
+
+[tool.flit.sdist]
+include = [
+  "LICENSE",
+  "README.md",
+  "tests/*.py"
+]
+exclude = [
+  "**/*.py[co]",
+  "**/__pycache__",
+  ".*"
+]
+
+[tool.isort]
+profile = "black"
+py_version = 310
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  "ignore::UserWarning",
+  "ignore::RuntimeWarning"
+]
+
+[tool.ruff]
+src = ["cc_qa"]
+line-length = 88
+target-version = "py310"
+ignore = ["E501"]
+
+[tool.ruff.format]
+line-ending = "auto"
+
+[tool.ruff.isort]
+known-first-party = ["cc_qa"]
+lines-after-imports = 1
+
+[tool.setuptools_scm]
+fallback_version = "999"
+write_to = "cc_qa/_version.py"
