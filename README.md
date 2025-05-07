@@ -1,8 +1,50 @@
-# Sample GitLab Project
+# cc-qa: Quality Assurance Workflow Based on compliance-checker and cc-plugin-cc6
 
-This sample project shows how a project in GitLab looks for demonstration purposes. It contains issues, merge requests and Markdown files in many branches,
-named and filled with lorem ipsum.
+This makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the 
+[ioos/compliance-checker](https://github.com/ioos/compliance-checker) and extensions coming with 
+[euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
 
-You can look around to get an idea how to structure your project and, when done, you can safely delete this project.
+This tool is designed to run the desired file-based QC tests with 
+[ioos/compliance-checker](https://github.com/ioos/compliance-checker) and 
+[euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6),
+conduct additional dataset-based checks (such as time axis continuity and
+consistency checks) as well as summarizing the test results.
 
-[Learn more about creating GitLab projects.](https://docs.gitlab.com/ee/gitlab-basics/create-project.html)
+`cc-qa` is mainly aimed at a QA workflow testing compliance with CORDEX-CMIP6 Archive Specifications (see below).
+However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker, and it should be easily extendable for any `cc-plugin` and for projects defining CORDEX, CORDEX-CMIP6, CMIP5 or CMIP6 style CMOR-tables.
+
+| Standard                                                                                             | Checker Name |
+| ---------------------------------------------------------------------------------------------------- | ------------ |
+| [cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)         |  cc6         |
+| [cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)|  cc6         |
+| [CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069) | cc6 |
+
+## Installation
+
+### Pip installation from source
+
+Clone the repository and `cd` into the repository folder, then
+```shell
+pip install -e .
+```
+
+See the [ioos/compliance-checker](https://github.com/ioos/compliance-checker#installation) for 
+additional Installation notes if problems arise with the dependencies.
+
+## Usage
+
+```shell
+$ ccqa [-h] [-r <RESULT_DIR>] [-t <TEST>] [-i <INFO>] <parent_dir>
+```
+
+- positional arguments:
+  - `parent_dir`: Parent directory to scan for files
+- options:
+  - `-h, --help`: show this help message and exit
+  - `-r RESULT_DIR, --result_dir`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
+  - `-t TEST, --test`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
+  - `-i INFO, --info`:  Information used to tag the QA results, eg. the simulation id to identify the checked run.
+
+## Displaying the check results
+
+The results will be stored in a single `json` file which can be displayed via the following website: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html). The website is based on Javascript and thus runs in the users browser. Alternatively you can open the included `display_qc_results.html` with your browser.

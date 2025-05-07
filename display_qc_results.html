@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QC Result Viewer</title>
+    <style>
+        ul { list-style-type: none; padding-left: 20px; }
+        .toggle { cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .hidden { display: none; }
+        .expand-btn { margin: 10px 5px; cursor: pointer; padding: 5px 10px; border: 1px solid black; background: lightgray; }
+    </style>
+</head>
+<body>
+    <h1>QC Result Viewer</h1>
+    <br>
+    <div id="disclaimer">
+        <b>Disclaimer:</b><br>
+        Please note that this website will access and interpret the files you select.<br>
+        The interpretation will happen locally in your browser. No data will be sent to the server.<br>
+        By making use of the file selection, you acknowledge that you understand and agree to this.
+    </div>
+    <br>
+    <h2>Select a File:</h2>
+    <input type="file" id="file-input" accept=".json">
+    <h2 id="title"></h2>
+    <h3 id="subtitle"></h3>
+    <h3 id="subtitle2"></h3>
+
+    <button id="buttonfail" class="expand-btn">Expand/Collapse Failed Checks</button>
+    <button id="buttonpass" class="expand-btn">Expand/Collapse Passed Checks</button>
+
+    <div id="json-container"></div>
+
+    <script>
+        document.getElementById("file-input").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                const info = data.info;
+                document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
+                document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`
+                document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
+
+                const transformedData = transformKeys(data);
+                if (!transformedData["Runtime Errors"] || Object.keys(transformedData["Runtime Errors"]).length === 0) {
+                    delete transformedData["Runtime Errors"];
+                }
+
+                const container = document.getElementById("json-container");
+                container.innerHTML = "";
+                container.appendChild(renderTree(transformedData));
+            };
+            reader.readAsText(file);
+        });
+
+        function transformKeys(data) {
+            return {
+                "Runtime Errors": data["error"],
+                "Failed Checks": renameWeightKeys(data["fail"]),
+                "Passed Checks": renameWeightKeys(data["pass"])
+            };
+        }
+
+        function renameWeightKeys(section) {
+            if (!section) return {};
+            const weightMap = { 3: "Required", 2: "Recommended", 1: "Suggested" };
+            //return Object.fromEntries(Object.entries(section).map(([key, value]) => [weightMap[key] || key, value]));
+            return Object.assign({}, {
+                [weightMap[3]]: section[3] ?? ["No problems found."],
+                [weightMap[2]]: section[2] ?? ["No problems found."],
+                [weightMap[1]]: section[1] ?? ["No problems found."],
+            });
+        }
+
+        function renderTree(data) {
+            const ul = document.createElement("ul");
+
+            Object.entries(data).forEach(([key, value]) => {
+                const li = document.createElement("li");
+                const label = document.createElement("span");
+                const triangleSpan = document.createElement("span");
+                triangleSpan.className = "triangle";
+                triangleSpan.textContent = "▶";
+                label.textContent = "";
+                label.appendChild(triangleSpan);
+                label.appendChild(document.createTextNode(` ${key}`));
+                label.classList.add("toggle");
+
+                if (typeof value === "object" && value !== null && Object.keys(value).length > 0) {
+                    label.onclick = () => toggleNode(label);
+                    const subTree = renderTree(value);
+                    subTree.classList.add("hidden");
+                    li.appendChild(label);
+                    li.appendChild(subTree);
+                } else {
+                    if (!isNaN(key)) {
+                        li.textContent = `${JSON.stringify(value)}`;
+                    }
+                    else {
+                        li.textContent = `${key}: ${JSON.stringify(value)}`;
+                    }
+                }
+                ul.appendChild(li);
+            });
+
+            return ul;
+        }
+
+        function toggleNode(label) {
+            const triangleSpan = label.querySelector(".triangle");
+            const subTree = label.nextElementSibling;
+            if (!subTree) return;
+
+            const isHidden = subTree.classList.contains("hidden");
+            subTree.classList.toggle("hidden", !isHidden);
+            triangleSpan.textContent = isHidden ? "▼" : "▶";
+        }
+
+        const expandedStates = {};
+
+        function toggleExpandCollapse(button, section, levels) {
+            console.log("toggleExpandCollapse called for section " + section);
+            if (!(button.id in expandedStates)) {
+                expandedStates[button.id] = false;
+            }
+
+            const labels = [...document.querySelectorAll("span.toggle")].filter(label => label.textContent.includes(section));
+            labels.forEach(label => {
+                if (!expandedStates[button.id]) {
+                    console.log(labels);
+                    expandSubtree(label, levels);
+                } else {
+                    collapseSubtree(label);
+                }
+            });
+            expandedStates[button.id] = !expandedStates[button.id];
+        }
+
+        function getDepthFromRoot(element, root) {
+            let depth = 0;
+            while (element !== root && element.parentElement) {
+                if (element.parentElement.tagName === "UL") {
+                    depth++;
+                }
+                element = element.parentElement;
+            }
+            return depth;
+        }
+
+        function expandSubtree(label, levels) {
+            console.log("expandSubtree called");
+
+            // Ensure the main section is expanded
+            if (label.nextElementSibling.classList.contains("hidden")) {
+                toggleNode(label);
+            }
+
+            const sectionRoot = label.parentElement;
+            const subLabels = [...label.nextElementSibling.querySelectorAll("span.toggle")];
+
+            subLabels.forEach(subLabel => {
+                let depth = getDepthFromRoot(subLabel.parentElement, sectionRoot);
+                if (depth < levels && subLabel.nextElementSibling.classList.contains("hidden")) {
+                    toggleNode(subLabel);
+                }
+            });
+        }
+
+        function collapseSubtree(label) {
+            console.log("collapseSubtree called");
+            let parents = [label.parentElement];
+            if (!label.nextElementSibling.classList.contains("hidden")) {
+                toggleNode(label);
+            }
+            const subLabels = label.nextElementSibling.querySelectorAll("span.toggle");
+            subLabels.forEach(subLabel => {
+                if (!subLabel.nextElementSibling.classList.contains("hidden")) {
+                    toggleNode(subLabel);
+                }
+            });
+        }
+
+        document.addEventListener("click", event => {
+            if (event.target.id === "buttonfail") {
+                toggleExpandCollapse(event.target, "Failed Checks", 3);
+            } else if (event.target.id === "buttonpass") {
+                toggleExpandCollapse(event.target, "Passed Checks", 2);
+            }
+        });
+    </script>
+</body>
+</html>
