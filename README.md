@@ -46,8 +46,23 @@ $ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
 
+### Example Usage
+
+```shell
+$ ccqa -o /work/bb1364/dkrz/QC_results/IAEVALL02_2025-04-20 -i "IAEVALL02" /work/bb1149/ESGF_Buff/IAEVALL02/CORDEX-CMIP6
+```
+
+To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <parent_dir>
+(note, that the last modification date of files is NOT taken into account - once a certain file path has been checked 
+it will be marked as checked and checks will only be repeated if runtime errors occured):
+
+```shell
+$ ccqa -o /work/bb1364/dkrz/QC_results/IAEVALL02_2025-04-20 -r
+```
+
 ## Displaying the check results
 
-The results will be stored in a single `json` file which can be displayed via the following website: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
-The website is based on Javascript and thus runs in the users browser without interacting with the webserver.
-Alternatively you can open the included `display_qc_results.html` with your browser.
+The results will be stored in a single `json` file, which can be viewed using the following website: 
+[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
+This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
+Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
