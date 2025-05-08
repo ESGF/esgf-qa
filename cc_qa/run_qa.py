@@ -239,7 +239,10 @@ def main():
     # CLI
     parser = argparse.ArgumentParser(description="Run QA checks")
     parser.add_argument(
-        "parent_dir", type=str, help="Parent directory to scan for files"
+        "parent_dir",
+        type=str,
+        help="Parent directory to scan for files",
+        nargs="?",
     )
     parser.add_argument(
         "-o",
@@ -269,7 +272,7 @@ def main():
     args = parser.parse_args()
 
     result_dir = os.path.abspath(args.output_dir)
-    parent_dir = os.path.abspath(args.parent_dir)
+    parent_dir = os.path.abspath(args.parent_dir) if args.parent_dir else None
     tests = sorted(args.test) if args.test else []
     info = args.info
     resume = args.resume
@@ -339,7 +342,7 @@ def main():
                 tests = resume_info["tests"]
             if info and info != resume_info["info"]:
                 warnings.warn(
-                    "<info> argument differs from the originally specified <info> argument. Using the new specification."
+                    f"<info> argument differs from the originally specified <info> argument ('{resume_info['info']}'). Using the new specification."
                 )
             if parent_dir and Path(parent_dir) != Path(resume_info["parent_dir"]):
                 raise Exception(
@@ -373,6 +376,10 @@ def main():
             raise Exception(
                 f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
             )
+
+    # Does parent_dir exist?
+    if parent_dir is None or not os.path.exists(parent_dir):
+        raise Exception(f"The specified <parent_dir> '{parent_dir}' does not exist.")
 
     # Write resume file
     resume_info = {
