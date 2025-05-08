@@ -18,7 +18,7 @@ checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
 }
-checker_versions = {}
+checker_release_versions = {}
 
 _timestamp_with_ms = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
 _timestamp_filename = datetime.datetime.strptime(
@@ -99,6 +99,17 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
     return dsid
 
 
+def get_checker_release_versions(checkers, checker_options={}):
+    global checker_release_versions
+    check_suite = CheckSuite(options=checker_options)
+    check_suite.load_all_available_checkers()
+    for checker in checkers:
+        if checker not in checker_release_versions:
+            checker_release_versions[checker] = check_suite.checkers.get(
+                checker, "unknown version"
+            )._cc_spec_version
+
+
 def run_compliance_checker(file_path, checkers, checker_options={}):
     """
     Run the compliance checker on a file with the specified checkers and options.
@@ -109,14 +120,8 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
         checker_options (dict): Dictionary of options for each checker.
                                 Example format: {"cf": {"check_dimension_order": True}}
     """
-    global checker_versions
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
-    for checker in checkers:
-        if checker not in checker_versions:
-            checker_versions[checker] = check_suite.checkers.get(
-                checker, "unknown version"
-            )._cc_spec_version
     ds = check_suite.load_dataset(file_path)
     return check_suite.run_all(ds, checkers, skip_checks=[])
 
@@ -265,7 +270,7 @@ def main():
 
     result_dir = os.path.abspath(args.output_dir)
     parent_dir = os.path.abspath(args.parent_dir)
-    tests = sorted(args.test)
+    tests = sorted(args.test) if args.test else []
     info = args.info
     resume = args.resume
 
@@ -371,7 +376,7 @@ def main():
 
     # Write resume file
     resume_info = {
-        "parent_dir": parent_dir,
+        "parent_dir": str(parent_dir),
         "info": info,
         "tests": sorted([f"{c}:{v}" for c, v in zip(checkers, checkers_versions)]),
     }
@@ -567,6 +572,9 @@ def main():
     #    print(f"File: {file}")
     #    print(f"Result: {result}")
     #    #print(json.dumps(result, indent=4, ensure_ascii=False))
+    # todo: always the latest checker version is used atm, but the
+    #       specified version should be used ("tests")
+    get_checker_release_versions(checkers)
     qc_summary = summarize_quality_results(
         {k: v for k, v in zip(files_to_check, results)}, dataset_files_map
     )
@@ -578,7 +586,7 @@ def main():
         "cc_version": cc_version,
         "checkers": ", ".join(
             [
-                f"{checker_dict.get(checker, '')} {checker}:{checker_versions[checker]}"
+                f"{checker_dict.get(checker, '')} {checker}:{checker_release_versions[checker]}"
                 for checker in checkers
             ]
         ),
