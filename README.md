@@ -34,16 +34,17 @@ additional Installation notes if problems arise with the dependencies.
 ## Usage
 
 ```shell
-$ ccqa [-h] [-r <RESULT_DIR>] [-t <TEST>] [-i <INFO>] <parent_dir>
+$ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
 ```
 
 - positional arguments:
   - `parent_dir`: Parent directory to scan for netCDF-files to check
 - options:
   - `-h, --help`: show this help message and exit
-  - `-r RESULT_DIR, --result_dir`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t TEST, --test`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
-  - `-i INFO, --info`:  Information used to tag the QA results, eg. the simulation id to identify the checked run.
+  - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
+  - `-t, --test TEST`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
+  - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run.
+  - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
 
 ## Displaying the check results
 

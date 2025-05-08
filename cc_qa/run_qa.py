@@ -6,6 +6,7 @@ import json
 import multiprocessing
 import os
 import re
+import warnings
 from collections import defaultdict
 from pathlib import Path
 
@@ -236,8 +237,8 @@ def main():
         "parent_dir", type=str, help="Parent directory to scan for files"
     )
     parser.add_argument(
-        "-r",
-        "--result_dir",
+        "-o",
+        "--output_dir",
         type=str,
         default=get_default_result_dir(),
         help="Directory to store QA results. Needs to be non-existing or empty or from previous QA run.",
@@ -254,20 +255,95 @@ def main():
         type=str,
         help="Informtaion to be included in the QA results identifying the current run, eg. the experiment_id.",
     )
+    parser.add_argument(
+        "-r",
+        "--resume",
+        action="store_true",
+        help="Specify to continue a previous QC run. Requires the <output_dir> argument to be set.",
+    )
     args = parser.parse_args()
 
-    result_dir = os.path.abspath(args.result_dir)
+    result_dir = os.path.abspath(args.output_dir)
     parent_dir = os.path.abspath(args.parent_dir)
-    tests = args.test
+    tests = sorted(args.test)
     info = args.info
+    resume = args.resume
+
+    # Progress file to track already checked files
+    progress_file = Path(result_dir, "progress.txt")
+
+    # Resume information stored in a json file
+    resume_info_file = Path(result_dir, ".resume_info")
 
     # Deal with result_dir
     if not os.path.exists(result_dir):
+        if resume:
+            resume = False
+            warnings.warn(
+                "Resume is set but specified output_directory does not exist. Starting a new QA run..."
+            )
         os.mkdir(result_dir)
     elif os.listdir(result_dir) != []:
-        # if not "progress.txt" in result_dir:
-        raise Exception("Result directory is not empty.")
-    print(f"Storing check results in '{result_dir}'")
+        if resume:
+            required_files = [progress_file, resume_info_file]
+            if not all(os.path.isfile(rfile) for rfile in required_files):
+                raise Exception(
+                    "Resume is set but specified output_directory cannot be identified as output_directory of a previous QA run."
+                )
+        else:
+            if "progress.txt" in os.listdir(
+                result_dir
+            ) and ".resume_info" in os.listdir(result_dir):
+                raise Exception(
+                    "Specified output_directory is not empty but can be identified as output_directory of a prevous QA run. Use'-r' or '--resume' (together with '-o' or '--output_dir') to continue the previous QA run or choose a different output_directory instead."
+                )
+            else:
+                raise Exception("Specified output_directory is not empty.")
+    else:
+        if resume:
+            resume = False
+            warnings.warn(
+                "Resume is set but specified output_directory is empty. Starting a new QA run..."
+            )
+    if resume:
+        print(f"Resuming previous QA run in '{result_dir}'")
+        with open(os.path.join(result_dir, ".resume_info")) as f:
+            try:
+                resume_info = json.load(f)
+                required_keys = ["parent_dir", "info", "tests"]
+                if not all(key in resume_info for key in required_keys):
+                    raise Exception(
+                        "Invalid .resume_info file. It should contain the keys 'parent_dir', 'info', and 'tests'."
+                    )
+                if not (
+                    isinstance(resume_info["parent_dir"], str)
+                    and isinstance(resume_info["info"], str)
+                    and isinstance(resume_info["tests"], list)
+                    and all(isinstance(test, str) for test in resume_info["tests"])
+                ):
+                    raise Exception(
+                        "Invalid .resume_info file. 'parent_dir' and 'info' should be strings, and 'tests' should be a list of strings."
+                    )
+            except json.JSONDecodeError:
+                raise Exception(
+                    "Invalid .resume_info file. It should be a valid JSON file."
+                )
+            if tests and tests != resume_info["tests"]:
+                raise Exception("Cannot resume a previous QA run with different tests.")
+            else:
+                tests = resume_info["tests"]
+            if info and info != resume_info["info"]:
+                warnings.warn(
+                    "<info> argument differs from the originally specified <info> argument. Using the new specification."
+                )
+            if parent_dir and Path(parent_dir) != Path(resume_info["parent_dir"]):
+                raise Exception(
+                    "Cannot resume a previous QA run with different <parent_dir>."
+                )
+            else:
+                parent_dir = Path(resume_info["parent_dir"])
+    else:
+        print(f"Storing check results in '{result_dir}'")
 
     # Deal with tests
     if not tests:
@@ -288,19 +364,29 @@ def main():
             for test in tests
         ]
         checker_options = {}
-        if any(test not in ["cc6", "cf"] for test in checkers):
-            raise Exception("Invalid test(s) specified. Supported are: cc6, cf")
+        if any(test not in checker_dict.keys() for test in checkers):
+            raise Exception(
+                f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
+            )
 
-    # Set up progress file to track already checked files
-    progress_file = Path(result_dir, "progress.txt")
+    # Write resume file
+    resume_info = {
+        "parent_dir": parent_dir,
+        "info": info,
+        "tests": sorted([f"{c}:{v}" for c, v in zip(checkers, checkers_versions)]),
+    }
+    with open(os.path.join(result_dir, ".resume_info"), "w") as f:
+        json.dump(resume_info, f)
+
+    # Ensure progress file exists
+    progress_file.touch()
 
     # list(filter(re.compile(r"^(?!\d{1,}-{0,1}\d{0,}$)").match, os.path.splitext(filename)[0].split("_")))
     # Check if progress file exists and read already processed files
     processed_files = set()
-    if os.path.exists(progress_file):
-        with open(progress_file) as file:
-            for line in file:
-                processed_files.add(line.strip())
+    with open(progress_file) as file:
+        for line in file:
+            processed_files.add(line.strip())
 
     # todo: allow black-/whitelisting (parts of) paths for checks
     path_whitelist = []
