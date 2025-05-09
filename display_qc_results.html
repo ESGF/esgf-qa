@@ -28,7 +28,7 @@
     <h3 id="subtitle2"></h3>
 
     <button id="buttonfail" class="expand-btn">Expand/Collapse Failed Checks</button>
-    <button id="buttonpass" class="expand-btn">Expand/Collapse Passed Checks</button>
+    <button id="buttonerr" class="expand-btn">Expand/Collapse Runetime Errors</button>
 
     <div id="json-container"></div>
 
@@ -60,8 +60,7 @@
         function transformKeys(data) {
             return {
                 "Runtime Errors": data["error"],
-                "Failed Checks": renameWeightKeys(data["fail"]),
-                "Passed Checks": renameWeightKeys(data["pass"])
+                "Failed Checks": renameWeightKeys(data["fail"])
             };
         }
 
@@ -187,8 +186,8 @@
         document.addEventListener("click", event => {
             if (event.target.id === "buttonfail") {
                 toggleExpandCollapse(event.target, "Failed Checks", 3);
-            } else if (event.target.id === "buttonpass") {
-                toggleExpandCollapse(event.target, "Passed Checks", 2);
+            } else if (event.target.id === "buttonerr") {
+                toggleExpandCollapse(event.target, "Runtime Errors", 2);
             }
         });
     </script>
