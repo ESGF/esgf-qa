@@ -147,7 +147,7 @@ class QAResultAggregator:
                         if example_parts:
                             msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
                         else:
-                            msg_summary = f"{generalized} ({len(cluster)} occurrences)"
+                            msg_summary = f"{generalized}{' (' + str(len(cluster)) + ' occurrences)' if len(cluster) > 1 else ''}"
 
                         # Gather all ds_ids and filenames across the cluster
                         combined = defaultdict(set)
