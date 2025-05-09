@@ -279,7 +279,7 @@ def process_file(
         #      rerun checks if forced by user
         # if all(result[checker][1] == {} for checker in checkers):
         if all(result[checker]["errors"] == {} for checker in checkers):
-            return result
+            return file_path, result
         else:
             print(f"Rerunning previously erroneous checks for '{file_path}'.")
     else:
@@ -389,7 +389,7 @@ def main():
     result_dir = os.path.abspath(args.output_dir)
     parent_dir = os.path.abspath(args.parent_dir) if args.parent_dir else None
     tests = sorted(args.test) if args.test else []
-    info = args.info
+    info = args.info if args.info else ""
     resume = args.resume
 
     # Progress file to track already checked files
