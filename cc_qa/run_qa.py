@@ -142,7 +142,10 @@ class QAResultAggregator:
                             QAResultAggregator.generalize_message_group(cluster)
                         )
                         example_parts = ", ".join(
-                            [f'{k}="{v[0]}"' for k, v in placeholders.items()]
+                            [
+                                f'{k}="{v[0]}"' if isinstance(v, list) else f"{k}={v}"
+                                for k, v in placeholders.items()
+                            ]
                         )
                         if example_parts:
                             msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
@@ -184,14 +187,19 @@ class QAResultAggregator:
                                 QAResultAggregator.generalize_message_group(cluster)
                             )
                             example_parts = ", ".join(
-                                [f'{k}="{v[0]}"' for k, v in placeholders.items()]
+                                [
+                                    (
+                                        f'{k}="{v[0]}"'
+                                        if isinstance(v, list)
+                                        else f"{k}={v}"
+                                    )
+                                    for k, v in placeholders.items()
+                                ]
                             )
                             if example_parts:
                                 msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
                             else:
-                                msg_summary = (
-                                    f"{generalized} ({len(cluster)} occurrences)"
-                                )
+                                msg_summary = f"{generalized}{' (' + str(len(cluster)) + ' occurrences)' if len(cluster) > 1 else ''}"
 
                             # Gather all ds_ids and filenames across the cluster
                             combined = defaultdict(set)
@@ -712,7 +720,7 @@ def main():
         ]
 
         # Use a pool of workers to run jobs in parallel
-        with multiprocessing.Pool(processes=num_processes) as pool:
+        with multiprocessing.Pool(processes=num_processes, maxtasksperchild=10) as pool:
             # results = [result_first] + pool.starmap(
             #    process_file, args
             # )  # This collects all results in a list
@@ -720,6 +728,7 @@ def main():
                 summary.update(
                     result, files_to_check_dict[processed_file]["id"], processed_file
                 )
+                del result
 
     #########################################################
     # QA Part 2 - Run all consistency checks
