@@ -66,3 +66,7 @@ The results will be stored in a single `json` file, which can be viewed using th
 [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
 This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
 Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
+
+# License
+
+This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the [LICENSE](./LICENSE) file for more details.

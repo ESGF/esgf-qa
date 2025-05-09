@@ -5,14 +5,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QC Result Viewer</title>
     <style>
-        ul { list-style-type: none; padding-left: 20px; }
-        .toggle { cursor: pointer; font-weight: bold; margin-right: 5px; }
-        .hidden { display: none; }
-        .expand-btn { margin: 10px 5px; cursor: pointer; padding: 5px 10px; border: 1px solid black; background: lightgray; }
+        @font-face {
+            font-family: 'Inter';
+            src: url('/ress/Inter-Regular.woff2') format('woff2'),
+	         url('fonts/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('/ress/Inter-SemiBold.woff2') format('woff2');
+	         url('fonts/Inter-SemiBold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+
+       	#banner {
+            background: linear-gradient(to right, #7dbde8, #2980b9);
+            border: 1px solid #b2dfdb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #banner h1 {
+            margin: 0;
+            font-size: 2.2em;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+        }
+        h1 {
+            text-align: left;
+            font-size: 2em;
+            margin-bottom: 0.3em;
+            color: #2c3e50;
+            padding-bottom: 0.2em;
+        }
+
+        h2, h3 {
+            text-align: left;
+            font-weight: normal;
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+
+        #subtitle, #subtitle2 {
+            font-size: 1.1em;
+            color: #777;
+        }
+	header {
+            margin-bottom: 1em;
+            padding-bottom: 0.5em;
+            border-bottom: 2px solid #ccc;
+        }
+
+        #main-title {
+            font-size: 2em;
+            margin-bottom: 0.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-info {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 0.2em;
+        }
+
+        .file-meta {
+            font-size: 0.95em;
+            color: #777;
+            font-style: italic;
+        }
+
+        #disclaimer {
+            background: #fff3cd;
+            border-left: 6px solid #ffecb5;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 1rem;
+        }
+
+        .expand-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 14px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #json-container {
+            background-color: #ffffff;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 1rem;
+        }
+
+        .toggle {
+            cursor: pointer;
+            font-weight: 600;
+            color: #2c3e50;
+            user-select: none;
+        }
+
+        .toggle:hover {
+            color: #2980b9;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .triangle {
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+            color: #999;
+        }
+
+        li {
+            margin-bottom: 4px;
+            line-height: 1.4em;
+        }
+	li:not(:has(ul)):hover {
+            background-color: #f0f0f0;
+            cursor: default;
+        }
+        li:not(:has(ul)) {
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h1>QC Result Viewer</h1>
+    <div id="banner">
+        <h1>QC Result Viewer</h1>
+    </div>
     <br>
     <div id="disclaimer">
         <b>Disclaimer:</b><br>
@@ -21,14 +181,17 @@
         By making use of the file selection, you acknowledge that you understand and agree to this.
     </div>
     <br>
-    <h2>Select a File:</h2>
+    <h2>Select a QC Summary File:</h2>
     <input type="file" id="file-input" accept=".json">
-    <h2 id="title"></h2>
-    <h3 id="subtitle"></h3>
-    <h3 id="subtitle2"></h3>
+    <header>
+        <h1 id="main-title" style="border-bottom: 2px solid #ccc;">Quality Control Summary</h1>
+        <p id="title" class="file-info"></p>
+        <p id="subtitle" class="file-meta"></p>
+        <p id="subtitle2" class="file-meta"></p>
+    </header>
 
-    <button id="buttonfail" class="expand-btn">Expand/Collapse Failed Checks</button>
     <button id="buttonerr" class="expand-btn">Expand/Collapse Runetime Errors</button>
+    <button id="buttonfail" class="expand-btn">Expand/Collapse Failed Checks</button>
 
     <div id="json-container"></div>
 
@@ -44,6 +207,8 @@
                 document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
                 document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`
                 document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
+		const hasErrors = data["error"] && Object.keys(data["error"]).length > 0;
+                document.getElementById("buttonerr").style.display = hasErrors ? "inline-block" : "none";
 
                 const transformedData = transformKeys(data);
                 if (!transformedData["Runtime Errors"] || Object.keys(transformedData["Runtime Errors"]).length === 0) {
@@ -97,10 +262,26 @@
                     li.appendChild(subTree);
                 } else {
                     if (!isNaN(key)) {
-                        li.textContent = `${JSON.stringify(value)}`;
+                        const span = document.createElement("span");
+                        span.textContent = typeof value === 'string' ? value : JSON.stringify(value);
+                        if (typeof value === 'string' && value.includes("files affected")) {
+                            span.style.fontStyle = "italic";
+                            span.style.color = "#555";
+                        }
+                        li.appendChild(span);
                     }
                     else {
-                        li.textContent = `${key}: ${JSON.stringify(value)}`;
+                        if (typeof value === 'string') {
+                            const span = document.createElement("span");
+                            span.textContent = `${key}: ${value}`;
+                            if (value.includes("files affected")) {
+                                span.style.fontStyle = "italic";
+                                span.style.color = "#555";
+                            }
+                            li.appendChild(span);
+                        } else {
+                            li.textContent = `${key}: ${JSON.stringify(value)}`;
+                        }
                     }
                 }
                 ul.appendChild(li);
