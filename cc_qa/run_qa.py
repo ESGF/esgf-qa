@@ -82,110 +82,140 @@ class QAResultAggregator:
                 sorted(self.summary["error"][checker].items())
             )
 
-    def cluster_summary(self, sim_threshold=0.85, min_group_size=2):
-        """
-        Apply clustering to too extensive parts of the summary.
-        """
-        new_summary = defaultdict(
+    @staticmethod
+    def cluster_messages(messages, threshold):
+        clusters = []
+        while messages:
+            base = messages.pop(0)
+            cluster = [base]
+            to_remove = []
+            for msg in messages:
+                ratio = difflib.SequenceMatcher(None, base, msg).ratio()
+                if ratio >= threshold:
+                    cluster.append(msg)
+                    to_remove.append(msg)
+            for msg in to_remove:
+                messages.remove(msg)
+            clusters.append(cluster)
+        return clusters
+
+    @staticmethod
+    def generalize_message_group(messages):
+        if len(messages) == 1:
+            return messages[0], {}
+
+        # Split messages into tokens
+        split_messages = [re.findall(r"\w+|\W", m) for m in messages]
+        transposed = list(zip(*split_messages))
+        template = []
+        placeholders = {}
+        var_index = 0
+
+        for i, tokens in enumerate(transposed):
+            unique_tokens = set(tokens)
+            if len(unique_tokens) == 1:
+                template.append(tokens[0])
+            else:
+                var_name = chr(ord("A") + var_index)
+                template.append(f"{{{var_name}}}")
+                placeholders[var_name] = list(unique_tokens)[0]
+                var_index += 1
+
+        generalized = "".join(template)
+        return generalized, placeholders
+
+    def cluster_summary(self, threshold=0.8):
+        self.clustered_summary = defaultdict(
             lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         )
+        for status in self.summary:
+            if status == "error":
+                for test_id in self.summary[status]:
+                    messages = list(self.summary[status][test_id].keys())
+                    # Pass a copy of messages to cluster_messages to generate clusters
+                    clusters = QAResultAggregator.cluster_messages(
+                        messages[:], threshold
+                    )
 
-        for level, weights in self.summary.items():
-            if level == "error":
-                # There is no weights layer for errors,
-                #  so "weights" are actually "tests" in this case
-                for test_id, messages in weights.items():
-                    # Group messages by ds_id sets
-                    dsid_to_messages = defaultdict(list)
-                    for msg, dsids in messages.items():
-                        for dsid, files in dsids.items():
-                            dsid_to_messages[dsid].append((msg, files))
+                    for cluster in clusters:
+                        generalized, placeholders = (
+                            QAResultAggregator.generalize_message_group(cluster)
+                        )
+                        example_parts = ", ".join(
+                            [f'{k}="{v[0]}"' for k, v in placeholders.items()]
+                        )
+                        if example_parts:
+                            msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
+                        else:
+                            msg_summary = f"{generalized} ({len(cluster)} occurrences)"
 
-                        for dsid, msg_file_list in dsid_to_messages.items():
-                            clustered = QAResultAggregator.cluster_messages(
-                                msg_file_list, sim_threshold, min_group_size
-                            )
-                            for clustered_msg, file_list in clustered:
-                                file_summary = QAResultAggregator.summarize_file_list(
-                                    file_list
-                                )
-                                new_summary[level][test_id][clustered_msg][dsid] = [
-                                    file_summary
+                        # Gather all ds_ids and filenames across the cluster
+                        combined = defaultdict(set)
+                        for message in cluster:
+                            for ds_id, files in self.summary[status][test_id][
+                                message
+                            ].items():
+                                combined[ds_id].update(files)
+
+                        # Shorten file lists to one example
+                        formatted = {
+                            ds_id: (
+                                [
+                                    f"{len(files)} files affected, e.g. '{next(iter(files))}'"
                                 ]
-            elif level == "fail":
-                for weight, tests in weights.items():
-                    for test_id, messages in tests.items():
-                        # Group messages by ds_id sets
-                        dsid_to_messages = defaultdict(list)
-                        for msg, dsids in messages.items():
-                            for dsid, files in dsids.items():
-                                dsid_to_messages[dsid].append((msg, files))
-
-                        for dsid, msg_file_list in dsid_to_messages.items():
-                            clustered = QAResultAggregator.cluster_messages(
-                                msg_file_list, sim_threshold, min_group_size
+                                if len(files) > 1
+                                else [f"'{next(iter(files))}'"]
                             )
-                            for clustered_msg, file_list in clustered:
-                                file_summary = QAResultAggregator.summarize_file_list(
-                                    file_list
+                            for ds_id, files in combined.items()
+                        }
+
+                        self.clustered_summary[status][test_id][msg_summary] = formatted
+            elif status == "fail":
+                for weight in self.summary[status]:
+                    for test_id in self.summary[status][weight]:
+                        messages = list(self.summary[status][weight][test_id].keys())
+                        # Pass a copy of messages to cluster_messages to generate clusters
+                        clusters = QAResultAggregator.cluster_messages(
+                            messages[:], threshold
+                        )
+
+                        for cluster in clusters:
+                            generalized, placeholders = (
+                                QAResultAggregator.generalize_message_group(cluster)
+                            )
+                            example_parts = ", ".join(
+                                [f'{k}="{v[0]}"' for k, v in placeholders.items()]
+                            )
+                            if example_parts:
+                                msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
+                            else:
+                                msg_summary = (
+                                    f"{generalized} ({len(cluster)} occurrences)"
                                 )
-                                new_summary[level][weight][test_id][clustered_msg][
-                                    dsid
-                                ] = [file_summary]
 
-        return new_summary
+                            # Gather all ds_ids and filenames across the cluster
+                            combined = defaultdict(set)
+                            for message in cluster:
+                                for ds_id, files in self.summary[status][weight][
+                                    test_id
+                                ][message].items():
+                                    combined[ds_id].update(files)
 
-    @staticmethod
-    def cluster_messages(msg_file_list, sim_threshold, min_group_size):
-        used = [False] * len(msg_file_list)
-        result = []
+                            # Shorten file lists to one example
+                            formatted = {
+                                ds_id: (
+                                    [
+                                        f"{len(files)} files affected, e.g. '{next(iter(files))}'"
+                                    ]
+                                    if len(files) > 1
+                                    else [f"'{next(iter(files))}'"]
+                                )
+                                for ds_id, files in combined.items()
+                            }
 
-        for i, (msg_i, files_i) in enumerate(msg_file_list):
-            if used[i]:
-                continue
-            similar = [(msg_i, files_i)]
-            used[i] = True
-            for j in range(i + 1, len(msg_file_list)):
-                if used[j]:
-                    continue
-                msg_j, _ = msg_file_list[j]
-                ratio = difflib.SequenceMatcher(None, msg_i, msg_j).ratio()
-                if ratio >= sim_threshold:
-                    similar.append(msg_file_list[j])
-                    used[j] = True
-
-            if len(similar) >= min_group_size:
-                template = QAResultAggregator.generalize_message(similar[0][0])
-                example = QAResultAggregator.extract_example(similar[0][0])
-                clustered_msg = (
-                    f"{template} ({len(similar)} occurrences, e.g. {example})"
-                )
-                all_files = [f for _, files in similar for f in files]
-                result.append((clustered_msg, all_files))
-            else:
-                for msg, files in similar:
-                    result.append((msg, files))
-        return result
-
-    @staticmethod
-    def generalize_message(msg):
-        msg = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", "{}", msg)
-        msg = re.sub(r"\d+", "{}", msg)
-        return msg
-
-    @staticmethod
-    def extract_example(msg):
-        match = re.search(r"'[^']*' \('.*?'\)", msg)
-        return match.group(0) if match else "example"
-
-    @staticmethod
-    def summarize_file_list(files):
-        if not files:
-            return ""
-        elif len(files) > 1:
-            return f"{len(files)} files affected, e.g. '{files[0]}'"
-        else:
-            return files[0]
+                            self.clustered_summary[status][weight][test_id][
+                                msg_summary
+                            ] = formatted
 
 
 def get_default_result_dir():
@@ -705,7 +735,7 @@ def main():
     summary.sort()
     qc_summary = summary.summary
     get_checker_release_versions(checkers)
-    qc_summary["info"] = {
+    summary_info = {
         "id": "",
         "date": _timestamp_pprint,
         "files": str(len(files_to_check)),
@@ -722,9 +752,10 @@ def main():
     if dsid_common_prefix != list(dataset_files_map.keys())[0]:
         dsid_common_prefix = dsid_common_prefix + "*"
     if info:
-        qc_summary["info"]["id"] = f"{info} ({dsid_common_prefix})"
+        summary_info["id"] = f"{info} ({dsid_common_prefix})"
     else:
-        qc_summary["info"]["id"] = f"{dsid_common_prefix}"
+        summary_info["id"] = f"{dsid_common_prefix}"
+    qc_summary["info"] = summary_info
 
     # Save JSON file
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -735,8 +766,10 @@ def main():
     print(f"Saved QC result: {result_dir}/{filename}")
 
     # Save cluster
-    qc_summary_clustered = summary.cluster_summary()
-    qc_summary_clustered["info"] = qc_summary["info"]
+    summary.cluster_summary()
+    qc_summary_clustered = summary.clustered_summary
+    print(json.dumps(qc_summary_clustered, indent=4))
+    qc_summary_clustered["info"] = summary_info
     filename = f"qc_result_{file_id}_{timestamp}.cluster.json"
     with open(os.path.join(result_dir, filename), "w") as f:
         json.dump(
