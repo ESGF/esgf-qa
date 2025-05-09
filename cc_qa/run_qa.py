@@ -1,6 +1,7 @@
 import argparse
 import csv
 import datetime
+import difflib
 import hashlib
 import json
 import multiprocessing
@@ -29,52 +30,162 @@ _timestamp_pprint = datetime.datetime.strptime(
 ).strftime("%Y-%m-%d %H:%M")
 
 
-def summarize_quality_results(result_dict, dsmap):
-    summary = {
-        "error": defaultdict(
-            lambda: defaultdict(lambda: defaultdict(str))
-        ),  # No weight, just function -> error msg
-        "fail": defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        ),
-        "pass": defaultdict(lambda: defaultdict(lambda: defaultdict(list))),
-    }
+class QAResultAggregator:
+    def __init__(self, checker_dict):
+        """
+        Initialize the aggregator with an empty summary.
+        """
+        self.summary = {
+            "error": defaultdict(
+                lambda: defaultdict(lambda: defaultdict(list))
+            ),  # No weight, just function -> error msg
+            "fail": defaultdict(
+                lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+            ),  # weight -> test -> msg -> dsid -> filenames
+        }
+        self.checker_dict = checker_dict
 
-    for dsid in sorted(dsmap.keys()):
-        for file_name in sorted(dsmap[dsid]):
-            for checker in result_dict[file_name]:
-                for test in result_dict[file_name][checker]:
-                    # Handle Errors - Stored as function -> error message
-                    if test == "errors":
-                        for function_name, error_msg in result_dict[file_name][checker][
-                            "errors"
-                        ].items():
-                            summary["error"][
-                                f"[{checker_dict[checker]}] " + function_name
-                            ][dsid][file_name] = error_msg
-                    else:
-                        test_data = result_dict[file_name][checker][test]
-                        score, max_score = test_data["value"]
-                        weight = test_data.get("weight", 3)
-                        msgs = test_data.get("msgs", [])
-
-                        if score < max_score:  # fail
-                            for msg in msgs:
-                                summary["fail"][weight][
-                                    f"[{checker_dict[checker]}] " + test
-                                ][msg][dsid].append(file_name)
-                        else:  # pass
-                            summary["pass"][weight][
+    def update(self, result_dict, dsid, file_name):
+        """
+        Update the summary with a single result.
+        """
+        for checker in result_dict:
+            for test in result_dict[checker]:
+                if test == "errors":
+                    for function_name, error_msg in result_dict[checker][
+                        "errors"
+                    ].items():
+                        self.summary["error"][
+                            f"[{checker_dict[checker]}] " + function_name
+                        ][error_msg][dsid].append(file_name)
+                else:
+                    score, max_score = result_dict[checker][test]["value"]
+                    weight = result_dict[checker][test].get("weight", 3)
+                    msgs = result_dict[checker][test].get("msgs", [])
+                    if score < max_score:  # test outcome: fail
+                        for msg in msgs:
+                            self.summary["fail"][weight][
                                 f"[{checker_dict[checker]}] " + test
-                            ][dsid].append(file_name)
-    # Sort
-    summary["pass"] = dict(sorted(summary["pass"].items(), reverse=True))
-    summary["fail"] = dict(sorted(summary["fail"].items(), reverse=True))
-    for key in summary["pass"]:
-        summary["pass"][key] = dict(sorted(summary["pass"][key].items()))
-    for key in summary["fail"]:
-        summary["fail"][key] = dict(sorted(summary["fail"][key].items()))
-    return summary
+                            ][msg][dsid].append(file_name)
+
+    def sort(self):
+        """
+        Sort the summary.
+        """
+        self.summary["fail"] = dict(sorted(self.summary["fail"].items(), reverse=True))
+        for key in self.summary["fail"]:
+            self.summary["fail"][key] = dict(sorted(self.summary["fail"][key].items()))
+
+        # Sort errors by function name
+        for checker in self.summary["error"]:
+            self.summary["error"][checker] = dict(
+                sorted(self.summary["error"][checker].items())
+            )
+
+    def cluster_summary(self, sim_threshold=0.85, min_group_size=2):
+        """
+        Apply clustering to too extensive parts of the summary.
+        """
+        new_summary = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+        )
+
+        for level, weights in self.summary.items():
+            if level == "error":
+                # There is no weights layer for errors,
+                #  so "weights" are actually "tests" in this case
+                for test_id, messages in weights.items():
+                    # Group messages by ds_id sets
+                    dsid_to_messages = defaultdict(list)
+                    for msg, dsids in messages.items():
+                        for dsid, files in dsids.items():
+                            dsid_to_messages[dsid].append((msg, files))
+
+                        for dsid, msg_file_list in dsid_to_messages.items():
+                            clustered = QAResultAggregator.cluster_messages(
+                                msg_file_list, sim_threshold, min_group_size
+                            )
+                            for clustered_msg, file_list in clustered:
+                                file_summary = QAResultAggregator.summarize_file_list(
+                                    file_list
+                                )
+                                new_summary[level][test_id][clustered_msg][dsid] = [
+                                    file_summary
+                                ]
+            elif level == "fail":
+                for weight, tests in weights.items():
+                    for test_id, messages in tests.items():
+                        # Group messages by ds_id sets
+                        dsid_to_messages = defaultdict(list)
+                        for msg, dsids in messages.items():
+                            for dsid, files in dsids.items():
+                                dsid_to_messages[dsid].append((msg, files))
+
+                        for dsid, msg_file_list in dsid_to_messages.items():
+                            clustered = QAResultAggregator.cluster_messages(
+                                msg_file_list, sim_threshold, min_group_size
+                            )
+                            for clustered_msg, file_list in clustered:
+                                file_summary = QAResultAggregator.summarize_file_list(
+                                    file_list
+                                )
+                                new_summary[level][weight][test_id][clustered_msg][
+                                    dsid
+                                ] = [file_summary]
+
+        return new_summary
+
+    @staticmethod
+    def cluster_messages(msg_file_list, sim_threshold, min_group_size):
+        used = [False] * len(msg_file_list)
+        result = []
+
+        for i, (msg_i, files_i) in enumerate(msg_file_list):
+            if used[i]:
+                continue
+            similar = [(msg_i, files_i)]
+            used[i] = True
+            for j in range(i + 1, len(msg_file_list)):
+                if used[j]:
+                    continue
+                msg_j, _ = msg_file_list[j]
+                ratio = difflib.SequenceMatcher(None, msg_i, msg_j).ratio()
+                if ratio >= sim_threshold:
+                    similar.append(msg_file_list[j])
+                    used[j] = True
+
+            if len(similar) >= min_group_size:
+                template = QAResultAggregator.generalize_message(similar[0][0])
+                example = QAResultAggregator.extract_example(similar[0][0])
+                clustered_msg = (
+                    f"{template} ({len(similar)} occurrences, e.g. {example})"
+                )
+                all_files = [f for _, files in similar for f in files]
+                result.append((clustered_msg, all_files))
+            else:
+                for msg, files in similar:
+                    result.append((msg, files))
+        return result
+
+    @staticmethod
+    def generalize_message(msg):
+        msg = re.sub(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", "{}", msg)
+        msg = re.sub(r"\d+", "{}", msg)
+        return msg
+
+    @staticmethod
+    def extract_example(msg):
+        match = re.search(r"'[^']*' \('.*?'\)", msg)
+        return match.group(0) if match else "example"
+
+    @staticmethod
+    def summarize_file_list(files):
+        if not files:
+            return ""
+        elif len(files) > 1:
+            return f"{len(files)} files affected, e.g. '{files[0]}'"
+        else:
+            return files[0]
 
 
 def get_default_result_dir():
@@ -228,7 +339,11 @@ def process_file(
     with open(progress_file, "a") as file:
         file.write(file_path + "\n")
 
-    return check_results
+    return file_path, check_results
+
+
+def call_process_file(args):
+    return process_file(*args)
 
 
 def process_dataset(dataset_files, results_queue):
@@ -294,7 +409,11 @@ def main():
     elif os.listdir(result_dir) != []:
         if resume:
             required_files = [progress_file, resume_info_file]
-            if not all(os.path.isfile(rfile) for rfile in required_files):
+            required_paths = [os.path.join(result_dir, p) for p in ["tables"]]
+            if not all(os.path.isfile(rfile) for rfile in required_files) or not all(
+                os.path.isdir(rpath) and os.listdir(rpath) != []
+                for rpath in required_paths
+            ):
                 raise Exception(
                     "Resume is set but specified output_directory cannot be identified as output_directory of a previous QA run."
                 )
@@ -500,7 +619,7 @@ def main():
                     "consistency_file"
                 ],
                 "tables_dir": result_dir + "/tables",
-                "force_table_download": file_path == files_to_check[0],
+                "force_table_download": file_path == files_to_check[0] and not resume,
             },
             "cf:": {
                 "enable_appendix_a_checks": True,
@@ -527,13 +646,11 @@ def main():
     # QA Part 1 - Run all compliance-checker checks
     #########################################################
 
-    # result = process_file(files_to_check[0], checkers, checker_options[files_to_check[0]])
-    # print(result)
-    # quit()
+    summary = QAResultAggregator(checker_dict=checker_dict)
 
     # Run the first process:
     if len(files_to_check) > 0:
-        result_first = process_file(
+        processed_file, result_first = process_file(
             files_to_check[0],
             checkers,
             checker_options[files_to_check[0]],
@@ -541,6 +658,11 @@ def main():
             processed_files,
             progress_file,
         )
+        summary.update(
+            result_first, files_to_check_dict[processed_file]["id"], processed_file
+        )
+
+    # Run the rest of the processes
     if len(files_to_check) > 1:
 
         # Calculate the number of processes
@@ -561,9 +683,13 @@ def main():
 
         # Use a pool of workers to run jobs in parallel
         with multiprocessing.Pool(processes=num_processes) as pool:
-            results = [result_first] + pool.starmap(
-                process_file, args
-            )  # This collects all results in a list
+            # results = [result_first] + pool.starmap(
+            #    process_file, args
+            # )  # This collects all results in a list
+            for processed_file, result in pool.imap_unordered(call_process_file, args):
+                summary.update(
+                    result, files_to_check_dict[processed_file]["id"], processed_file
+                )
 
     #########################################################
     # QA Part 2 - Run all consistency checks
@@ -574,17 +700,11 @@ def main():
     # Summarize and save results
     #########################################################
 
-    # Iterate through the files and their corresponding results
-    # for file, result in zip(files_to_check, results):
-    #    print(f"File: {file}")
-    #    print(f"Result: {result}")
-    #    #print(json.dumps(result, indent=4, ensure_ascii=False))
     # todo: always the latest checker version is used atm, but the
     #       specified version should be used ("tests")
+    summary.sort()
+    qc_summary = summary.summary
     get_checker_release_versions(checkers)
-    qc_summary = summarize_quality_results(
-        {k: v for k, v in zip(files_to_check, results)}, dataset_files_map
-    )
     qc_summary["info"] = {
         "id": "",
         "date": _timestamp_pprint,
@@ -613,6 +733,18 @@ def main():
     with open(os.path.join(result_dir, filename), "w") as f:
         json.dump(qc_summary, f, indent=4, ensure_ascii=False, sort_keys=False)
     print(f"Saved QC result: {result_dir}/{filename}")
+
+    # Save cluster
+    qc_summary_clustered = summary.cluster_summary()
+    qc_summary_clustered["info"] = qc_summary["info"]
+    filename = f"qc_result_{file_id}_{timestamp}.cluster.json"
+    with open(os.path.join(result_dir, filename), "w") as f:
+        json.dump(
+            qc_summary_clustered, f, indent=4, ensure_ascii=False, sort_keys=False
+        )
+    print(f"Saved QC cluster summary: {result_dir}/{filename}")
+
+    # Save CSV file
 
     """
     for dataset_id in dataset_files.keys():
