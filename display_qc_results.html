@@ -8,7 +8,7 @@
         @font-face {
             font-family: 'Inter';
             src: url('/ress/Inter-Regular.woff2') format('woff2'),
-	         url('fonts/Inter-Regular.woff2') format('woff2');
+                 url('fonts/Inter-Regular.woff2') format('woff2');
             font-weight: 400;
             font-style: normal;
             font-display: swap;
@@ -16,14 +16,14 @@
 
         @font-face {
             font-family: 'Inter';
-            src: url('/ress/Inter-SemiBold.woff2') format('woff2');
-	         url('fonts/Inter-SemiBold.woff2') format('woff2');
+            src: url('/ress/Inter-SemiBold.woff2') format('woff2'),
+                 url('fonts/Inter-SemiBold.woff2') format('woff2');
             font-weight: 600;
             font-style: normal;
             font-display: swap;
         }
 
-       	#banner {
+        #banner {
             background: linear-gradient(to right, #7dbde8, #2980b9);
             border: 1px solid #b2dfdb;
             border-radius: 12px;
@@ -66,7 +66,7 @@
             font-size: 1.1em;
             color: #777;
         }
-	header {
+        header {
             margin-bottom: 1em;
             padding-bottom: 0.5em;
             border-bottom: 2px solid #ccc;
@@ -137,7 +137,7 @@
             cursor: pointer;
             font-weight: 600;
             color: #2c3e50;
-            user-select: none;
+            user-select: text;
         }
 
         .toggle:hover {
@@ -153,13 +153,14 @@
             width: 1em;
             text-align: center;
             color: #999;
+            user-select: none;
         }
 
         li {
             margin-bottom: 4px;
             line-height: 1.4em;
         }
-	li:not(:has(ul)):hover {
+        li:not(:has(ul)):hover {
             background-color: #f0f0f0;
             cursor: default;
         }
@@ -207,7 +208,7 @@
                 document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
                 document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`
                 document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
-		const hasErrors = data["error"] && Object.keys(data["error"]).length > 0;
+                const hasErrors = data["error"] && Object.keys(data["error"]).length > 0;
                 document.getElementById("buttonerr").style.display = hasErrors ? "inline-block" : "none";
 
                 const transformedData = transformKeys(data);
