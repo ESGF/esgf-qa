@@ -121,10 +121,99 @@ class QAResultAggregator:
                 placeholders[var_name] = list(unique_tokens)[0]
                 var_index += 1
 
+        # Merge placeholders if possible
+        template, placeholders = QAResultAggregator.merge_placeholders(
+            template, placeholders
+        )
+
+        # Return the generalized message and the placeholders
         generalized = "".join(template)
         return generalized, placeholders
 
-    def cluster_summary(self, threshold=0.8):
+    @staticmethod
+    def merge_placeholders(list_of_strings, dictionary, skip=0):
+        def find_next_two_placeholders(list_of_strings, skip):
+            placeholders = [
+                s for s in list_of_strings if s.startswith("{") and s.endswith("}")
+            ]
+            if len(placeholders) < 2:
+                return None, None
+            return placeholders[skip] if len(placeholders) >= skip + 1 else None, (
+                placeholders[skip + 1] if len(placeholders) >= skip + 2 else None
+            )
+
+        def extract_text_between_placeholders(
+            list_of_strings, placeholder1, placeholder2
+        ):
+            idx1 = list_of_strings.index(placeholder1)
+            idx2 = list_of_strings.index(placeholder2)
+            return "".join(list_of_strings[idx1 + 1 : idx2])
+
+        def merge_two_placeholders(
+            placeholder1, placeholder2, text_between, dictionary
+        ):
+            new_value = (
+                dictionary[placeholder1.lstrip("{").rstrip("}")]
+                + text_between
+                + dictionary[placeholder2.lstrip("{").rstrip("}")]
+            )
+            dictionary[placeholder1.lstrip("{").rstrip("}")] = new_value
+            del dictionary[placeholder2.lstrip("{").rstrip("}")]
+            return dictionary
+
+        def update_placeholder_names(list_of_strings, dictionary):
+            old_placeholders = sorted(list(dictionary.keys()))
+            new_placeholders = [
+                chr(ord("A") + i) for i in range(0, len(old_placeholders))
+            ]
+            new_dictionary = dict(
+                zip(new_placeholders, [dictionary[val] for val in old_placeholders])
+            )
+            for old, new in zip(old_placeholders, new_placeholders):
+                list_of_strings = [
+                    s.replace("{" + old + "}", "{" + new + "}") for s in list_of_strings
+                ]
+            return list_of_strings, new_dictionary
+
+        def replace_placeholders_with_new_one(
+            list_of_strings, placeholder1, placeholder2
+        ):
+            idx1 = list_of_strings.index(placeholder1)
+            idx2 = list_of_strings.index(placeholder2)
+            list_of_strings_new = list_of_strings[:idx1] + [placeholder1]
+            if idx2 < len(list_of_strings) + 1:
+                list_of_strings_new += list_of_strings[idx2 + 1 :]
+            return list_of_strings_new
+
+        if not any(s.startswith("{") and s.endswith("}") for s in list_of_strings):
+            return list_of_strings, dictionary
+
+        placeholder1, placeholder2 = find_next_two_placeholders(list_of_strings, skip)
+        if placeholder1 is None or placeholder2 is None:
+            return list_of_strings, dictionary
+
+        text_between = extract_text_between_placeholders(
+            list_of_strings, placeholder1, placeholder2
+        )
+        if len(text_between) < 4:
+            dictionary = merge_two_placeholders(
+                placeholder1, placeholder2, text_between, dictionary
+            )
+            list_of_strings = replace_placeholders_with_new_one(
+                list_of_strings, placeholder1, placeholder2
+            )
+            list_of_strings, dictionary = update_placeholder_names(
+                list_of_strings, dictionary
+            )
+            return QAResultAggregator.merge_placeholders(
+                list_of_strings, dictionary, skip
+            )
+        else:
+            return QAResultAggregator.merge_placeholders(
+                list_of_strings, dictionary, skip + 1
+            )
+
+    def cluster_summary(self, threshold=0.75):
         self.clustered_summary = defaultdict(
             lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         )
@@ -143,7 +232,11 @@ class QAResultAggregator:
                         )
                         example_parts = ", ".join(
                             [
-                                f'{k}="{v[0]}"' if isinstance(v, list) else f"{k}={v}"
+                                (
+                                    f"{k}='{v[0]}'"
+                                    if isinstance(v, list)
+                                    else f"{k}='{v}'"
+                                )
                                 for k, v in placeholders.items()
                             ]
                         )
@@ -189,9 +282,9 @@ class QAResultAggregator:
                             example_parts = ", ".join(
                                 [
                                     (
-                                        f'{k}="{v[0]}"'
+                                        f"{k}='{v[0]}'"
                                         if isinstance(v, list)
-                                        else f"{k}={v}"
+                                        else f"{k}='{v}'"
                                     )
                                     for k, v in placeholders.items()
                                 ]
@@ -756,6 +849,7 @@ def main():
                 for checker in checkers
             ]
         ),
+        "parent_dir": str(parent_dir),
     }
     dsid_common_prefix = os.path.commonprefix(list(dataset_files_map.keys()))
     if dsid_common_prefix != list(dataset_files_map.keys())[0]:
