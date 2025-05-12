@@ -255,10 +255,11 @@ class QAResultAggregator:
 
                         # Shorten file lists to one example
                         formatted = {
-                            ds_id: (
-                                [
-                                    f"{len(files)} files affected, e.g. '{next(iter(files))}'"
-                                ]
+                            ds_id
+                            + " ("
+                            + str(len(files))
+                            + f" file{'s' if len(files) > 1 else ''} affected)": (
+                                [f"e.g. '{next(iter(files))}'"]
                                 if len(files) > 1
                                 else [f"'{next(iter(files))}'"]
                             )
@@ -304,10 +305,11 @@ class QAResultAggregator:
 
                             # Shorten file lists to one example
                             formatted = {
-                                ds_id: (
-                                    [
-                                        f"{len(files)} files affected, e.g. '{next(iter(files))}'"
-                                    ]
+                                ds_id
+                                + " ("
+                                + str(len(files))
+                                + f" file{'s' if len(files) > 1 else ''} affected)": (
+                                    [f"e.g. '{next(iter(files))}'"]
                                     if len(files) > 1
                                     else [f"'{next(iter(files))}'"]
                                 )
