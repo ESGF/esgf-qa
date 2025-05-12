@@ -861,9 +861,10 @@ def main():
     qc_summary["info"] = summary_info
 
     # Save JSON file
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_id = "001"
-    filename = f"qc_result_{file_id}_{timestamp}.json"
+    timestamp = _timestamp_filename
+    fileid = hashlib.md5(_timestamp_with_ms.encode()).hexdigest()
+    infostr = re.sub("[^a-z0-9]", "", info.lower())[:10] if info else ""
+    filename = f"qa_result_{infostr}{'_' if infostr else ''}{timestamp}_{fileid}.json"
     with open(os.path.join(result_dir, filename), "w") as f:
         json.dump(qc_summary, f, indent=4, ensure_ascii=False, sort_keys=False)
     print(f"Saved QC result: {result_dir}/{filename}")
@@ -871,9 +872,11 @@ def main():
     # Save cluster
     summary.cluster_summary()
     qc_summary_clustered = summary.clustered_summary
-    print(json.dumps(qc_summary_clustered, indent=4))
+    # print(json.dumps(qc_summary_clustered, indent=4))
     qc_summary_clustered["info"] = summary_info
-    filename = f"qc_result_{file_id}_{timestamp}.cluster.json"
+    filename = (
+        f"qa_result_{infostr}{'_' if infostr else ''}{timestamp}_{fileid}.cluster.json"
+    )
     with open(os.path.join(result_dir, filename), "w") as f:
         json.dump(
             qc_summary_clustered, f, indent=4, ensure_ascii=False, sort_keys=False
