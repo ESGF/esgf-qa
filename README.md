@@ -43,7 +43,7 @@ $ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
   - `-h, --help`: show this help message and exit
   - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
   - `-t, --test TEST`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
-  - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run.
+  - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
 
 ### Example Usage
@@ -66,6 +66,11 @@ The results will be stored in a single `json` file, which can be viewed using th
 [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
 This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
 Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
+
+### Add results to QA results repository
+
+[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html) allows viewing QA results hosted
+in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). You can create a Merge Request in that repository to add your own results.
 
 # License
 
