@@ -11,15 +11,17 @@ import warnings
 from collections import defaultdict
 from pathlib import Path
 
-import xarray as xr
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
+
+from cc_qa._version import version
 
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
 }
 checker_release_versions = {}
+checker_dict_ext = {"cons": "Consistency", "cont": "Continuity", **checker_dict}
 
 _timestamp_with_ms = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
 _timestamp_filename = datetime.datetime.strptime(
@@ -47,7 +49,7 @@ class QAResultAggregator:
 
     def update(self, result_dict, dsid, file_name):
         """
-        Update the summary with a single result.
+        Update the summary with a single result of a cc-run.
         """
         for checker in result_dict:
             for test in result_dict[checker]:
@@ -66,6 +68,29 @@ class QAResultAggregator:
                         for msg in msgs:
                             self.summary["fail"][weight][
                                 f"[{checker_dict[checker]}] " + test
+                            ][msg][dsid].append(file_name)
+
+    def update_ds(self, result_dict, dsid):
+        """
+        Update the summary with a single result of a cc-qa run.
+        """
+        for checker in result_dict:
+            for test in result_dict[checker]:
+                if test == "errors":
+                    for function_name, errdict in result_dict[checker][
+                        "errors"
+                    ].items():
+                        for file_name in errdict["files"]:
+                            self.summary["error"][
+                                f"[{checker_dict_ext[checker]}] " + function_name
+                            ][errdict["msg"]][dsid].append(file_name)
+                else:
+                    weight = result_dict[checker][test].get("weight", 3)
+                    fails = result_dict[checker][test].get("msgs", {})
+                    for msg, file_names in fails.items():
+                        for file_name in file_names:
+                            self.summary["fail"][weight][
+                                f"[{checker_dict_ext[checker]}] " + test
                             ][msg][dsid].append(file_name)
 
     def sort(self):
@@ -195,7 +220,7 @@ class QAResultAggregator:
         text_between = extract_text_between_placeholders(
             list_of_strings, placeholder1, placeholder2
         )
-        if len(text_between) < 4:
+        if len(text_between) < 5:
             dictionary = merge_two_placeholders(
                 placeholder1, placeholder2, text_between, dictionary
             )
@@ -345,13 +370,18 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
 
 def get_checker_release_versions(checkers, checker_options={}):
     global checker_release_versions
+    global checker_dict
+    global checker_dict_ext
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     for checker in checkers:
         if checker not in checker_release_versions:
-            checker_release_versions[checker] = check_suite.checkers.get(
-                checker, "unknown version"
-            )._cc_spec_version
+            if checker in checker_dict:
+                checker_release_versions[checker] = check_suite.checkers.get(
+                    checker, "unknown version"
+                )._cc_spec_version
+            elif checker in checker_dict_ext:
+                checker_release_versions[checker] = version
 
 
 def run_compliance_checker(file_path, checkers, checker_options={}):
@@ -368,13 +398,6 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     check_suite.load_all_available_checkers()
     ds = check_suite.load_dataset(file_path)
     return check_suite.run_all(ds, checkers, skip_checks=[])
-
-
-def run_external_check(file_paths, results_queue):
-    dataset = xr.open_mfdataset(file_paths, combine="by_coords")
-    # Perform external checks on the dataset
-    # ...
-    results_queue.put(None)
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
@@ -410,7 +433,6 @@ def process_file(
         #      rerun checks if lvl 1 and 2 checks failed
         #      rerun checks if any checks failed
         #      rerun checks if forced by user
-        # if all(result[checker][1] == {} for checker in checkers):
         if all(result[checker]["errors"] == {} for checker in checkers):
             return file_path, result
         else:
@@ -475,12 +497,74 @@ def process_file(
     return file_path, check_results
 
 
+def process_dataset(
+    ds,
+    ds_map,
+    checkers,
+    checker_options,
+    files_to_check_dict,
+    processed_datasets,
+    progress_file,
+):
+    # Read result from disk if check was run previously
+    result_file = files_to_check_dict[ds_map[ds][0]]["result_file_ds"]
+    if ds in processed_datasets and os.path.isfile(result_file):
+        with open(result_file) as file:
+            print(f"Read result from disk for '{ds}'.")
+            result = json.load(file)
+        # If no runtime errors were registered last time, return results, otherwise rerun checks
+        # Potentially add more conditions to rerun checks:
+        #  eg. rerun checks if runtime errors occured
+        #      rerun checks if lvl 1 checks failed
+        #      rerun checks if lvl 1 and 2 checks failed
+        #      rerun checks if any checks failed
+        #      rerun checks if forced by user
+        if all(
+            result[checker]["errors"] == {}
+            for checker in checkers
+            if checker in result and "errors" in result[checker]
+        ):
+            return ds, result
+        else:
+            print(f"Rerunning previously erroneous checks for '{ds}'.")
+    else:
+        print(f"Running checks for '{ds}'.")
+
+    # Else run check
+    result = dict()
+    for checker in checkers:
+        if checker in globals():
+            checker_fct = globals()[checker]
+            result[checker] = checker_fct(
+                ds, ds_map, files_to_check_dict, checker_options[checker]
+            )
+        else:
+            result[checker] = {
+                "errors": {
+                    checker: {
+                        "msg": f"Checker '{checker}' not found.",
+                        "files": ds_map[ds],
+                    },
+                },
+            }
+
+    # Write result to disk
+    with open(result_file, "w") as f:
+        json.dump(result, f, ensure_ascii=False, indent=4)
+
+    # Register file in progress file
+    with open(progress_file, "a") as file:
+        file.write(ds + "\n")
+
+    return ds, result
+
+
 def call_process_file(args):
     return process_file(*args)
 
 
-def process_dataset(dataset_files, results_queue):
-    run_external_check(dataset_files, results_queue)
+def call_process_dataset(args):
+    return process_dataset(*args)
 
 
 def main():
@@ -527,6 +611,8 @@ def main():
 
     # Progress file to track already checked files
     progress_file = Path(result_dir, "progress.txt")
+    # Progress file to track already checked datasets
+    dataset_file = Path(result_dir, "progress_datasets.txt")
 
     # Resume information stored in a json file
     resume_info_file = Path(result_dir, ".resume_info")
@@ -642,15 +728,19 @@ def main():
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
         json.dump(resume_info, f)
 
-    # Ensure progress file exists
+    # Ensure progress files exist
     progress_file.touch()
+    dataset_file.touch()
 
-    # list(filter(re.compile(r"^(?!\d{1,}-{0,1}\d{0,}$)").match, os.path.splitext(filename)[0].split("_")))
-    # Check if progress file exists and read already processed files
+    # Check if progress files exist and read already processed files/datasets
     processed_files = set()
     with open(progress_file) as file:
         for line in file:
             processed_files.add(line.strip())
+    processed_datasets = set()
+    with open(dataset_file) as file:
+        for line in file:
+            processed_datasets.add(line.strip())
 
     # todo: allow black-/whitelisting (parts of) paths for checks
     path_whitelist = []
@@ -742,6 +832,13 @@ def main():
         files_to_check_dict[file_path]["id"] = get_dsid(
             files_to_check_dict, dataset_files_map_ext, file_path, "CORDEX-CMIP6"
         )
+        files_to_check_dict[file_path]["result_file_ds"] = (
+            result_dir
+            + dataset_id_dir
+            + "/"
+            + hashlib.md5(files_to_check_dict[file_path]["id"].encode()).hexdigest()
+            + ".json"
+        )
         if files_to_check_dict[file_path]["id"] in dataset_files_map:
             dataset_files_map[files_to_check_dict[file_path]["id"]].append(file_path)
         else:
@@ -761,7 +858,12 @@ def main():
 
     if len(files_to_check) == 0:
         raise Exception("No files found to check.")
+    else:
+        print(
+            f"Found {len(files_to_check)} files (organized in {len(dataset_files_map)} datasets) to check."
+        )
 
+    print()
     print("Files to check:")
     print(json.dumps(files_to_check, indent=4))
     print()
@@ -779,7 +881,14 @@ def main():
     # QA Part 1 - Run all compliance-checker checks
     #########################################################
 
-    summary = QAResultAggregator(checker_dict=checker_dict)
+    print()
+    print("#" * 50)
+    print("# QA Part 1 - Run all compliance-checker checks")
+    print("#" * 50)
+    print()
+
+    # Initialize the summary
+    summary = QAResultAggregator(checker_dict=checker_dict_ext)
 
     # Run the first process:
     if len(files_to_check) > 0:
@@ -794,6 +903,7 @@ def main():
         summary.update(
             result_first, files_to_check_dict[processed_file]["id"], processed_file
         )
+        del result_first
 
     # Run the rest of the processes
     if len(files_to_check) > 1:
@@ -826,13 +936,45 @@ def main():
                 del result
 
     #########################################################
-    # QA Part 2 - Run all consistency checks
+    # QA Part 2 - Run all consistency & continuity checks
     #########################################################
-    # todo
+
+    print()
+    print("#" * 50)
+    print("# QA Part 2 - Run consistency & continuity checks")
+    print("#" * 50)
+    print()
+
+    datasets = sorted(list(dataset_files_map.keys()))
+    args = [
+        (
+            x,
+            dataset_files_map,
+            ["cons", "cont"],
+            {"cons": {}, "cont": {}},
+            files_to_check_dict,
+            processed_datasets,
+            dataset_file,
+        )
+        for x in datasets
+        if len(dataset_files_map[x]) > 1
+    ]
+    if len(args) > 0:
+        # Use a pool of workers to run jobs in parallel
+        with multiprocessing.Pool(processes=num_processes, maxtasksperchild=10) as pool:
+            for processed_ds, result in pool.imap_unordered(call_process_dataset, args):
+                summary.update_ds(result, processed_ds)
+                del result
 
     #########################################################
     # Summarize and save results
     #########################################################
+
+    print()
+    print("#" * 50)
+    print("# QA Part 3 - Summarizing and clustering the results")
+    print("#" * 50)
+    print()
 
     # todo: always the latest checker version is used atm, but the
     #       specified version should be used ("tests")
@@ -884,38 +1026,6 @@ def main():
             qc_summary_clustered, f, indent=4, ensure_ascii=False, sort_keys=False
         )
     print(f"Saved QC cluster summary: {result_dir}/{filename}")
-
-    # Save CSV file
-
-    """
-    for dataset_id in dataset_files.keys():
-        for dataset_files in dataset_files_map[dataset_id]:
-            external_check_process = multiprocessing.Process(target=process_dataset, args=(dataset_files, results_queue))
-            external_check_processes.append(external_check_process)
-            external_check_process.start()
-
-    compliance_check_process.join()
-    for external_check_process in external_check_processes:
-        external_check_process.join()
-
-    while not results_queue.empty():
-        file_path, result = results_queue.get()
-        if result is not None:
-            all_results.append((file_path, result))
-            with open(progress_file, 'a') as file:
-                file.write(f"Check completed for file: {file_path}\n")
-        else:
-            with open(progress_file, 'a') as file:
-                file.write(f"Skipped check for file: {file_path}\n")
-
-    # Process all_results as needed
-    for file_path, result in all_results:
-        if result is not None:
-            # Process each result
-            pass
-
-    # Additional processing of results if needed
-    """
 
 
 if __name__ == "__main__":
