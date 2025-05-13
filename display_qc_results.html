@@ -32,14 +32,24 @@
             margin-bottom: 20px;
             text-align: center;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: left;
+            justify-content: left;
+            gap: 10px; /* space between logo and text */
+            margin: 20px 0;
         }
 
         #banner h1 {
             margin: 0;
-            font-size: 2.2em;
+            font-size: 3.6em;
             color: #2c3e50;
             letter-spacing: 1px;
         }
+
+        #logo {
+            height: 75px;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f5f7fa;
@@ -227,6 +237,7 @@
 </head>
 <body>
     <div id="banner">
+        <img id="logo" src="/ress/cc-qa_Logo.png" alt="" onerror="this.style.display='none'">
         <h1>QC Result Viewer</h1>
     </div>
     <br>
@@ -268,7 +279,7 @@
 
     <script>
 
-        const repoBaseUrl = "/ress";
+        const repoBaseUrl = "https://qa-results-04a949.gitlab-pages.dkrz.de";
         const allowedHosts = ['cmiphub.dkrz.de', 'c6dreq.dkrz.de', 'cmiphub.cloud.dkrz.de'];
         const isHosted = allowedHosts.includes(window.location.hostname);
 
@@ -304,7 +315,7 @@
 
             entries.forEach(entry => {
                 const label = `${entry.date}: ${entry.common_dsid}`;
-                dropdown.innerHTML += `<option value="/${entry.qc_results_filename.split('/').pop()}">${label}</option>`;
+                dropdown.innerHTML += `<option value="/${entry.qc_results_filename}">${label}</option>`;
             });
 
             dropdown.addEventListener("change", async (e) => {
