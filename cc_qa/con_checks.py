@@ -314,7 +314,8 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     test = "xarray open_mfdataset - override"
     results[test]["weight"] = 3
     try:
-        xr.open_mfdataset(filelist, coords="minimal", compat="override")
+        with xr.open_mfdataset(filelist, coords="minimal", compat="override") as ds:
+            pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
 
@@ -322,7 +323,8 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     test = "xarray open_mfdataset - no_conflicts"
     results[test]["weight"] = 3
     try:
-        xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts")
+        with xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts") as ds:
+            pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
 
