@@ -29,6 +29,7 @@ dependencies = [
   "cftime",
   "cf_xarray",
   "compliance-checker>=5.3.0",
+  "dask",
   "netCDF4",
   "pandas",
   "xarray",
