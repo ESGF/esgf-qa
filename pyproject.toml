@@ -121,3 +121,6 @@ lines-after-imports = 1
 [tool.setuptools_scm]
 fallback_version = "999"
 write_to = "cc_qa/_version.py"
+
+[tool.setuptools.packages.find]
+exclude = ["fonts"]
