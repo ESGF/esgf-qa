@@ -309,10 +309,21 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
 def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
-    test = "xarray open_mfdataset"
+
+    # open_mfdataset - override
+    test = "xarray open_mfdataset - override"
     results[test]["weight"] = 3
     try:
         xr.open_mfdataset(filelist, coords="minimal", compat="override")
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
+
+    # open_mfdataset - no_conflicts
+    test = "xarray open_mfdataset - no_conflicts"
+    results[test]["weight"] = 3
+    try:
+        xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts")
+    except Exception as e:
+        results[test]["msgs"][str(e)].extend(filelist)
+
     return results
