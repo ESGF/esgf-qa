@@ -898,6 +898,11 @@ def main():
     # Initialize the summary
     summary = QAResultAggregator(checker_dict=checker_dict_ext)
 
+    # Calculate the number of processes
+    num_processes = max(multiprocessing.cpu_count() - 4, 1)
+    print(f"Using {num_processes} parallel processes for cc checks.")
+    print()
+
     # Run the first process:
     if len(files_to_check) > 0:
         processed_file, result_first = process_file(
@@ -915,10 +920,6 @@ def main():
 
     # Run the rest of the processes
     if len(files_to_check) > 1:
-
-        # Calculate the number of processes
-        num_processes = max(multiprocessing.cpu_count() - 4, 1)
-
         # Prepare the argument tuples
         args = [
             (
@@ -951,6 +952,14 @@ def main():
     print("#" * 50)
     print("# QA Part 2 - Run consistency & continuity checks")
     print("#" * 50)
+    print()
+
+    # Calculate the number of processes
+    num_processes = max(multiprocessing.cpu_count() - 4, 1)
+    # Limit the number of processes for consistency checks since a lot
+    #   of files will be opened at the same time
+    num_processes = min(num_processes, 10)
+    print(f"Using {num_processes} parallel processes for dataset checks.")
     print()
 
     datasets = sorted(list(dataset_files_map.keys()))
