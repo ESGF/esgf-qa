@@ -15,13 +15,21 @@ from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
 
 from cc_qa._version import version
+from cc_qa.con_checks import compatibility_checks as comp  # noqa
+from cc_qa.con_checks import consistency_checks as cons  # noqa
+from cc_qa.con_checks import continuity_checks as cont  # noqa
 
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
 }
 checker_release_versions = {}
-checker_dict_ext = {"cons": "Consistency", "cont": "Continuity", **checker_dict}
+checker_dict_ext = {
+    "cons": "Consistency",
+    "cont": "Continuity",
+    "comp": "Compatibility",
+    **checker_dict,
+}
 
 _timestamp_with_ms = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
 _timestamp_filename = datetime.datetime.strptime(
@@ -950,8 +958,8 @@ def main():
         (
             x,
             dataset_files_map,
-            ["cons", "cont"],
-            {"cons": {}, "cont": {}},
+            ["cons", "cont", "comp"],
+            {"cons": {}, "cont": {}, "comp": {}},
             files_to_check_dict,
             processed_datasets,
             dataset_file,
