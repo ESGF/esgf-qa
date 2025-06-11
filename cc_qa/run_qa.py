@@ -18,6 +18,7 @@ from cc_qa._version import version
 from cc_qa.con_checks import compatibility_checks as comp  # noqa
 from cc_qa.con_checks import consistency_checks as cons  # noqa
 from cc_qa.con_checks import continuity_checks as cont  # noqa
+from cc_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
 
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
@@ -702,7 +703,7 @@ def main():
     # Deal with tests
     if not tests:
         checkers = ["cc6", "cf"]
-        checkers_versions = ["latest", "latest"]
+        checkers_versions = ["latest", "1.11"]
         checker_options = {}
     else:
         test_regex = re.compile(r"^[a-z0-9]+:(latest|[0-9]+(\.[0-9]+)*)$")
@@ -954,6 +955,9 @@ def main():
     print("#" * 50)
     print()
 
+    ###########################
+    # Consistency across files
+
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
     # Limit the number of processes for consistency checks since a lot
@@ -982,6 +986,23 @@ def main():
             for processed_ds, result in pool.imap_unordered(call_process_dataset, args):
                 summary.update_ds(result, processed_ds)
                 del result
+
+    ##############################
+    # Consistency across datasets
+
+    # Attributes and Coordinates
+    results_extra = inter_dataset_consistency_checks(
+        dataset_files_map, files_to_check_dict, checker_options={}
+    )
+    for ds in results_extra.keys():
+        summary.update_ds({"cons": results_extra[ds]}, ds)
+
+    # Time coverage
+    results_extra = dataset_coverage_checks(
+        dataset_files_map, files_to_check_dict, checker_options={}
+    )
+    for ds in results_extra.keys():
+        summary.update_ds({"cons": results_extra[ds]}, ds)
 
     #########################################################
     # Summarize and save results

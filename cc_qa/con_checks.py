@@ -1,5 +1,5 @@
 import json
-from collections import OrderedDict, defaultdict
+from collections import ChainMap, OrderedDict, defaultdict
 
 import cftime
 import xarray as xr
@@ -13,6 +13,10 @@ def level2_factory():
 
 def level1_factory():
     return defaultdict(level2_factory)
+
+
+def level0_factory():
+    return defaultdict(level1_factory)
 
 
 def printtimedelta(d):
@@ -327,5 +331,249 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
             pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
+
+    return results
+
+
+def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
+    results = defaultdict(level0_factory)
+    test = "Time coverage"
+
+    coverage_start = dict()
+    coverage_end = dict()
+
+    # Extract time coverage for each dataset
+    for ds in ds_map.keys():
+        fl = sorted(ds_map[ds])
+        ts0 = None
+        tsn = None
+        try:
+            if files_to_check_dict[fl[0]]["ts"] != "":
+                ts0 = files_to_check_dict[fl[0]]["ts"].split("-")[0][0:4]
+                # If time interval of timestamp does not start in January, use following year
+                if len(files_to_check_dict[fl[-1]]["ts"].split("-")[0]) >= 6:
+                    if files_to_check_dict[fl[-1]]["ts"].split("-")[0][4:6] != "01":
+                        coverage_start[ds] = int(ts0) + 1
+                    else:
+                        coverage_start[ds] = int(ts0)
+                coverage_start[ds] = int(ts0)
+            if files_to_check_dict[fl[-1]]["ts"] != "":
+                tsn = files_to_check_dict[fl[-1]]["ts"].split("-")[1][0:4]
+                # If time interval of timestamp ends in January, use previous year
+                if len(files_to_check_dict[fl[-1]]["ts"].split("-")[1]) >= 6:
+                    if files_to_check_dict[fl[-1]]["ts"].split("-")[1][4:6] == "01":
+                        coverage_end[ds] = int(tsn) - 1
+                    else:
+                        coverage_end[ds] = int(tsn)
+                else:
+                    coverage_end[ds] = int(tsn)
+        except IndexError or ValueError:
+            results[ds][test]["weight"] = 1
+            if len(fl) > 1:
+                results[ds][test]["msgs"]["Time coverage cannot be inferred."] = [
+                    fl[0],
+                    fl[-1],
+                ]
+            else:
+                results[ds][test]["msgs"]["Time coverage cannot be inferred."] = [fl[0]]
+            continue
+
+        # Compare coverage
+        if len(coverage_start.keys()) > 1:
+            scov = min(coverage_start.values())
+            ecov = max(coverage_end.values())
+            # Get all ds where coverage_start differs
+            for ds in coverage_start.keys():
+                if coverage_start[ds] != scov:
+                    results[ds][test]["weight"] = 1
+                    results[ds][test]["msgs"][
+                        f"Time series starts at '{coverage_start[ds]}' while other time series start at '{scov}'"
+                    ] = [fl[0]]
+                if coverage_end[ds] != ecov:
+                    results[ds][test]["weight"] = 1
+                    results[ds][test]["msgs"][
+                        f"Time series ends at '{coverage_end[ds]}' while other time series end at '{ecov}'"
+                    ] = [fl[-1]]
+
+    return results
+
+
+def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_options):
+    results = defaultdict(level0_factory)
+    filedict = {}
+    consistency_data = {}
+    for ds in ds_map.keys():
+        filedict[ds] = sorted(ds_map[ds])[0]
+
+    # Exclude the following global attributes from comparison
+    excl_global_attrs = [
+        "creation_date",
+        "history",
+        "tracking_id",
+        "variable_id",
+        "frequency",
+        "external_variables",
+        "table_id",
+        "grid",
+        "grid_label",
+        "realm",
+        "modeling_realm",
+    ]
+
+    # Include the following global attributes in the realm-specific comparison
+    incl_global_attrs = ["grid", "grid_label", "realm", "modeling_realm"]
+
+    # Consistency data
+    for ds, dsfile0 in filedict.items():
+        consistency_file = files_to_check_dict[dsfile0]["consistency_file"]
+        with open(consistency_file) as f:
+            data = json.load(f)
+            consistency_data[ds] = data
+
+    # Reference datasets
+    ref_ds = dict()
+
+    # Compare each file with reference
+    for ds, data in consistency_data.items():
+        # Select first dataset as main reference
+        if "main" not in ref_ds:
+            ref_ds["main"] = ds
+        # Also group datasets by realm and grid label
+        #   for grid / realm specific consistency checks
+        realm = ChainMap(
+            data["global_attributes"], data["global_attributes_non_required"]
+        ).get("realm", None)
+        if not realm:
+            realm = ChainMap(
+                data["global_attributes"], data["global_attributes_non_required"]
+            ).get("modeling_realm", None)
+        if not realm:
+            realm = "Default"
+        gridlabel = ChainMap(
+            data["global_attributes"], data["global_attributes_non_required"]
+        ).get("grid_label", None)
+        if not gridlabel:
+            gridlabel = ChainMap(
+                data["global_attributes"], data["global_attributes_non_required"]
+            ).get("grid", None)
+        if not gridlabel:
+            gridlabel = "Default"
+        ref_ds_key = f"{realm}/{gridlabel}"
+        if ref_ds_key not in ref_ds:
+            ref_ds[ref_ds_key] = ds
+            continue
+        else:
+            reference_data_rg = consistency_data[ref_ds[ref_ds_key]]
+            reference_data = consistency_data[ref_ds["main"]]
+
+            # Compare required global attributes
+            test = "Required global attributes (Inter-Dataset)"
+            results[ds][test]["weight"] = 2
+            diff_keys = compare_dicts(
+                reference_data["global_attributes"],
+                data["global_attributes"],
+                exclude_keys=excl_global_attrs,
+            )
+            if diff_keys:
+                err_msg = (
+                    "The following global attributes differ between datasets: "
+                    + ", ".join(sorted(diff_keys))
+                )
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+            # Compare specific global attributes
+            test = "Realm-specific global attributes (Inter-Dataset)"
+            results[ds][test]["weight"] = 2
+            diff_keys = compare_dicts(
+                {
+                    k: ChainMap(
+                        reference_data_rg["global_attributes"],
+                        reference_data_rg["global_attributes_non_required"],
+                    ).get(k, "unset")
+                    for k in incl_global_attrs
+                },
+                {
+                    k: ChainMap(
+                        data["global_attributes"],
+                        data["global_attributes_non_required"],
+                    ).get(k, "unset")
+                    for k in incl_global_attrs
+                },
+                exclude_keys=[],
+            )
+            if diff_keys:
+                err_msg = (
+                    "The following realm-specific global attributes differ between datasets (realm/grid_label: {ref_ds_key}): "
+                    + ", ".join(sorted(diff_keys))
+                )
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+            # Compare non-required global attributes
+            test = "Non-required global attributes (Inter-Dataset)"
+            results[ds][test]["weight"] = 1
+            diff_keys = compare_dicts(
+                reference_data["global_attributes_non_required"],
+                data["global_attributes_non_required"],
+                exclude_keys=excl_global_attrs,
+            )
+            if diff_keys:
+                err_msg = (
+                    "The following non-required global attributes differ between datasets: "
+                    + ", ".join(sorted(diff_keys))
+                )
+            results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+            # Compare global attributes dtypes
+            test = "Global attributes data types (Inter-Dataset)"
+            results[ds][test]["weight"] = 2
+            diff_keys = compare_dicts(
+                reference_data["global_attributes_dtypes"],
+                data["global_attributes_dtypes"],
+                exclude_keys=[],
+            )
+            if diff_keys:
+                if diff_keys:
+                    err_msg = (
+                        "The following global attributes have inconsistent data types between datasets: "
+                        + ", ".join(sorted(diff_keys))
+                    )
+                    results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+            # Compare dimensions
+            test = "Dimensions (Inter-Dataset)"
+            results[ds][test]["weight"] = 2
+            diff_keys = compare_dicts(
+                reference_data_rg["dimensions"],
+                data["dimensions"],
+                exclude_keys=["depth", "lev"],
+            )
+            if diff_keys:
+                err_msg = (
+                    "The following dimensions differ between datasets: "
+                    + ", ".join(sorted(diff_keys))
+                )
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+            # Compare coordinates
+            test = "Coordinates (Inter-Dataset)"
+            results[ds][test]["weight"] = 2
+            diff_keys = compare_dicts(
+                reference_data_rg["coordinates"],
+                data["coordinates"],
+                exclude_keys=[
+                    "depth",
+                    "depth_bnds",
+                    "lev",
+                    "lev_bnds",
+                    "plev",
+                    "height",
+                ],
+            )
+            if diff_keys:
+                err_msg = (
+                    "The following coordinates differ between datasets: "
+                    + ", ".join(sorted(diff_keys))
+                )
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
 
     return results
