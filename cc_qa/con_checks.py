@@ -199,7 +199,7 @@ def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
                 diff_keys = compare_dicts(
                     reference_data["dimensions"],
                     data["dimensions"],
-                    exclude_keys=[],
+                    exclude_keys=["time"],
                 )
                 if diff_keys:
                     err_msg = "The following dimensions differ: " + ", ".join(
@@ -521,7 +521,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                     "The following non-required global attributes differ between datasets: "
                     + ", ".join(sorted(diff_keys))
                 )
-            results[ds][test]["msgs"][err_msg].append(filedict[ds])
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
 
             # Compare global attributes dtypes
             test = "Global attributes data types (Inter-Dataset)"
@@ -532,12 +532,11 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                 exclude_keys=[],
             )
             if diff_keys:
-                if diff_keys:
-                    err_msg = (
-                        "The following global attributes have inconsistent data types between datasets: "
-                        + ", ".join(sorted(diff_keys))
-                    )
-                    results[ds][test]["msgs"][err_msg].append(filedict[ds])
+                err_msg = (
+                    "The following global attributes have inconsistent data types between datasets: "
+                    + ", ".join(sorted(diff_keys))
+                )
+                results[ds][test]["msgs"][err_msg].append(filedict[ds])
 
             # Compare dimensions
             test = "Dimensions (Inter-Dataset)"
@@ -545,7 +544,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             diff_keys = compare_dicts(
                 reference_data_rg["dimensions"],
                 data["dimensions"],
-                exclude_keys=["depth", "lev"],
+                exclude_keys=["time", "depth", "lev"],
             )
             if diff_keys:
                 err_msg = (
