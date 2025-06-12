@@ -23,11 +23,22 @@ However, it is generally applicable to test for compliance with the CF conventio
 
 ## Installation
 
+### Pip installation
+
+```shell
+$ pip install cc_qa
+```
+
 ### Pip installation from source
 
-Clone the repository and `cd` into the repository folder, then
+Clone the repository and `cd` into the repository folder, then:
 ```shell
-pip install -e .
+$ pip install -e .
+```
+
+Optionally install the dependencies for development:
+```shell
+$ pip install -e .[dev]
 ```
 
 See the [ioos/compliance-checker](https://github.com/ioos/compliance-checker#installation) for
