@@ -1,8 +1,7 @@
 [build-system]
 requires = [
   "setuptools>=42",
-  "wheel",
-  "setuptools_scm[toml]>=3.4"
+  "setuptools_scm[toml]>=6.0",
 ]
 
 [project]
@@ -33,7 +32,7 @@ dependencies = [
   "netCDF4",
   "pandas",
   "xarray",
-  "cc-plugin-cc6"
+  "cc-plugin-cc6>=0.3.0"
 ]
 dynamic = [
   "version"
@@ -42,7 +41,7 @@ dynamic = [
 [project.optional-dependencies]
 dev = [
   "black",
-  "bump2version",
+  "build",
   "isort",
   "flake8",
   "flake8-builtins",
@@ -52,7 +51,9 @@ dev = [
   "pre-commit",
   "pytest>=7.0.0",
   "pytest-flake8",
-  "ruff>=0.1.0"
+  "ruff>=0.1.0",
+  "twine",
+  "wheel"
 ]
 
 [project.urls]
@@ -81,18 +82,6 @@ ignore = [
   "notebooks/*",
   "tests",
   "tests/*"
-]
-
-[tool.flit.sdist]
-include = [
-  "LICENSE",
-  "README.md",
-  "tests/*.py"
-]
-exclude = [
-  "**/*.py[co]",
-  "**/__pycache__",
-  ".*"
 ]
 
 [tool.isort]
