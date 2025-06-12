@@ -1,0 +1,13 @@
+*.pyc
+.*.swp
+build
+dist
+*.egg-info
+
+# dotenv
+.env
+env
+
+.DS_Store
+.pytest_cache
+cc_qa/_version.py
