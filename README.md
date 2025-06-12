@@ -1,3 +1,5 @@
+[![PyPI version](https://img.shields.io/pypi/v/cc-qa.svg)](https://pypi.org/project/cc-qa/)
+
 # cc-qa: Quality Assurance Workflow Based on compliance-checker and cc-plugin-cc6
 
 This makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the 
