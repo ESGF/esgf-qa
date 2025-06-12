@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools>=42",
+  "setuptools>=77.0.0",
   "setuptools_scm[toml]>=6.0",
 ]
 
@@ -110,6 +110,9 @@ lines-after-imports = 1
 [tool.setuptools_scm]
 fallback_version = "999"
 write_to = "cc_qa/_version.py"
+
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 exclude = ["fonts"]
