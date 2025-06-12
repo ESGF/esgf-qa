@@ -9,7 +9,7 @@ name = "cc-qa"
 description = "QA based on compliance-checker"
 readme = "README.md"
 keywords = ["compliance checker", "plugin", "cordex", "cordex-cmip6"]
-license = {file = "LICENSE"}
+license = {text = "Apache-2.0"}
 authors = [
   {name = "Martin Schupfner", email = "schupfner@dkrz.de"},
 ]
