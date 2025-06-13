@@ -152,7 +152,7 @@ class QAResultAggregator:
             else:
                 var_name = chr(ord("A") + var_index)
                 template.append(f"{{{var_name}}}")
-                placeholders[var_name] = list(unique_tokens)[0]
+                placeholders[var_name] = tokens[0]
                 var_index += 1
 
         # Merge placeholders if possible
