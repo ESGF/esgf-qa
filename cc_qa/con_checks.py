@@ -367,6 +367,8 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
                         coverage_end[ds] = int(tsn)
                 else:
                     coverage_end[ds] = int(tsn)
+            if ts0 is None or tsn is None:
+                continue
         except IndexError or ValueError:
             results[ds][test]["weight"] = 1
             if len(fl) > 1:
@@ -380,6 +382,7 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
 
         # Compare coverage
         if len(coverage_start.keys()) > 1:
+
             scov = min(coverage_start.values())
             ecov = max(coverage_end.values())
             # Get all ds where coverage_start differs
@@ -574,5 +577,11 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                     + ", ".join(sorted(diff_keys))
                 )
                 results[ds][test]["msgs"][err_msg].append(filedict[ds])
+
+    # List reference datasets
+    print("The following datasets were used as reference:")
+    for key in sorted(list(ref_ds.keys())):
+        print(f"{key}: {ref_ds[key]}")
+    print()
 
     return results

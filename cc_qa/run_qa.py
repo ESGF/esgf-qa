@@ -957,6 +957,11 @@ def main():
 
     ###########################
     # Consistency across files
+    print("# QA Part 2.1 - Continuity &Consistency across files of a single dataset")
+    print(
+        "#   (Reference for consistency checks is the first file of each respective dataset timeseries)"
+    )
+    print()
 
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
@@ -989,6 +994,8 @@ def main():
 
     ##############################
     # Consistency across datasets
+    print("# QA Part 2.2 - Continuity & Consistency across all datasets")
+    print()
 
     # Attributes and Coordinates
     results_extra = inter_dataset_consistency_checks(
