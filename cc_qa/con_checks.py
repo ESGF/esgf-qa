@@ -31,6 +31,32 @@ def printtimedelta(d):
         return f"{d} seconds"
 
 
+def truncate_str(s, max_length=16):
+    if max_length <= 15 or len(s) <= max_length:
+        return s
+
+    # Select start and end of string
+    words = s.split()
+    start = ""
+    end = ""
+
+    for i in range(len(words)):
+        if len(" ".join(words[: i + 1])) >= 6:
+            start = " ".join(words[: i + 1])
+            break
+
+    for i in range(len(words) - 1, -1, -1):
+        if len(" ".join(words[i:])) >= 6:
+            end = " ".join(words[i:])
+            break
+
+    # Return truncated string
+    if len(start) + len(end) + 3 >= len(s):
+        return s
+    else:
+        return f"{start}...{end}"
+
+
 def compare_dicts(dict1, dict2, exclude_keys=None):
     if exclude_keys is None:
         exclude_keys = set()
@@ -367,7 +393,19 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
                         coverage_end[ds] = int(tsn)
                 else:
                     coverage_end[ds] = int(tsn)
-            if ts0 is None or tsn is None:
+            if ts0 is None and tsn is None:
+                continue
+            elif ts0 is None:
+                results[ds][test]["weight"] = 1
+                results[ds][test]["msgs"][
+                    "Begin of time coverage cannot be inferred."
+                ] = [fl[0]]
+                continue
+            elif tsn is None:
+                results[ds][test]["weight"] = 1
+                results[ds][test]["msgs"][
+                    "End of time coverage cannot be inferred."
+                ] = [fl[-1]]
                 continue
         except IndexError or ValueError:
             results[ds][test]["weight"] = 1
@@ -380,23 +418,23 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
                 results[ds][test]["msgs"]["Time coverage cannot be inferred."] = [fl[0]]
             continue
 
-        # Compare coverage
-        if len(coverage_start.keys()) > 1:
-
-            scov = min(coverage_start.values())
-            ecov = max(coverage_end.values())
-            # Get all ds where coverage_start differs
-            for ds in coverage_start.keys():
-                if coverage_start[ds] != scov:
-                    results[ds][test]["weight"] = 1
-                    results[ds][test]["msgs"][
-                        f"Time series starts at '{coverage_start[ds]}' while other time series start at '{scov}'"
-                    ] = [fl[0]]
-                if coverage_end[ds] != ecov:
-                    results[ds][test]["weight"] = 1
-                    results[ds][test]["msgs"][
-                        f"Time series ends at '{coverage_end[ds]}' while other time series end at '{ecov}'"
-                    ] = [fl[-1]]
+    # Compare coverage
+    if len(coverage_start.keys()) > 1:
+        scov = min(coverage_start.values())
+        ecov = max(coverage_end.values())
+        # Get all ds where coverage_start differs
+        for ds in coverage_start.keys():
+            fl = sorted(ds_map[ds])
+            if coverage_start[ds] != scov:
+                results[ds][test]["weight"] = 1
+                results[ds][test]["msgs"][
+                    f"Time series starts at '{coverage_start[ds]}' while other time series start at '{scov}'"
+                ] = [fl[0]]
+            if coverage_end[ds] != ecov:
+                results[ds][test]["weight"] = 1
+                results[ds][test]["msgs"][
+                    f"Time series ends at '{coverage_end[ds]}' while other time series end at '{ecov}'"
+                ] = [fl[-1]]
 
     return results
 
@@ -439,8 +477,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     # Compare each file with reference
     for ds, data in consistency_data.items():
         # Select first dataset as main reference
-        if "main" not in ref_ds:
-            ref_ds["main"] = ds
+        if "Main" not in ref_ds:
+            ref_ds["Main"] = ds
         # Also group datasets by realm and grid label
         #   for grid / realm specific consistency checks
         realm = ChainMap(
@@ -467,7 +505,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             continue
         else:
             reference_data_rg = consistency_data[ref_ds[ref_ds_key]]
-            reference_data = consistency_data[ref_ds["main"]]
+            reference_data = consistency_data[ref_ds["Main"]]
 
             # Compare required global attributes
             test = "Required global attributes (Inter-Dataset)"
@@ -506,7 +544,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             )
             if diff_keys:
                 err_msg = (
-                    "The following realm-specific global attributes differ between datasets (realm/grid_label: {ref_ds_key}): "
+                    f"The following realm-specific global attributes differ between datasets (realm/grid_label: {truncate_str(ref_ds_key.split('/')[0])}/{truncate_str(ref_ds_key.split('/')[1])}): "
                     + ", ".join(sorted(diff_keys))
                 )
                 results[ds][test]["msgs"][err_msg].append(filedict[ds])
@@ -581,7 +619,13 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     # List reference datasets
     print("The following datasets were used as reference:")
     for key in sorted(list(ref_ds.keys())):
-        print(f"{key}: {ref_ds[key]}")
+        if key == "Main":
+            print(f"{key}: {ref_ds[key]}")
+        else:
+            print(
+                f"{truncate_str(key.split('/')[0])} / {truncate_str(key.split('/')[1])} (realm / grid): {ref_ds[key]}"
+            )
+
     print()
 
     return results
