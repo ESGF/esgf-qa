@@ -384,13 +384,15 @@ def get_checker_release_versions(checkers, checker_options={}):
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     for checker in checkers:
-        if checker not in checker_release_versions:
-            if checker in checker_dict:
-                checker_release_versions[checker] = check_suite.checkers.get(
-                    checker, "unknown version"
-                )._cc_spec_version
-            elif checker in checker_dict_ext:
-                checker_release_versions[checker] = version
+        if checker.split(":")[0] not in checker_release_versions:
+            if checker.split(":")[0] in checker_dict:
+                checker_release_versions[checker.split(":")[0]] = (
+                    check_suite.checkers.get(
+                        checker, "unknown version"
+                    )._cc_spec_version
+                )
+            elif checker.split(":")[0] in checker_dict_ext:
+                checker_release_versions[checker.split(":")[0]] = version
 
 
 def run_compliance_checker(file_path, checkers, checker_options={}):
@@ -442,7 +444,7 @@ def process_file(
         #      rerun checks if lvl 1 and 2 checks failed
         #      rerun checks if any checks failed
         #      rerun checks if forced by user
-        if all(result[checker]["errors"] == {} for checker in checkers):
+        if all(result[checker.split(":")[0]]["errors"] == {} for checker in checkers):
             return file_path, result
         else:
             print(f"Rerunning previously erroneous checks for '{file_path}'.")
@@ -457,7 +459,8 @@ def process_file(
     # Note: the key in the errors dict is not the same as the check name!
     #       The key is the checker function name, while the check.name
     #       is the description.
-    for checker in checkers:
+    for checkerv in checkers:
+        checker = checkerv.split(":")[0]
         check_results[checker] = dict()
         check_results[checker]["errors"] = {}
         # print()
@@ -468,15 +471,15 @@ def process_file(
         # print("method", result[checker][0][0].check_method)
         # print("children", result[checker][0][0].children)
         # quit()
-        for check in result[checker][0]:
+        for check in result[checkerv][0]:
             check_results[checker][check.name] = {}
             check_results[checker][check.name]["weight"] = check.weight
             check_results[checker][check.name]["value"] = check.value
             check_results[checker][check.name]["msgs"] = check.msgs
             check_results[checker][check.name]["method"] = check.check_method
             check_results[checker][check.name]["children"] = check.children
-        for check_method in result[checker][1]:
-            a = result[checker][1][check_method][1]
+        for check_method in result[checkerv][1]:
+            a = result[checkerv][1][check_method][1]
             while True:
                 if a.tb_frame.f_code.co_name == check_method:
                     break
@@ -484,7 +487,7 @@ def process_file(
                     a = a.tb_next
             check_results[checker]["errors"][
                 check_method
-            ] = f"Exception: {result[checker][1][check_method][0]} at {a.tb_frame.f_code.co_filename}:{a.tb_frame.f_lineno} in function/method '{a.tb_frame.f_code.co_name}'."
+            ] = f"Exception: {result[checkerv][1][check_method][0]} at {a.tb_frame.f_code.co_filename}:{a.tb_frame.f_lineno} in function/method '{a.tb_frame.f_code.co_name}'."
             vars = [
                 j
                 for i, j in a.tb_frame.f_locals.items()
@@ -529,9 +532,10 @@ def process_dataset(
         #      rerun checks if any checks failed
         #      rerun checks if forced by user
         if all(
-            result[checker]["errors"] == {}
+            result[checker.split(":")[0]]["errors"] == {}
             for checker in checkers
-            if checker in result and "errors" in result[checker]
+            if checker.split(":")[0] in result
+            and "errors" in result[checker.split(":")[0]]
         ):
             return ds, result
         else:
@@ -541,7 +545,8 @@ def process_dataset(
 
     # Else run check
     result = dict()
-    for checker in checkers:
+    for checkerv in checkers:
+        checker = checkerv.split(":")[0]
         if checker in globals():
             checker_fct = globals()[checker]
             result[checker] = checker_fct(
@@ -596,7 +601,7 @@ def main():
         "-t",
         "--test",
         action="append",
-        help="The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'",
+        help="The test to run ('cc6:latest' or 'cf:<version>', can be specified multiple times, eg.: '-t cc6:latest -t cf:1.8') - default: running 'cc6:latest' and 'cf:1.11'.",
     )
     parser.add_argument(
         "-i",
@@ -639,8 +644,7 @@ def main():
             required_files = [progress_file, resume_info_file]
             required_paths = [os.path.join(result_dir, p) for p in ["tables"]]
             if not all(os.path.isfile(rfile) for rfile in required_files) or not all(
-                os.path.isdir(rpath) and os.listdir(rpath) != []
-                for rpath in required_paths
+                os.path.isdir(rpath) for rpath in required_paths
             ):
                 raise Exception(
                     "Resume is set but specified output_directory cannot be identified as output_directory of a previous QA run."
@@ -650,7 +654,7 @@ def main():
                 result_dir
             ) and ".resume_info" in os.listdir(result_dir):
                 raise Exception(
-                    "Specified output_directory is not empty but can be identified as output_directory of a prevous QA run. Use'-r' or '--resume' (together with '-o' or '--output_dir') to continue the previous QA run or choose a different output_directory instead."
+                    "Specified output_directory is not empty but can be identified as output_directory of a previous QA run. Use'-r' or '--resume' (together with '-o' or '--output_dir') to continue the previous QA run or choose a different output_directory instead."
                 )
             else:
                 raise Exception("Specified output_directory is not empty.")
@@ -683,7 +687,7 @@ def main():
                 raise Exception(
                     "Invalid .resume_info file. It should be a valid JSON file."
                 )
-            if tests and tests != resume_info["tests"]:
+            if tests and sorted(tests) != resume_info["tests"]:
                 raise Exception("Cannot resume a previous QA run with different tests.")
             else:
                 tests = resume_info["tests"]
@@ -691,6 +695,8 @@ def main():
                 warnings.warn(
                     f"<info> argument differs from the originally specified <info> argument ('{resume_info['info']}'). Using the new specification."
                 )
+            if parent_dir is None:
+                parent_dir = resume_info["parent_dir"]
             if parent_dir and Path(parent_dir) != Path(resume_info["parent_dir"]):
                 raise Exception(
                     "Cannot resume a previous QA run with different <parent_dir>."
@@ -708,8 +714,12 @@ def main():
     else:
         test_regex = re.compile(r"^[a-z0-9]+:(latest|[0-9]+(\.[0-9]+)*)$")
         if not all([test_regex.match(test) for test in tests]):
-            raise Exception("Invalid test(s) specified.")
+            raise Exception(
+                "Invalid test(s) specified. Please specify tests in the format 'checker_name:version'. Currently supported are only 'cc6' and 'cf'."
+            )
         checkers = [test.split(":")[0] for test in tests]
+        if sorted(checkers) != sorted(list(set(checkers))):
+            raise Exception("Cannot specify multiple instances of the same checker.")
         checkers_versions = [
             (
                 test.split(":")[1]
@@ -718,26 +728,36 @@ def main():
             )
             for test in tests
         ]
+        if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
+            checkers_versions["cc6"] = "latest"
+            warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
         checker_options = {}
         if any(test not in checker_dict.keys() for test in checkers):
             raise Exception(
                 f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
             )
 
+    # Combine checkers and versions
+    #  (checker_options are hardcoded)
+    checkers = sorted([f"{c}:{v}" for c, v in zip(checkers, checkers_versions)])
+
     # Does parent_dir exist?
-    if parent_dir is None or not os.path.exists(parent_dir):
+    if parent_dir is None:
+        parser.error("Missing required argument <parent_dir>.")
+    elif not os.path.exists(parent_dir):
         raise Exception(f"The specified <parent_dir> '{parent_dir}' does not exist.")
 
     # Write resume file
     resume_info = {
         "parent_dir": str(parent_dir),
         "info": info,
-        "tests": sorted([f"{c}:{v}" for c, v in zip(checkers, checkers_versions)]),
+        "tests": checkers,
     }
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
         json.dump(resume_info, f)
 
     # Ensure progress files exist
+    os.makedirs(result_dir + "/tables", exist_ok=True)
     progress_file.touch()
     dataset_file.touch()
 
@@ -858,7 +878,10 @@ def main():
                     "consistency_file"
                 ],
                 "tables_dir": result_dir + "/tables",
-                "force_table_download": file_path == files_to_check[0] and not resume,
+                "force_table_download": file_path == files_to_check[0]
+                and (
+                    not resume or (resume and os.listdir(result_dir + "/tables") == [])
+                ),
             },
             "cf:": {
                 "enable_appendix_a_checks": True,
@@ -945,71 +968,87 @@ def main():
                 )
                 del result
 
-    #########################################################
-    # QA Part 2 - Run all consistency & continuity checks
-    #########################################################
+    # Skip continuity and consistency checks if no cc6 checks were run
+    #   (and thus no consistency output file was created)
+    if "cc6:latest" in checkers:
 
-    print()
-    print("#" * 50)
-    print("# QA Part 2 - Run consistency & continuity checks")
-    print("#" * 50)
-    print()
+        #########################################################
+        # QA Part 2 - Run all consistency & continuity checks
+        #########################################################
 
-    ###########################
-    # Consistency across files
-    print("# QA Part 2.1 - Continuity &Consistency across files of a single dataset")
-    print(
-        "#   (Reference for consistency checks is the first file of each respective dataset timeseries)"
-    )
-    print()
+        print()
+        print("#" * 50)
+        print("# QA Part 2 - Run consistency & continuity checks")
+        print("#" * 50)
+        print()
 
-    # Calculate the number of processes
-    num_processes = max(multiprocessing.cpu_count() - 4, 1)
-    # Limit the number of processes for consistency checks since a lot
-    #   of files will be opened at the same time
-    num_processes = min(num_processes, 10)
-    print(f"Using {num_processes} parallel processes for dataset checks.")
-    print()
-
-    datasets = sorted(list(dataset_files_map.keys()))
-    args = [
-        (
-            x,
-            dataset_files_map,
-            ["cons", "cont", "comp"],
-            {"cons": {}, "cont": {}, "comp": {}},
-            files_to_check_dict,
-            processed_datasets,
-            dataset_file,
+        ###########################
+        # Consistency across files
+        print(
+            "# QA Part 2.1 - Continuity &Consistency across files of a single dataset"
         )
-        for x in datasets
-        if len(dataset_files_map[x]) > 1
-    ]
-    if len(args) > 0:
-        # Use a pool of workers to run jobs in parallel
-        with multiprocessing.Pool(processes=num_processes, maxtasksperchild=10) as pool:
-            for processed_ds, result in pool.imap_unordered(call_process_dataset, args):
-                summary.update_ds(result, processed_ds)
-                del result
+        print(
+            "#   (Reference for consistency checks is the first file of each respective dataset timeseries)"
+        )
+        print()
 
-    ##############################
-    # Consistency across datasets
-    print("# QA Part 2.2 - Continuity & Consistency across all datasets")
-    print()
+        # Calculate the number of processes
+        num_processes = max(multiprocessing.cpu_count() - 4, 1)
+        # Limit the number of processes for consistency checks since a lot
+        #   of files will be opened at the same time
+        num_processes = min(num_processes, 10)
+        print(f"Using {num_processes} parallel processes for dataset checks.")
+        print()
 
-    # Attributes and Coordinates
-    results_extra = inter_dataset_consistency_checks(
-        dataset_files_map, files_to_check_dict, checker_options={}
-    )
-    for ds in results_extra.keys():
-        summary.update_ds({"cons": results_extra[ds]}, ds)
+        datasets = sorted(list(dataset_files_map.keys()))
+        args = [
+            (
+                x,
+                dataset_files_map,
+                ["cons", "cont", "comp"],
+                {"cons": {}, "cont": {}, "comp": {}},
+                files_to_check_dict,
+                processed_datasets,
+                dataset_file,
+            )
+            for x in datasets
+            if len(dataset_files_map[x]) > 1
+        ]
+        if len(args) > 0:
+            # Use a pool of workers to run jobs in parallel
+            with multiprocessing.Pool(
+                processes=num_processes, maxtasksperchild=10
+            ) as pool:
+                for processed_ds, result in pool.imap_unordered(
+                    call_process_dataset, args
+                ):
+                    summary.update_ds(result, processed_ds)
+                    del result
 
-    # Time coverage
-    results_extra = dataset_coverage_checks(
-        dataset_files_map, files_to_check_dict, checker_options={}
-    )
-    for ds in results_extra.keys():
-        summary.update_ds({"cons": results_extra[ds]}, ds)
+        ##############################
+        # Consistency across datasets
+        print()
+        print("# QA Part 2.2 - Continuity & Consistency across all datasets")
+        print()
+
+        # Attributes and Coordinates
+        results_extra = inter_dataset_consistency_checks(
+            dataset_files_map, files_to_check_dict, checker_options={}
+        )
+        for ds in results_extra.keys():
+            summary.update_ds({"cons": results_extra[ds]}, ds)
+
+        # Time coverage
+        results_extra = dataset_coverage_checks(
+            dataset_files_map, files_to_check_dict, checker_options={}
+        )
+        for ds in results_extra.keys():
+            summary.update_ds({"cons": results_extra[ds]}, ds)
+    else:
+        print()
+        warnings.warn(
+            "Continuity & Consistency checks skipped since no cc6 checks were run."
+        )
 
     #########################################################
     # Summarize and save results
@@ -1017,7 +1056,9 @@ def main():
 
     print()
     print("#" * 50)
-    print("# QA Part 3 - Summarizing and clustering the results")
+    print(
+        f"# QA Part {'3' if 'cc6:latest' in checkers else '2'} - Summarizing and clustering the results"
+    )
     print("#" * 50)
     print()
 
@@ -1034,7 +1075,7 @@ def main():
         "cc_version": cc_version,
         "checkers": ", ".join(
             [
-                f"{checker_dict.get(checker, '')} {checker}:{checker_release_versions[checker]}"
+                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}"
                 for checker in checkers
             ]
         ),

@@ -618,12 +618,13 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
 
     # List reference datasets
     print("The following datasets were used as reference:")
+    print(f" - General reference: {ref_ds['Main']}")
     for key in sorted(list(ref_ds.keys())):
         if key == "Main":
-            print(f"{key}: {ref_ds[key]}")
+            continue
         else:
             print(
-                f"{truncate_str(key.split('/')[0])} / {truncate_str(key.split('/')[1])} (realm / grid): {ref_ds[key]}"
+                f" - '{truncate_str(key.split('/')[0])}' / '{truncate_str(key.split('/')[1])}' (realm / grid): {ref_ds[key]}"
             )
 
     print()
