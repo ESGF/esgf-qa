@@ -23,9 +23,19 @@ from cc_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
+    "mip": "MIP",
+    # "wcrp-cmip5": "CMIP5",
+    # "wcrp-cmip6": "CMIP6",
+    # "wcrp-cmip7": "CMIP7-AFT",
+    # "wcrp-cmip7": "CMIP7",
+    # "wcrp-cordex": "CORDEX",
+    # "wcrp-cordex-cmip6": "CORDEX-CMIP6",
+    # "obs4mips": "Obs4MIPs",
+    # "input4mips": "Input4MIPs",
 }
 checker_release_versions = {}
 checker_dict_ext = {
+    # "pcons": "ParentConsistency"
     "cons": "Consistency",
     "cont": "Continuity",
     "comp": "Compatibility",
@@ -408,7 +418,33 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     ds = check_suite.load_dataset(file_path)
-    return check_suite.run_all(ds, checkers, skip_checks=[])
+    include_checks = None
+    # Run only time checks if time_checks_only option is set
+    if checker_options.get("cc6", {}).get(
+        "time_checks_only", False
+    ) or checker_options.get("mip", {}).get("time_checks_only", False):
+        include_checks = [
+            "check_time_continuity",
+            "check_time_bounds",
+            "check_time_range",
+        ]
+    else:
+        include_checks = None
+    if include_checks:
+        results = {}
+        for checker in checkers:
+            if include_checks and "cc6:latest" in checker or "mip:latest" in checker:
+                results.update(
+                    check_suite.run_all(ds, [checker], include_checks, skip_checks=[])
+                )
+            else:
+                results.update(
+                    check_suite.run_all(
+                        ds, [checker], include_checks=None, skip_checks=[]
+                    )
+                )
+        return results
+    return check_suite.run_all(ds, checkers, include_checks=None, skip_checks=[])
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
@@ -581,6 +617,38 @@ def call_process_dataset(args):
     return process_dataset(*args)
 
 
+def parse_options(opts):
+    """
+    Helper function to parse possible options. Splits option into key/value
+    pairs and optionally a value for the checker option. The separator
+    is a colon. Adapted from
+    https://github.com/ioos/compliance-checker/blob/cbb40ed1981c169b74c954f0775d5bd23005ed23/cchecker.py#L23
+
+    Parameters:
+        opts: Iterable of strings with options
+
+    Returns:
+        Dictionary with keys as checker type (i.e. "mip").
+        Each value is a dictionary where keys are checker options and values
+        are checker option values or None if not provided.
+    """
+    options_dict = defaultdict(dict)
+    for opt_str in opts:
+        try:
+            checker_type, checker_opt, *checker_val = opt_str.split(":", 2)
+            checker_val = checker_val[0] if checker_val else None
+        except ValueError:
+            raise ValueError(
+                f"Could not split option '{opt_str}', seems illegally formatted. The required format is: '<checker>:<option_name>[:<option_value>]', eg. 'mip:tables:/path/to/Tables'."
+            )
+        if checker_type != "mip":
+            raise ValueError(
+                f"Currently, only options for 'mip' checker are supported, got '{checker_type}'."
+            )
+        options_dict[checker_type][checker_opt] = checker_val
+    return options_dict
+
+
 def main():
     # CLI
     parser = argparse.ArgumentParser(description="Run QA checks")
@@ -596,6 +664,13 @@ def main():
         type=str,
         default=get_default_result_dir(),
         help="Directory to store QA results. Needs to be non-existing or empty or from previous QA run.",
+    )
+    parser.add_argument(
+        "-O",
+        "--option",
+        default=[],
+        action="append",
+        help="Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.",
     )
     parser.add_argument(
         "-t",
@@ -622,6 +697,7 @@ def main():
     tests = sorted(args.test) if args.test else []
     info = args.info if args.info else ""
     resume = args.resume
+    cl_checker_options = parse_options(args.option)
 
     # Progress file to track already checked files
     progress_file = Path(result_dir, "progress.txt")
@@ -701,6 +777,12 @@ def main():
                 raise Exception(
                     "Cannot resume a previous QA run with different <parent_dir>."
                 )
+            if cl_checker_options and cl_checker_options != resume_info.get(
+                "checker_options", {}
+            ):
+                raise Exception(
+                    "Cannot resume a previous QA run with different <option> arguments."
+                )
             else:
                 parent_dir = Path(resume_info["parent_dir"])
     else:
@@ -709,8 +791,8 @@ def main():
     # Deal with tests
     if not tests:
         checkers = ["cc6", "cf"]
-        checkers_versions = ["latest", "1.11"]
-        checker_options = {}
+        checkers_versions = {"cc6": "latest", "cf": "1.11"}
+        checker_options = defaultdict(dict)
     else:
         test_regex = re.compile(r"^[a-z0-9]+:(latest|[0-9]+(\.[0-9]+)*)$")
         if not all([test_regex.match(test) for test in tests]):
@@ -720,26 +802,49 @@ def main():
         checkers = [test.split(":")[0] for test in tests]
         if sorted(checkers) != sorted(list(set(checkers))):
             raise Exception("Cannot specify multiple instances of the same checker.")
-        checkers_versions = [
-            (
+        checkers_versions = {
+            test.split(":")[0]: (
                 test.split(":")[1]
                 if len(test.split(":")) == 2 and test.split(":")[1] != ""
                 else "latest"
             )
             for test in tests
-        ]
+        }
+        checker_options = defaultdict(dict)
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
             checkers_versions["cc6"] = "latest"
             warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
-        checker_options = {}
-        if any(test not in checker_dict.keys() for test in checkers):
+        if "mip" in checkers_versions and checkers_versions["mip"] != "latest":
+            checkers_versions["mip"] = "latest"
+            warnings.warn("Version of checker 'mip' must be 'latest'. Using 'latest'.")
+            if "tables" not in cl_checker_options["mip"]:
+                raise Exception(
+                    "Option 'tables' with path to CMOR tables as value must be specified for checker 'mip'."
+                )
+        # EERIE support - hard code
+        if "eerie" in checkers_versions:
+            checkers_versions["mip"] = "latest"
+            del checkers_versions["eerie"]
+            if "tables" in cl_checker_options["eerie"]:
+                cl_checker_options["mip"]["tables"] = cl_checker_options["eerie"][
+                    "tables"
+                ]
+            elif "tables" not in cl_checker_options["mip"]:
+                cl_checker_options["mip"][
+                    "tables"
+                ] = "/work/bm0021/cmor_tables/eerie_cmor_tables/Tables"
+        if sum(1 for ci in checkers_versions if ci in ["mip", "cc6"]) > 1:
+            raise Exception(
+                "ERROR: Cannot run both 'cc6' and 'mip' checkers at the same time."
+            )
+        if any(test not in checker_dict.keys() for test in checkers_versions):
             raise Exception(
                 f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
             )
 
     # Combine checkers and versions
     #  (checker_options are hardcoded)
-    checkers = sorted([f"{c}:{v}" for c, v in zip(checkers, checkers_versions)])
+    checkers = sorted([f"{c}:{v}" for c, v in checkers_versions.items()])
 
     # Does parent_dir exist?
     if parent_dir is None:
@@ -753,8 +858,18 @@ def main():
         "info": info,
         "tests": checkers,
     }
+    if cl_checker_options:
+        resume_info["checker_options"] = cl_checker_options
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
         json.dump(resume_info, f)
+
+    # If only cf checker is selected, run cc6 time checks only
+    if not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers):
+        time_checks_only = True
+        checkers.append("mip:latest")
+        checkers.sort()
+    else:
+        time_checks_only = False
 
     # Ensure progress files exist
     os.makedirs(result_dir + "/tables", exist_ok=True)
@@ -863,7 +978,8 @@ def main():
         )
         files_to_check_dict[file_path]["result_file_ds"] = (
             result_dir
-            + dataset_id_dir
+            + "/"
+            + files_to_check_dict[file_path]["id_dir"]
             + "/"
             + hashlib.md5(files_to_check_dict[file_path]["id"].encode()).hexdigest()
             + ".json"
@@ -873,7 +989,15 @@ def main():
         else:
             dataset_files_map[files_to_check_dict[file_path]["id"]] = [file_path]
         checker_options[file_path] = {
+            "mip": {
+                **cl_checker_options["mip"],
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+                "time_checks_only": time_checks_only,
+            },
             "cc6": {
+                **cl_checker_options["cc6"],
                 "consistency_output": files_to_check_dict[file_path][
                     "consistency_file"
                 ],
@@ -882,11 +1006,20 @@ def main():
                 and (
                     not resume or (resume and os.listdir(result_dir + "/tables") == [])
                 ),
+                "time_checks_only": time_checks_only,
             },
             "cf:": {
+                **cl_checker_options["cf"],
                 "enable_appendix_a_checks": True,
             },
         }
+        checker_options[file_path].update(
+            {
+                k: v
+                for k, v in cl_checker_options.items()
+                if k not in ["cc6", "cf", "mip"]
+            }
+        )
 
     if len(files_to_check) == 0:
         raise Exception("No files found to check.")
@@ -968,9 +1101,9 @@ def main():
                 )
                 del result
 
-    # Skip continuity and consistency checks if no cc6 checks were run
+    # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if "cc6:latest" in checkers:
+    if "cc6:latest" in checkers or "mip:latest" in checkers:
 
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
@@ -985,7 +1118,7 @@ def main():
         ###########################
         # Consistency across files
         print(
-            "# QA Part 2.1 - Continuity &Consistency across files of a single dataset"
+            "# QA Part 2.1 - Continuity & Consistency across files of a single dataset"
         )
         print(
             "#   (Reference for consistency checks is the first file of each respective dataset timeseries)"
@@ -1057,7 +1190,7 @@ def main():
     print()
     print("#" * 50)
     print(
-        f"# QA Part {'3' if 'cc6:latest' in checkers else '2'} - Summarizing and clustering the results"
+        f"# QA Part {'3' if 'cc6:latest' in checkers or 'mip:latest' in checkers else '2'} - Summarizing and clustering the results"
     )
     print("#" * 50)
     print()
