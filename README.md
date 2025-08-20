@@ -90,7 +90,7 @@ Alternatively, you can open the included `display_qc_results.html` file directly
 in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). You can create a Merge Request in that repository to add your own results.
 
 
-### Install `ESGF-QC` as `compliance_checker` plugin rather than a `compliance_checker` replacement
+## Install `ESGF-QC` as `compliance_checker` plugin rather than a `compliance_checker` replacement
 
 Since `ESGF-QC` is set up as fork of the IOOS `compliance_checker`, rather than a plugin,
 installing `ESGF-QC` and `compliance_checker` at the same time is not possible:
