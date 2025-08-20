@@ -1,3 +1,16 @@
+0.2.0 (2025-08-20)
+------------------
+
+New Features
+^^^^^^^^^^^^
+
+* Now supporting ESGF-QC and EERIE checkers.
+* Added `-C` command line argument to additionally run consistency and time checks when not running the 'mip' or 'cc6' checkers.
+
+Bug Fixes
+^^^^^^^^^
+* Fixed check for consistent time-span of datasets failing when filename timestamp is not a time range.
+
 0.1.2 (2025-06-16)
 ------------------
 
