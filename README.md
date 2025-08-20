@@ -51,7 +51,7 @@ additional Installation notes if problems arise with the dependencies.
 ## Usage
 
 ```shell
-$ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
+$ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] [-C] <parent_dir>
 ```
 
 - positional arguments:
@@ -62,6 +62,7 @@ $ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
   - `-t, --test TEST`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
+  - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using `cc6`, `mip` or `eerie` checkers, they are included by default.
 
 ### Example Usage
 
