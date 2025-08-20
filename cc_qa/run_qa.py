@@ -25,11 +25,11 @@ checker_dict = {
     "cf": "CF-Conventions",
     "mip": "MIP",
     # "wcrp-cmip5": "CMIP5",
-    # "wcrp-cmip6": "CMIP6",
-    # "wcrp-cmip7": "CMIP7-AFT",
-    # "wcrp-cmip7": "CMIP7",
-    # "wcrp-cordex": "CORDEX",
-    # "wcrp-cordex-cmip6": "CORDEX-CMIP6",
+    "wcrp_cmip6": "CMIP6",
+    # "wcrp_cmip7": "CMIP7-AFT",
+    # "wcrp_cmip7": "CMIP7",
+    # "wcrp_cordex": "CORDEX",
+    # "wcrp_cordex_cmip6": "CORDEX-CMIP6",
     # "obs4mips": "Obs4MIPs",
     # "input4mips": "Input4MIPs",
 }
@@ -468,7 +468,10 @@ def process_file(
     if (
         file_path in processed_files
         and os.path.isfile(result_file)
-        and os.path.isfile(consistency_file)
+        and (
+            os.path.isfile(consistency_file)
+            or not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers)
+        )
     ):
         with open(result_file) as file:
             print(f"Read result from disk for '{file_path}'.")
@@ -690,6 +693,12 @@ def main():
         action="store_true",
         help="Specify to continue a previous QC run. Requires the <output_dir> argument to be set.",
     )
+    parser.add_argument(
+        "-C",
+        "--include_consistency_checks",
+        action="store_true",
+        help="Include basic consistency and continuity checks. Default: False.",
+    )
     args = parser.parse_args()
 
     result_dir = os.path.abspath(args.output_dir)
@@ -697,6 +706,9 @@ def main():
     tests = sorted(args.test) if args.test else []
     info = args.info if args.info else ""
     resume = args.resume
+    include_consistency_checks = (
+        args.include_consistency_checks if args.include_consistency_checks else False
+    )
     cl_checker_options = parse_options(args.option)
 
     # Progress file to track already checked files
@@ -785,6 +797,8 @@ def main():
                 )
             else:
                 parent_dir = Path(resume_info["parent_dir"])
+            if "include_consistency_checks" in resume_info:
+                include_consistency_checks = resume_info["include_consistency_checks"]
     else:
         print(f"Storing check results in '{result_dir}'")
 
@@ -794,7 +808,7 @@ def main():
         checkers_versions = {"cc6": "latest", "cf": "1.11"}
         checker_options = defaultdict(dict)
     else:
-        test_regex = re.compile(r"^[a-z0-9]+:(latest|[0-9]+(\.[0-9]+)*)$")
+        test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
         if not all([test_regex.match(test) for test in tests]):
             raise Exception(
                 "Invalid test(s) specified. Please specify tests in the format 'checker_name:version'. Currently supported are only 'cc6' and 'cf'."
@@ -858,13 +872,18 @@ def main():
         "info": info,
         "tests": checkers,
     }
+    if include_consistency_checks:
+        resume_info["include_consistency_checks"] = True
     if cl_checker_options:
         resume_info["checker_options"] = cl_checker_options
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
         json.dump(resume_info, f)
 
     # If only cf checker is selected, run cc6 time checks only
-    if not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers):
+    if (
+        not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers)
+        and include_consistency_checks
+    ):
         time_checks_only = True
         checkers.append("mip:latest")
         checkers.sort()

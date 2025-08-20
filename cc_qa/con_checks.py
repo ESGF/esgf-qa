@@ -430,7 +430,7 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
                 results[ds][test]["msgs"][
                     f"Time series starts at '{coverage_start[ds]}' while other time series start at '{scov}'"
                 ] = [fl[0]]
-            if coverage_end[ds] != ecov:
+            if ds in coverage_end and coverage_end[ds] != ecov:
                 results[ds][test]["weight"] = 1
                 results[ds][test]["msgs"][
                     f"Time series ends at '{coverage_end[ds]}' while other time series end at '{ecov}'"
