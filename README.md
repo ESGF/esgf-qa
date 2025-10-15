@@ -24,6 +24,7 @@ However, it is generally applicable to test for compliance with the CF conventio
 | [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) | wcrp_cmip6 (esgf_qc) |
 | [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) | wcrp_cmip6 (esgf_qc) |
 | [EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
+| Custom MIP | mip |
 
 ## Installation
 
@@ -51,17 +52,19 @@ additional Installation notes if problems arise with the dependencies.
 ## Usage
 
 ```shell
-$ ccqa [-h] [-o <RESULT_DIR>][-t <TEST>] [-i <INFO>] [-r] <parent_dir>
+$ ccqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
 ```
 
 - positional arguments:
   - `parent_dir`: Parent directory to scan for netCDF-files to check
 - options:
   - `-h, --help`: show this help message and exit
-  - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t, --test TEST`: The test to run ('cc6' or 'cf', can be specified multiple times) - default: running 'cc6' and 'cf'.
+  - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
+  - `-t, --test TEST`: The test to run ('cc6:latest' or 'cf:<version>', can be specified multiple times, eg.: '-t cc6:latest -t cf:1.8') - default: running 'cc6:latest' and 'cf:1.11'.
+  - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
+  - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using `cc6`, `mip` or `eerie` checkers, they are included by default.
 
 ### Example Usage
 
@@ -75,6 +78,23 @@ it will be marked as checked and checks will only be repeated if runtime errors 
 
 ```shell
 $ ccqa -o /work/bb1364/dkrz/QC_results/IAEVALL02_2025-04-20 -r
+```
+
+For an `esgf-qc` test:
+
+```shell
+$ ccqa -o /path/to/QA_results/ -t "cf:1.7" -t "wcrp_cmip6:latest" /path/to/CMIP6/datasets/
+```
+
+For a custom MIP with defined CMOR tables (`"mip"` is not a placeholder but an actual basic checker of the `cc_plugin_cc6`):
+
+```shell
+$ ccqa -o /path/to/test/results -t "mip:latest" -O "mip:tables:/path/to/mip_cmor_tables/Tables" /path/to/MIP/datasets/`
+```
+
+For CF checks and basic time and consistency / continuity checks:
+```shell
+$ ccqa -o /path/to/test/results -t "cf:1.11" -C /path/to/datasets/to/check
 ```
 
 ## Displaying the check results
