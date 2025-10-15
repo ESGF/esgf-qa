@@ -9,7 +9,7 @@ requires = [
 name = "cc-qa"
 description = "QA based on compliance-checker"
 readme = "README.md"
-keywords = ["compliance checker", "plugin", "cordex", "cordex-cmip6", "qc"]
+keywords = ["compliance checker", "plugin", "wcrp", "cmip", "cmip6", "cmip7", "cordex", "cordex-cmip6", "qc", "qa", "quality control", "quality assurance"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [
@@ -33,8 +33,10 @@ dependencies = [
   "dask",
   "netCDF4",
   "pandas",
+  "textual",
   "xarray",
-  "cc-plugin-cc6>=0.3.0"
+  "cc-plugin-cc6>=0.3.0",
+  "cc-plugin-wcrp"
 ]
 dynamic = [
   "version"
@@ -64,6 +66,7 @@ repository = "https://gitlab.dkrz.de/udag/cc-qa"
 
 [project.scripts]
 ccqa = "cc_qa.run_qa:main"
+qcviewer = "cc_qa.qcviewer:main"
 
 [tool.black]
 target-version = [

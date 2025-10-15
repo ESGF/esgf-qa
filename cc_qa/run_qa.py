@@ -811,7 +811,7 @@ def main():
         test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
         if not all([test_regex.match(test) for test in tests]):
             raise Exception(
-                "Invalid test(s) specified. Please specify tests in the format 'checker_name:version'. Currently supported are only 'cc6' and 'cf'."
+                f"Invalid test(s) specified. Please specify tests in the format 'checker_name:version'. Currently supported are: {', '.join(list(checker_dict.keys()))}, eerie."
             )
         checkers = [test.split(":")[0] for test in tests]
         if sorted(checkers) != sorted(list(set(checkers))):
