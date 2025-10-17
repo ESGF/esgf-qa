@@ -1,11 +1,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/esgf-qa.svg)](https://pypi.org/project/esgf-qa/)
 
-<h1 align="left">
-  esgf-qa: Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp`
-  <img src="docs/esgf-qa_Logo.png" align="right" width="120">
-</h1>
+# esgf-qa: Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp` 
+<img src="docs/esgf-qa_Logo.png" align="left" width="120">
 
-This makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the
+`esgf-qa` makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) and extensions coming with
 [ESGF/cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp) and
 [euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
@@ -13,8 +11,8 @@ This makes use of the frameworks and [CF](https://cfconventions.org/)-compliance
 This tool is designed to run the desired file-based QC tests with
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) and
 [euro-cordex/cc-plugin-wcrp](https://github.com/euro-cordex/cc-plugin-wcrp),
-conduct additional dataset-based checks (such as time axis continuity and
-consistency checks) as well as summarizing the test results.
+to conduct additional dataset-based checks (such as time axis continuity and
+consistency checks) as well as to summarize the test results.
 
 `esgf-qa` is mainly aimed at a QA workflow testing compliance with various WCRP Project Specifications (see below).
 However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker,
@@ -25,9 +23,9 @@ and it is easily extendable for any `cc-plugin` and for projects defining CORDEX
 | [cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)                                    |  wcrp_cordex_cmip6, cc6 |
 | [cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)                  |  wcrp_cordex_cmip6, cc6 |
 | [CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)                       |  wcrp_cordex_cmip6, cc6 |
-| [CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf) | wcrp_cmip6 |
-| [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc) | wcrp_cmip6 |
-| [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc) | wcrp_cmip6 |
+| [CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf) | wcrp_cmip6 / plugin_cmip6 |
+| [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc) | wcrp_cmip6 / plugin_cmip6 |
+| [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc) | wcrp_cmip6 / plugin_cmip6 |
 | [EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
 | Custom MIP | mip |
 
