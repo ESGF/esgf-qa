@@ -146,9 +146,7 @@ in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). Y
 This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the [LICENSE](./LICENSE) file for more details.
 
 > [!NOTE]
-> **This project was originally developed by [DKRZ](https://www.dkrz.de)**
-> under the name **cc-qa** (see [DKRZ GitLab](https://gitlab.dkrz.de/udag/cc-qa)).
-> It has since been renamed to **esgf-qa** and is now maintained under the
-> **Earth System Grid Federation (ESGF)** organization on GitHub.
+> **This project was originally developed by [DKRZ](https://www.dkrz.de)** under the name **cc-qa** (see [DKRZ GitLab](https://gitlab.dkrz.de/udag/cc-qa)), with funding from the German Ministry of Research, Technology and Space ([BMFTR](https://www.bmftr.bund.de/en), reference `01LP2326E`).
+> It has since been renamed to **esgf-qa** and is now maintained under the **Earth System Grid Federation (ESGF)** organization on GitHub.
 >
 > If you previously used `cc-qa`, please update your installations as described above.

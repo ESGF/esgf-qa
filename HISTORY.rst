@@ -1,3 +1,19 @@
+0.3.0 (2025-10-17)
+------------------
+
+This is the first release of this package under the name `esgf-qa` and versioned/maintained under the ESGF organization
+(https://github.com/ESGF/esgf-qa) on GitHub. This project was originally labeled `cc-qa` and versioned via the DKRZ GitLab (https://gitlab.dkrz.de/udag/cc-qa).
+
+New Features
+^^^^^^^^^^^^
+
+* Changed app executable from ccqa to esgqa
+* Added esgqaviewer app
+* Added reference datasets for inter-dataset consistency checks
+* Added reference dataset in web result viewer (display_qc_results.html)
+* Updated creation of dataset ids from file paths
+* Basic support of cc-plugin-wcrp
+
 0.2.0 (2025-08-20)
 ------------------
 
