@@ -1,7 +1,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/esgf-qa.svg)](https://pypi.org/project/esgf-qa/)
 
 # esgf-qa: Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp` 
-<img src="docs/esgf-qa_Logo.png" align="left" width="120">
+<img src="https://raw.githubusercontent.com/ESGF/esgf-qa/master/docs/esgf-qa_Logo.png" align="left" width="120">
 
 `esgf-qa` makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) and extensions coming with
