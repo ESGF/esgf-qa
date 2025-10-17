@@ -14,24 +14,35 @@ from pathlib import Path
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
 
-from cc_qa._version import version
-from cc_qa.con_checks import compatibility_checks as comp  # noqa
-from cc_qa.con_checks import consistency_checks as cons  # noqa
-from cc_qa.con_checks import continuity_checks as cont  # noqa
-from cc_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
+from esgf_qa._version import version
+from esgf_qa.con_checks import compatibility_checks as comp  # noqa
+from esgf_qa.con_checks import consistency_checks as cons  # noqa
+from esgf_qa.con_checks import continuity_checks as cont  # noqa
+from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
 
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
     "mip": "MIP",
+    "plugin_cmip6": "CMIP6",
     # "wcrp-cmip5": "CMIP5",
     "wcrp_cmip6": "CMIP6",
     # "wcrp_cmip7": "CMIP7-AFT",
     # "wcrp_cmip7": "CMIP7",
     # "wcrp_cordex": "CORDEX",
-    # "wcrp_cordex_cmip6": "CORDEX-CMIP6",
+    "wcrp_cordex_cmip6": "CORDEX-CMIP6",
     # "obs4mips": "Obs4MIPs",
     # "input4mips": "Input4MIPs",
+}
+DRS_path_parent = {
+    "CMIP5": "CMIP5",
+    "CMIP6": "CMIP6",
+    "CMIP7": "CMIP7",
+    "CMIP7-AFT": "CMIP7",
+    "CORDEX": "CORDEX",
+    "CORDEX-CMIP6": "CORDEX-CMIP6",
+    "Obs4MIPs": "Obs4MIPs",
+    "Input4MIPs": "Input4MIPs",
 }
 checker_release_versions = {}
 checker_dict_ext = {
@@ -91,7 +102,7 @@ class QAResultAggregator:
 
     def update_ds(self, result_dict, dsid):
         """
-        Update the summary with a single result of a cc-qa run.
+        Update the summary with a single result of a esgf-qa run.
         """
         for checker in result_dict:
             for test in result_dict[checker]:
@@ -371,21 +382,20 @@ def get_default_result_dir():
     hash_object = hashlib.md5(_timestamp_with_ms.encode())
     return (
         os.path.abspath(".")
-        + f"/cc-qa-results_{_timestamp_filename}_{hash_object.hexdigest()}"
+        + f"/esgf-qa-results_{_timestamp_filename}_{hash_object.hexdigest()}"
     )
-
 
 def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
     dir_id = files_to_check_dict[file_path]["id_dir"].split("/")
     fn_id = files_to_check_dict[file_path]["id_fn"].split("_")
     if project_id in dir_id:
-        dsid = ".".join(dir_id[dir_id.index(project_id) :])
+        last_index = len(dir_id) - 1 - dir_id[::-1].index(project_id)
+        dsid = ".".join(dir_id[last_index:])
     else:
         dsid = ".".join(dir_id)
     if len(dataset_files_map_ext[files_to_check_dict[file_path]["id_dir"]].keys()) > 1:
         dsid += "." + ".".join(fn_id)
     return dsid
-
 
 def get_checker_release_versions(checkers, checker_options={}):
     global checker_release_versions
@@ -895,6 +905,14 @@ def main():
     progress_file.touch()
     dataset_file.touch()
 
+    DRS_parent = "CORDEX-CMIP6"
+    for cname in checkers:
+        print(cname)
+        DRS_parent_tmp = DRS_path_parent.get(checker_dict.get(cname.split(":")[0], ""), "")
+        if DRS_parent_tmp:
+            DRS_parent = DRS_parent_tmp
+            break
+
     # Check if progress files exist and read already processed files/datasets
     processed_files = set()
     with open(progress_file) as file:
@@ -993,7 +1011,7 @@ def main():
     files_to_check = sorted(files_to_check)
     for file_path in files_to_check:
         files_to_check_dict[file_path]["id"] = get_dsid(
-            files_to_check_dict, dataset_files_map_ext, file_path, "CORDEX-CMIP6"
+            files_to_check_dict, dataset_files_map_ext, file_path, DRS_parent
         )
         files_to_check_dict[file_path]["result_file_ds"] = (
             result_dir
@@ -1184,7 +1202,7 @@ def main():
         print()
 
         # Attributes and Coordinates
-        results_extra = inter_dataset_consistency_checks(
+        results_extra, reference_ds_dict = inter_dataset_consistency_checks(
             dataset_files_map, files_to_check_dict, checker_options={}
         )
         for ds in results_extra.keys():
@@ -1233,6 +1251,10 @@ def main():
         ),
         "parent_dir": str(parent_dir),
     }
+    # Add reference datasets for inter-dataset consistency checks
+    if 'cc6:latest' in checkers or 'mip:latest' in checkers:
+        summary_info["inter_ds_con_checks_ref"] = reference_ds_dict
+
     dsid_common_prefix = os.path.commonprefix(list(dataset_files_map.keys()))
     if dsid_common_prefix != list(dataset_files_map.keys())[0]:
         dsid_common_prefix = dsid_common_prefix + "*"

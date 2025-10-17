@@ -6,10 +6,10 @@ requires = [
 ]
 
 [project]
-name = "cc-qa"
+name = "esgf-qa"
 description = "QA based on compliance-checker"
 readme = "README.md"
-keywords = ["compliance checker", "plugin", "wcrp", "cmip", "cmip6", "cmip7", "cordex", "cordex-cmip6", "qc", "qa", "quality control", "quality assurance"]
+keywords = ["compliance checker", "plugin", "wcrp", "cmip", "cmip6", "cmip7", "cordex", "cordex-cmip6", "qc", "qa", "quality control", "quality assurance", "esgf"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [
@@ -35,7 +35,7 @@ dependencies = [
   "pandas",
   "textual",
   "xarray",
-  "cc-plugin-cc6>=0.3.0",
+  "cc-plugin-cc6>=0.4.0",
   "cc-plugin-wcrp"
 ]
 dynamic = [
@@ -61,12 +61,12 @@ dev = [
 ]
 
 [project.urls]
-homepage = "https://gitlab.dkrz.de/udag/cc-qa"
-repository = "https://gitlab.dkrz.de/udag/cc-qa"
+homepage = "https://github.com/ESGF/esgf-qa"
+repository = "https://github.com/ESGF/esgf-qa"
 
 [project.scripts]
-ccqa = "cc_qa.run_qa:main"
-qcviewer = "cc_qa.qcviewer:main"
+esgqa = "esgf_qa.run_qa:main"
+esgqaviewer = "esgf_qa.qaviewer:main"
 
 [tool.black]
 target-version = [
@@ -100,7 +100,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-src = ["cc_qa"]
+src = ["esgf_qa"]
 line-length = 88
 target-version = "py310"
 ignore = ["E501"]
@@ -109,12 +109,12 @@ ignore = ["E501"]
 line-ending = "auto"
 
 [tool.ruff.isort]
-known-first-party = ["cc_qa"]
+known-first-party = ["esgf_qa"]
 lines-after-imports = 1
 
 [tool.setuptools_scm]
 fallback_version = "999"
-write_to = "cc_qa/_version.py"
+write_to = "esgf_qa/_version.py"
 
 [tool.setuptools.packages.find]
 exclude = ["fonts"]

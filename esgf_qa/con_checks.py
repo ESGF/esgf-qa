@@ -4,7 +4,7 @@ from collections import ChainMap, OrderedDict, defaultdict
 import cftime
 import xarray as xr
 
-from cc_qa._constants import deltdic
+from esgf_qa._constants import deltdic
 
 
 def level2_factory():
@@ -619,14 +619,16 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     # List reference datasets
     print("The following datasets were used as reference:")
     print(f" - General reference: {ref_ds['Main']}")
+    reference_datasets = {"general_reference": ref_ds["Main"]}
     for key in sorted(list(ref_ds.keys())):
         if key == "Main":
             continue
         else:
+            reference_datasets[key] = ref_ds[key]
             print(
                 f" - '{truncate_str(key.split('/')[0])}' / '{truncate_str(key.split('/')[1])}' (realm / grid): {ref_ds[key]}"
             )
 
     print()
 
-    return results
+    return results, reference_datasets

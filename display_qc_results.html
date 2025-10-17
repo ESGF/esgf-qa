@@ -237,7 +237,7 @@
 </head>
 <body>
     <div id="banner">
-        <img id="logo" src="/ress/cc-qa_Logo.png" alt="" onerror="this.style.display='none'">
+        <img id="logo" src="/ress/esgf-qa_Logo.png" alt="" onerror="this.style.display='none'">
         <h1>QC Result Viewer</h1>
     </div>
     <br>
@@ -337,12 +337,43 @@
         }
 
 
-	// Function to handle the file processing
+	    // Function to handle the file processing
         function processQCResults(data) {
             const info = data.info;
             document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
             document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`;
             document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
+
+            // Check if "inter_ds_con_checks_ref" key exists in the info dictionary
+            if (info && info.inter_ds_con_checks_ref) {
+                const referenceOptional = info.inter_ds_con_checks_ref;
+                const detailsContainer = document.createElement('details');
+                detailsContainer.id = 'referenceOptionalDetails';
+                const summary = document.createElement('summary');
+                summary.textContent = 'Reference Datasets (inter-dataset consistency checks)';
+                detailsContainer.appendChild(summary);
+
+                const detailsList = document.createElement('ul');
+                for (const [key, value] of Object.entries(referenceOptional)) {
+                    const listItem = document.createElement('li');
+                    if (key.includes('/')) {
+                        const [strPart1, strPart2] = key.split('/');
+                        const shortenedStrPart2 = strPart2.length > 25 ? `${strPart2.substring(0, 10)}...${strPart2.substring(strPart2.length - 10)}` : strPart2;
+                        listItem.innerHTML = `<strong>${strPart1}/${shortenedStrPart2}</strong>: ${value}`;
+                    } else {
+                        listItem.innerHTML = `<strong>${key}</strong>: ${value}`;
+                    }
+                    detailsList.appendChild(listItem);
+                }
+
+                // Append the details container to the existing HTML structure
+                detailsContainer.appendChild(detailsList);
+                const subtitle2 = document.getElementById("subtitle2");
+                if (subtitle2) {
+                    subtitle2.parentNode.insertBefore(detailsContainer, subtitle2.nextSibling);
+                }
+            }
+
             const hasErrors = data["error"] && Object.keys(data["error"]).length > 0;
             document.getElementById("buttonerr").style.display = hasErrors ? "inline-block" : "none";
 

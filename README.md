@@ -1,28 +1,33 @@
-[![PyPI version](https://img.shields.io/pypi/v/cc-qa.svg)](https://pypi.org/project/cc-qa/)
+[![PyPI version](https://img.shields.io/pypi/v/esgf-qa.svg)](https://pypi.org/project/esgf-qa/)
 
-# cc-qa: Quality Assurance Workflow Based on compliance-checker and cc-plugin-cc6
+<h1 align="left">
+  esgf-qa: Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp`
+  <img src="docs/esgf-qa_Logo.png" align="right" width="120">
+</h1>
 
 This makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) and extensions coming with
+[ESGF/cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp) and
 [euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
 
 This tool is designed to run the desired file-based QC tests with
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) and
-[euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6),
+[euro-cordex/cc-plugin-wcrp](https://github.com/euro-cordex/cc-plugin-wcrp),
 conduct additional dataset-based checks (such as time axis continuity and
 consistency checks) as well as summarizing the test results.
 
-`cc-qa` is mainly aimed at a QA workflow testing compliance with CORDEX-CMIP6 Archive Specifications (see below).
-However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker, and it is easily extendable for any `cc-plugin` and for projects defining CORDEX, CORDEX-CMIP6, CMIP5 or CMIP6 style CMOR-tables.
+`esgf-qa` is mainly aimed at a QA workflow testing compliance with various WCRP Project Specifications (see below).
+However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker,
+and it is easily extendable for any `cc-plugin` and for projects defining CORDEX or CMIP style CMOR-tables.
 
 | Standard                                                                                             | Checker Name |
 | ---------------------------------------------------------------------------------------------------- | ------------ |
-| [cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)         |  cc6         |
-| [cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)|  cc6         |
-| [CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069) | cc6 |
-| [CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf) | wcrp_cmip6 (esgf-qc) |
-| [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) | wcrp_cmip6 (esgf_qc) |
-| [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) | wcrp_cmip6 (esgf_qc) |
+| [cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)                                    |  wcrp_cordex_cmip6, cc6 |
+| [cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)                  |  wcrp_cordex_cmip6, cc6 |
+| [CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)                       |  wcrp_cordex_cmip6, cc6 |
+| [CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf) | wcrp_cmip6 |
+| [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc) | wcrp_cmip6 |
+| [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc) | wcrp_cmip6 |
 | [EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
 | Custom MIP | mip |
 
@@ -31,7 +36,7 @@ However, it is generally applicable to test for compliance with the CF conventio
 ### Pip installation
 
 ```shell
-$ pip install cc_qa
+$ pip install esgf-qa
 ```
 
 ### Pip installation from source
@@ -49,110 +54,13 @@ $ pip install -e .[dev]
 See the [ioos/compliance-checker](https://github.com/ioos/compliance-checker#installation) for
 additional Installation notes if problems arise with the dependencies.
 
-## Usage
+### Installation and setup of `esgvoc`
 
-```shell
-$ ccqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
-```
-
-- positional arguments:
-  - `parent_dir`: Parent directory to scan for netCDF-files to check
-- options:
-  - `-h, --help`: show this help message and exit
-  - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t, --test TEST`: The test to run ('cc6:latest' or 'cf:<version>', can be specified multiple times, eg.: '-t cc6:latest -t cf:1.8') - default: running 'cc6:latest' and 'cf:1.11'.
-  - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.
-  - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
-  - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
-  - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using `cc6`, `mip` or `eerie` checkers, they are included by default.
-
-### Example Usage
-
-```shell
-$ ccqa -o /work/bb1364/dkrz/QC_results/IAEVALL02_2025-04-20 -i "IAEVALL02" /work/bb1149/ESGF_Buff/IAEVALL02/CORDEX-CMIP6
-```
-
-To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <parent_dir>
-(note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
-it will be marked as checked and checks will only be repeated if runtime errors occured):
-
-```shell
-$ ccqa -o /work/bb1364/dkrz/QC_results/IAEVALL02_2025-04-20 -r
-```
-
-For an `esgf-qc` test:
-
-```shell
-$ ccqa -o /path/to/QA_results/ -t "cf:1.7" -t "wcrp_cmip6:latest" /path/to/CMIP6/datasets/
-```
-
-For a custom MIP with defined CMOR tables (`"mip"` is not a placeholder but an actual basic checker of the `cc_plugin_cc6`):
-
-```shell
-$ ccqa -o /path/to/test/results -t "mip:latest" -O "mip:tables:/path/to/mip_cmor_tables/Tables" /path/to/MIP/datasets/`
-```
-
-For CF checks and basic time and consistency / continuity checks:
-```shell
-$ ccqa -o /path/to/test/results -t "cf:1.11" -C /path/to/datasets/to/check
-```
-
-## Displaying the check results
-
-The results will be stored in a single `json` file, which can be viewed using the following website:
-[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
-This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
-Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
-
-### Add results to QA results repository
-
-[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html) allows viewing QA results hosted
-in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). You can create a Merge Request in that repository to add your own results.
-
-
-## Install `ESGF-QC` as `compliance_checker` plugin rather than a `compliance_checker` replacement
-
-Since `ESGF-QC` is set up as fork of the IOOS `compliance_checker`, rather than a plugin,
-installing `ESGF-QC` and `compliance_checker` at the same time is not possible:
-Installing `ESGF-QC` will replace / overwrite any installation of the IOOS `compliance_checker`.
-
-The alternatives are to set up different virtual environments for each tool or to mimic an
-`esgf-qc` plugin for `compliance_checker`, enabling to use the `wcrp_cmip6` and other checkers
-set up in `esgf-qc` within the `compliance_checker`. As long as there are no incompatibilities 
-introduced in `esgf_qc` (which is currently the case) the latter one is a viable option,
- and is explained in the following:
-
-- Clone the `esgf-qc repository`
-
-```
-git clone https://github.com/ESGF/esgf-qc.git
-```
-
-- Create a `esgf-qc-plugin` directory and softlink the necessary folders
-
-```
-mkdir -p esgf-qc-plugin/esgf-qc
-cd esgf-qc-plugin
-ln -s ../esgf-qc/checks ./esgf-qc/
-ln -s ../esgf-qc/wcrp ./esgf-qc/
-```
-
-- Link the included `pyproject_esgf-qc-plugin.toml` from this repository
-
-```
-ln -s ../cc-qa/pyproject_esgf-qc-plugin.toml ./pyproject.toml
-```
-
-- pip install as plugin
-```
-pip install -e . --no-deps
-```
-
-- Set up `esgvoc` as described in the `esgf-qc` readme
-
+The `cc-plugin-wcrp` checker plugins require the `esgvoc` software to be installed and setup:
 ```
 pip install esgvoc
 esgvoc config set universe:branch=esgvoc_dev
+esgvoc config add cordex-cmip6
 esgvoc install
 ```
 
@@ -163,6 +71,84 @@ The following command should now also list the `esgf-qc` checks next to all `cc_
 cchecker.py -l
 ```
 
+## Usage
+
+```shell
+$ esgqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
+```
+
+- positional arguments:
+  - `parent_dir`: Parent directory to scan for netCDF-files to check
+- options:
+  - `-h, --help`: show this help message and exit
+  - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
+  - `-t, --test TEST`: The test to run ('wcrp_cmip6:latest', 'wcrp_cordex_cmip6':latest' or 'cf:<version>', can be specified multiple times, eg.: '-t wcrp_cmip6:latest -t cf:1.7') - default: running latest CF checks 'cf:latest'.
+  - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.
+  - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
+  - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
+  - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using the `wcrp-*`, `cc6`, `mip` or `eerie` checkers, they are included by default.
+
+### Example Usage
+
+```shell
+$ esgqa -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i "IAEVALL02" ESGF_Buff/IAEVALL02/CORDEX-CMIP6
+```
+
+To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <parent_dir>
+(note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
+it will be marked as checked and checks will only be repeated if runtime errors occured):
+
+```shell
+$ esgqa -o QA_results/IAEVALL02_2025-10-20 -r
+```
+
+For a custom MIP with defined CMOR tables (`"mip"` is not a placeholder but an actual basic checker of the `cc_plugin_cc6`):
+
+```shell
+$ esgqa -o /path/to/test/results -t "mip:latest" -O "mip:tables:/path/to/mip_cmor_tables/Tables" /path/to/MIP/datasets/`
+```
+
+For CF checks and basic time and consistency / continuity checks:
+```shell
+$ esgqa -o /path/to/test/results -t "cf:1.11" -C /path/to/datasets/to/check
+```
+
+## Displaying the check results
+
+The results will be stored in two `json` files:
+- `qa_result_*.json`: All failed checks incl. all affected datasets and files are listed. Depending on the number of failed checks and files affected, this file can be quite large in volume (up to GigaBytes).
+- `qa_result_*.cluster.json`: The failed checks are clustered and for affected datasets only a single file is referenced as example. This reduces the file size significantly (to usually below 1 MegaByte).
+
+### Web view
+The clustered results can be viewed using the following website:
+[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
+This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
+Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
+While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.
+
+### `esgqaviewer`
+The `esgqaviewer` app can be used to view the result files inside a terminal:
+```
+esgqaviewer path/to/result.json
+```
+At the bottom of the viewer, all possible tools are listed. The results can be searched using a full text search for instance.
+A double click with the right mouse button on a node will expand / collapse it and below nodes fully, while a left click will collapse the current node only.
+
+### Add results to QA results repository
+
+- DKRZ: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html) allows viewing QA results hosted
+in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). You can create a Merge Request in that repository to add your own results.
+- IPSL: coming soon
+- Feel free to set up repository for QA results for your institute as well. As example implementation can serve: [qa-results](https://gitlab.dkrz.de/udag/qa-results)
+
 # License
 
 This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the [LICENSE](./LICENSE) file for more details.
+
+> [!NOTE]
+> **This project was originally developed by [DKRZ](https://www.dkrz.de)**
+> under the name **cc-qa** (see [DKRZ GitLab](https://gitlab.dkrz.de/udag/cc-qa)).
+> It has since been renamed to **esgf-qa** and is now maintained under the
+> **Earth System Grid Federation (ESGF)** organization on GitHub.
+>
+> If you previously used `cc-qa`, please update your installations as described above.
