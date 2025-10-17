@@ -420,17 +420,27 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
 
     # Compare coverage
     if len(coverage_start.keys()) > 1:
-        scov = min(coverage_start.values())
-        ecov = max(coverage_end.values())
+        try:
+            scov = min(coverage_start.values())
+        except ValueError:
+            scov = None
+        try:
+            ecov = max(coverage_end.values())
+        except ValueError:
+            ecov = None
         # Get all ds where coverage_start differs
         for ds in coverage_start.keys():
             fl = sorted(ds_map[ds])
-            if coverage_start[ds] != scov:
+            if scov is None:
+                pass
+            elif coverage_start[ds] != scov:
                 results[ds][test]["weight"] = 1
                 results[ds][test]["msgs"][
                     f"Time series starts at '{coverage_start[ds]}' while other time series start at '{scov}'"
                 ] = [fl[0]]
-            if ds in coverage_end and coverage_end[ds] != ecov:
+            if ecov is None:
+                pass
+            elif ds in coverage_end and coverage_end[ds] != ecov:
                 results[ds][test]["weight"] = 1
                 results[ds][test]["msgs"][
                     f"Time series ends at '{coverage_end[ds]}' while other time series end at '{ecov}'"
