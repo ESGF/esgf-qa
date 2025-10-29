@@ -1049,6 +1049,18 @@ def main():
                 **cl_checker_options["cf"],
                 "enable_appendix_a_checks": True,
             },
+            "wcrp_cmip6": {
+                **cl_checker_options.get("wcrp_cmip6", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
+            "wcrp_cordex_cmip6": {
+                **cl_checker_options.get("wcrp_cordex_cmip6", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
         }
         checker_options[file_path].update(
             {
@@ -1140,7 +1152,15 @@ def main():
 
     # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if "cc6:latest" in checkers or "mip:latest" in checkers:
+    if (
+    "cc6:latest" in checkers
+    or "mip:latest" in checkers
+    or "wcrp_cmip6:1.0" in checkers
+    or "wcrp_cmip6:latest" in checkers
+    or "wcrp_cordex_cmip6:1.0" in checkers
+    or "wcrp_cordex_cmip6:latest" in checkers
+
+    ):
 
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
