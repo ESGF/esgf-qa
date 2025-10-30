@@ -36,7 +36,7 @@ dependencies = [
   "textual",
   "xarray",
   "cc-plugin-cc6>=0.4.0",
-  "wcrp_plugins"
+  "cc-plugin-wcrp"
 ]
 dynamic = [
   "version"
@@ -55,6 +55,7 @@ dev = [
   "pre-commit",
   "pytest>=7.0.0",
   "pytest-flake8",
+  "pytest-asyncio",
   "ruff>=0.1.0",
   "twine",
   "wheel"
@@ -101,14 +102,16 @@ filterwarnings = [
 
 [tool.ruff]
 src = ["esgf_qa"]
-line-length = 88
+line-length = 100
 target-version = "py310"
-ignore = ["E501"]
 
 [tool.ruff.format]
 line-ending = "auto"
 
-[tool.ruff.isort]
+[tool.ruff.lint]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["esgf_qa"]
 lines-after-imports = 1
 

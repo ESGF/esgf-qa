@@ -1,0 +1,28 @@
+name: esgf-qa-tests
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - cftime
+  - cf_xarray
+  - compliance-checker>=5.3.0
+  - dask
+  - netCDF4
+  - pandas
+  - textual
+  - xarray
+  - cc-plugin-cc6>=0.4.0
+# for testing
+  - pytest
+  - pytest>=7.0.0
+  - pytest-asyncio
+  - pytest-flake8
+  - pytest-cov
+  - pytest-env
+  - GitPython
+# pypi packages
+  - pip
+  - pip:
+    - compliance-checker @ git+https://github.com/ioos/compliance-checker.git@develop
+    - cc-plugin-wcrp @ git+https://github.com/ESGF/cc-plugin-wcrp.git@main
+#    - cc-plugin-wcrp

@@ -341,19 +341,19 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     filelist = sorted(ds_map[ds])
 
     # open_mfdataset - override
-    test = "xarray open_mfdataset - override"
+    test = "xarray open_mfdataset (compat='override', join='outer')"
     results[test]["weight"] = 3
     try:
-        with xr.open_mfdataset(filelist, coords="minimal", compat="override") as ds:
+        with xr.open_mfdataset(filelist, coords="minimal", compat="override", data_vars="all", join="outer") as ds:
             pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
 
     # open_mfdataset - no_conflicts
-    test = "xarray open_mfdataset - no_conflicts"
+    test = "xarray open_mfdataset (compat='no_conflicts', join='exact')"
     results[test]["weight"] = 3
     try:
-        with xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts") as ds:
+        with xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts", data_vars="all", join="exact") as ds:
             pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
