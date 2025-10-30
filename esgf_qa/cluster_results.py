@@ -14,12 +14,6 @@ class QAResultAggregator:
     and files, normalizes them into a consistent internal summary structure, and provides
     functionality to sort, cluster, and generalize similar messages.
 
-    Parameters
-    ----------
-    checker_dict : dict
-        Dictionary mapping checker names (e.g., ``"cf"``) to human-readable labels.
-        Used to label tests and messages in the summary.
-
     Attributes
     ----------
     summary : dict of defaultdict
@@ -33,7 +27,10 @@ class QAResultAggregator:
         messages are generalized and aggregated/clustered across similar text patterns.
     checker_dict : dict
         Mapping of checker identifiers to human-readable names, used
-        for consistent labeling in summaries.
+        for consistent labeling in summaries. Only cc checks.
+    checker_dict_ext : dict
+        Mapping of checker identifiers to human-readable names, used
+        for consistent labeling in summaries. cc checks extended by esgf_qa checks.
 
     Methods
     -------

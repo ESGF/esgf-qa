@@ -155,6 +155,7 @@ def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
     Consistency checks.
 
     Runs inter-file consistency checks on a dataset:
+
         - Global attributes (values and data types)
         - Variable attributes (values and data types)
         - Coordinates (values)
@@ -443,6 +444,7 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     Compatibility checks for a dataset.
 
     Checks for:
+
         - xarray open_mfdataset (compat='override', join='outer')
         - xarray open_mfdataset (compat='no_conflicts', join='exact')
 
@@ -607,6 +609,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
 
     Will group datasets by realm and grid for certain checks.
     Runs inter-dataset consistency checks:
+
         - Required and non-required global attributes (values and data types)
         - Coordinates (values)
         - Dimensions (names and sizes)
