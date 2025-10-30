@@ -708,38 +708,6 @@ and files, normalizes them into a consistent internal summary structure, and pro
 functionality to sort, cluster, and generalize similar messages.</p>
 
 
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>checker_dict</code>
-            </td>
-            <td>
-                  <code><span title="dict">dict</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Dictionary mapping checker names (e.g., <code>"cf"</code>) to human-readable labels.
-Used to label tests and messages in the summary.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
 <p><span class="doc-section-title">Attributes:</span></p>
     <table>
       <thead>
@@ -785,7 +753,19 @@ messages are generalized and aggregated/clustered across similar text patterns.<
             <td>
               <div class="doc-md-description">
                 <p>Mapping of checker identifiers to human-readable names, used
-for consistent labeling in summaries.</p>
+for consistent labeling in summaries. Only cc checks.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="esgf_qa.cluster_results.QAResultAggregator.checker_dict_ext">checker_dict_ext</span></code></td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Mapping of checker identifiers to human-readable names, used
+for consistent labeling in summaries. cc checks extended by esgf_qa checks.</p>
               </div>
             </td>
           </tr>
@@ -1355,10 +1335,7 @@ that come with esgf-qa.</p>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QAResultAggregator</span><span class="p">:</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QAResultAggregator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Aggregate, organize, and cluster the results of multiple ESGF-Quality Assurance (QA)</span>
 <span class="sd">    or Climate Checker (cc) runs.</span>
@@ -1366,12 +1343,6 @@ that come with esgf-qa.</p>
 <span class="sd">    This class collects the outcomes of compliance checker (cc) / cc-plugin runs from multiple datasets</span>
 <span class="sd">    and files, normalizes them into a consistent internal summary structure, and provides</span>
 <span class="sd">    functionality to sort, cluster, and generalize similar messages.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    checker_dict : dict</span>
-<span class="sd">        Dictionary mapping checker names (e.g., ``&quot;cf&quot;``) to human-readable labels.</span>
-<span class="sd">        Used to label tests and messages in the summary.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -1386,7 +1357,10 @@ that come with esgf-qa.</p>
 <span class="sd">        messages are generalized and aggregated/clustered across similar text patterns.</span>
 <span class="sd">    checker_dict : dict</span>
 <span class="sd">        Mapping of checker identifiers to human-readable names, used</span>
-<span class="sd">        for consistent labeling in summaries.</span>
+<span class="sd">        for consistent labeling in summaries. Only cc checks.</span>
+<span class="sd">    checker_dict_ext : dict</span>
+<span class="sd">        Mapping of checker identifiers to human-readable names, used</span>
+<span class="sd">        for consistent labeling in summaries. cc checks extended by esgf_qa checks.</span>
 
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
@@ -1850,7 +1824,10 @@ that come with esgf-qa.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">71</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
 <span class="normal">72</span>
 <span class="normal">73</span>
 <span class="normal">74</span>
@@ -1860,10 +1837,7 @@ that come with esgf-qa.</p>
 <span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize the aggregator with an empty summary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1973,7 +1947,10 @@ that come with esgf-qa.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
@@ -2000,10 +1977,7 @@ that come with esgf-qa.</p>
 <span class="normal">188</span>
 <span class="normal">189</span>
 <span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">cluster_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cluster messages based on similarity.</span>
@@ -2112,7 +2086,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">346</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
 <span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
@@ -2230,10 +2207,7 @@ large numbers of check failure messages.</p>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cluster messages in the summary into groups of similar messages.</span>
 
@@ -2445,7 +2419,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">196</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
 <span class="normal">199</span>
@@ -2486,10 +2463,7 @@ large numbers of check failure messages.</p>
 <span class="normal">234</span>
 <span class="normal">235</span>
 <span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">generalize_message_group</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generalize a group of messages.</span>
@@ -2657,7 +2631,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
 <span class="normal">245</span>
@@ -2756,10 +2733,7 @@ large numbers of check failure messages.</p>
 <span class="normal">338</span>
 <span class="normal">339</span>
 <span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">341</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Merge adjacent placeholders in message templates where possible.</span>
@@ -2885,7 +2859,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">148</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
@@ -2896,10 +2873,7 @@ large numbers of check failure messages.</p>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sort the summary by test weight and test name for consistent output ordering.</span>
 
@@ -2999,7 +2973,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 86</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
 <span class="normal"> 87</span>
 <span class="normal"> 88</span>
 <span class="normal"> 89</span>
@@ -3026,10 +3003,7 @@ large numbers of check failure messages.</p>
 <span class="normal">110</span>
 <span class="normal">111</span>
 <span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Update the summary with a single result of a cc-run.</span>
 
@@ -3129,7 +3103,10 @@ large numbers of check failure messages.</p>
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">118</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
@@ -3154,10 +3131,7 @@ large numbers of check failure messages.</p>
 <span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
+<span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Update the summary with a single result of an esgf-qa (inter-file/dataset) run.</span>
 

@@ -1034,9 +1034,10 @@
     <div class="doc doc-contents ">
 
         <p>Compatibility checks for a dataset.</p>
-<p>Checks for:
-    - xarray open_mfdataset (compat='override', join='outer')
-    - xarray open_mfdataset (compat='no_conflicts', join='exact')</p>
+<p>Checks for:</p>
+<pre><code>- xarray open_mfdataset (compat='override', join='outer')
+- xarray open_mfdataset (compat='no_conflicts', join='exact')
+</code></pre>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1143,8 +1144,7 @@
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">441</span>
-<span class="normal">442</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">442</span>
 <span class="normal">443</span>
 <span class="normal">444</span>
 <span class="normal">445</span>
@@ -1196,11 +1196,14 @@
 <span class="normal">491</span>
 <span class="normal">492</span>
 <span class="normal">493</span>
-<span class="normal">494</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compatibility checks for a dataset.</span>
 
 <span class="sd">    Checks for:</span>
+
 <span class="sd">        - xarray open_mfdataset (compat=&#39;override&#39;, join=&#39;outer&#39;)</span>
 <span class="sd">        - xarray open_mfdataset (compat=&#39;no_conflicts&#39;, join=&#39;exact&#39;)</span>
 
@@ -1268,11 +1271,12 @@
     <div class="doc doc-contents ">
 
         <p>Consistency checks.</p>
-<p>Runs inter-file consistency checks on a dataset:
-    - Global attributes (values and data types)
-    - Variable attributes (values and data types)
-    - Coordinates (values)
-    - Dimensions (names and sizes)</p>
+<p>Runs inter-file consistency checks on a dataset:</p>
+<pre><code>- Global attributes (values and data types)
+- Variable attributes (values and data types)
+- Coordinates (values)
+- Dimensions (names and sizes)
+</code></pre>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1557,11 +1561,13 @@
 <span class="normal">328</span>
 <span class="normal">329</span>
 <span class="normal">330</span>
-<span class="normal">331</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">consistency_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">331</span>
+<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">consistency_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Consistency checks.</span>
 
 <span class="sd">    Runs inter-file consistency checks on a dataset:</span>
+
 <span class="sd">        - Global attributes (values and data types)</span>
 <span class="sd">        - Variable attributes (values and data types)</span>
 <span class="sd">        - Coordinates (values)</span>
@@ -1861,8 +1867,7 @@
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">334</span>
-<span class="normal">335</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
 <span class="normal">336</span>
 <span class="normal">337</span>
 <span class="normal">338</span>
@@ -1965,7 +1970,8 @@
 <span class="normal">435</span>
 <span class="normal">436</span>
 <span class="normal">437</span>
-<span class="normal">438</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">438</span>
+<span class="normal">439</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks inter-file time and time_bnds continuity for a dataset.</span>
 
@@ -2179,9 +2185,7 @@
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">499</span>
 <span class="normal">500</span>
 <span class="normal">501</span>
 <span class="normal">502</span>
@@ -2283,7 +2287,9 @@
 <span class="normal">598</span>
 <span class="normal">599</span>
 <span class="normal">600</span>
-<span class="normal">601</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks consistency of dataset time coverage.</span>
 
@@ -2407,10 +2413,11 @@
 
         <p>Inter-dataset consistency checks.</p>
 <p>Will group datasets by realm and grid for certain checks.
-Runs inter-dataset consistency checks:
-    - Required and non-required global attributes (values and data types)
-    - Coordinates (values)
-    - Dimensions (names and sizes)</p>
+Runs inter-dataset consistency checks:</p>
+<pre><code>- Required and non-required global attributes (values and data types)
+- Coordinates (values)
+- Dimensions (names and sizes)
+</code></pre>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2501,9 +2508,7 @@ Runs inter-dataset consistency checks:
 
             <details class="quote">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">606</span>
 <span class="normal">607</span>
 <span class="normal">608</span>
 <span class="normal">609</span>
@@ -2716,12 +2721,16 @@ Runs inter-dataset consistency checks:
 <span class="normal">816</span>
 <span class="normal">817</span>
 <span class="normal">818</span>
-<span class="normal">819</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">819</span>
+<span class="normal">820</span>
+<span class="normal">821</span>
+<span class="normal">822</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inter-dataset consistency checks.</span>
 
 <span class="sd">    Will group datasets by realm and grid for certain checks.</span>
 <span class="sd">    Runs inter-dataset consistency checks:</span>
+
 <span class="sd">        - Required and non-required global attributes (values and data types)</span>
 <span class="sd">        - Coordinates (values)</span>
 <span class="sd">        - Dimensions (names and sizes)</span>
