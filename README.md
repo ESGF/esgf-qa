@@ -80,10 +80,10 @@ $ esgqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <pa
 - options:
   - `-h, --help`: show this help message and exit
   - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t, --test TEST`: The test to run ('wcrp_cmip6:latest', 'wcrp_cordex_cmip6':latest' or 'cf:<version>', can be specified multiple times, eg.: '-t wcrp_cmip6:latest -t cf:1.7') - default: running latest CF checks 'cf:latest'.
-  - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.
+  - `-t, --test TEST`: The test to run (`'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks `'cf:latest'`.
+  - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: `'<checker>:<option_name>[:<option_value>]'`. Multiple invocations possible.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
-  - `-r, --resume`: Specify to continue a previous QC run. Requires the <output_dir> argument to be set.
+  - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
   - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using the `wcrp-*`, `cc6`, `mip` or `eerie` checkers, they are included by default.
 
 ### Example Usage
@@ -92,7 +92,7 @@ $ esgqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <pa
 $ esgqa -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i "IAEVALL02" ESGF_Buff/IAEVALL02/CORDEX-CMIP6
 ```
 
-To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <parent_dir>
+To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the `<parent_dir>`
 (note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
 it will be marked as checked and checks will only be repeated if runtime errors occured):
 
@@ -119,6 +119,7 @@ The results will be stored in two `json` files:
 
 ### Web view
 The clustered results can be viewed using the following website:
+
 - DKRZ: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
 - IPSL: coming soon
 

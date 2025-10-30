@@ -13,15 +13,18 @@ from pathlib import Path
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
 
+from esgf_qa._constants import (
+    DRS_path_parent,
+    checker_dict,
+    checker_dict_ext,
+    checker_release_versions,
+)
 from esgf_qa._version import version
 from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import compatibility_checks as comp  # noqa
 from esgf_qa.con_checks import consistency_checks as cons  # noqa
 from esgf_qa.con_checks import continuity_checks as cont  # noqa
 from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
-from esgf_qa._constants import checker_dict, checker_dict_ext, checker_release_versions, DRS_path_parent
-
-
 
 _timestamp_with_ms = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
 _timestamp_filename = datetime.datetime.strptime(
@@ -32,8 +35,15 @@ _timestamp_pprint = datetime.datetime.strptime(
 ).strftime("%Y-%m-%d %H:%M")
 
 
-
 def get_default_result_dir():
+    """
+    Get the default result directory.
+
+    Returns
+    -------
+    str
+        Default result directory.
+    """
     global _timestamp
     global _timestamp_with_ms
     hash_object = hashlib.md5(_timestamp_with_ms.encode())
@@ -42,7 +52,27 @@ def get_default_result_dir():
         + f"/esgf-qa-results_{_timestamp_filename}_{hash_object.hexdigest()}"
     )
 
+
 def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
+    """
+    Get the dataset id for a file.
+
+    Parameters
+    ----------
+    files_to_check_dict : dict
+        Dictionary of files to check.
+    dataset_files_map_ext : dict
+        Dictionary of dataset files.
+    file_path : str
+        Path to the file.
+    project_id : str
+        Project id.
+
+    Returns
+    -------
+    str
+        Dataset id.
+    """
     dir_id = files_to_check_dict[file_path]["id_dir"].split("/")
     fn_id = files_to_check_dict[file_path]["id_fn"].split("_")
     if project_id in dir_id:
@@ -54,7 +84,24 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
         dsid += "." + ".".join(fn_id)
     return dsid
 
+
 def get_checker_release_versions(checkers, checker_options={}):
+    """
+    Get the release versions of the checkers.
+
+    Parameters
+    ----------
+    checkers : list
+        A list of checkers to get the release versions for.
+    checker_options : dict, optional
+        A dictionary of options for the checkers.
+        Example format: {"cf": {"check_dimension_order": True}}
+
+    Returns
+    -------
+    None
+        Updates the global dictionary ``checker_release_versions``.
+    """
     global checker_release_versions
     global checker_dict
     global checker_dict_ext
@@ -76,11 +123,20 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     """
     Run the compliance checker on a file with the specified checkers and options.
 
-    Parameters:
-        file_path (str): Path to the file to be checked.
-        checkers (list): List of checkers to run.
-        checker_options (dict): Dictionary of options for each checker.
-                                Example format: {"cf": {"check_dimension_order": True}}
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to be checked.
+    checkers : list
+        A list of checkers to run.
+    checker_options : dict, optional
+        A dictionary of options for the checkers.
+        Example format: {"cf": {"check_dimension_order": True}}
+
+    Returns
+    -------
+    dict
+        A dictionary containing the results of the compliance checker.
     """
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
@@ -115,6 +171,21 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
+    """
+    Track checked datasets.
+
+    Parameters
+    ----------
+    checked_datasets_file : str
+        The path to the file to track checked datasets.
+    checked_datasets : list
+        A list of checked datasets.
+
+    Returns
+    -------
+    None
+        Writes the checked datasets to the file.
+    """
     with open(checked_datasets_file, "a") as file:
         writer = csv.writer(file)
         for dataset_id in checked_datasets:
@@ -129,6 +200,29 @@ def process_file(
     processed_files,
     progress_file,
 ):
+    """
+    Runs cc checks for a single file.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to be checked.
+    checkers : list
+        A list of checkers to run.
+    checker_options : dict
+        A dictionary of options for the checkers.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    processed_files : list
+        A list of files that have already been checked.
+    progress_file : str
+        The path to the progress file.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the file path and the results of the compliance checker.
+    """
     # Read result from disk if check was run previously
     result_file = files_to_check_dict[file_path]["result_file"]
     consistency_file = files_to_check_dict[file_path]["consistency_file"]
@@ -224,6 +318,31 @@ def process_dataset(
     processed_datasets,
     progress_file,
 ):
+    """
+    Runs esgf_qa checks on a dataset.
+
+    Parameters
+    ----------
+    ds : str
+        Dataset to process.
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    checkers : list
+        List of checkers to run.
+    checker_options : dict
+        Dictionary of checker options.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    processed_datasets : set
+        Set of processed datasets.
+    progress_file : str
+        Path to progress file.
+
+    Returns
+    -------
+    tuple
+        Dataset ID and check results.
+    """
     # Read result from disk if check was run previously
     result_file = files_to_check_dict[ds_map[ds][0]]["result_file_ds"]
     if ds in processed_datasets and os.path.isfile(result_file):
@@ -294,10 +413,14 @@ def parse_options(opts):
     is a colon. Adapted from
     https://github.com/ioos/compliance-checker/blob/cbb40ed1981c169b74c954f0775d5bd23005ed23/cchecker.py#L23
 
-    Parameters:
-        opts: Iterable of strings with options
+    Parameters
+    ----------
+    opts : Iterable of strings
+        Iterable of option strings
 
-    Returns:
+    Returns
+    -------
+    dict
         Dictionary with keys as checker type (i.e. "mip").
         Each value is a dictionary where keys are checker options and values
         are checker option values or None if not provided.
@@ -320,7 +443,9 @@ def parse_options(opts):
 
 
 def main():
-    # CLI
+    """
+    CLI entry point.
+    """
     parser = argparse.ArgumentParser(description="Run QA checks")
     parser.add_argument(
         "parent_dir",
@@ -565,7 +690,9 @@ def main():
     DRS_parent = "CORDEX-CMIP6"
     for cname in checkers:
         print(cname)
-        DRS_parent_tmp = DRS_path_parent.get(checker_dict.get(cname.split(":")[0], ""), "")
+        DRS_parent_tmp = DRS_path_parent.get(
+            checker_dict.get(cname.split(":")[0], ""), ""
+        )
         if DRS_parent_tmp:
             DRS_parent = DRS_parent_tmp
             break
@@ -932,7 +1059,7 @@ def main():
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks
-    if 'cc6:latest' in checkers or 'mip:latest' in checkers:
+    if "cc6:latest" in checkers or "mip:latest" in checkers:
         summary_info["inter_ds_con_checks_ref"] = reference_ds_dict
 
     dsid_common_prefix = os.path.commonprefix(list(dataset_files_map.keys()))
