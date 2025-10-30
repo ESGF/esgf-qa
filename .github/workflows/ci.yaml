@@ -1,14 +1,10 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: github CI
+
 on:
   push:
-    branches:
-      - "*"
+    branches: ["master"]
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,50 +12,51 @@ concurrency:
 
 jobs:
   test:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     name: ${{ matrix.os }}-py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        # python versions
         python-version: ["3.10", "3.11", "3.12", "3.13"]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Set environment variables
-        run: |
-          echo "CONDA_ENV_FILE=ci/requirements/environment.yml" >> $GITHUB_ENV
-          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
-      - name: Create conda environment
+          fetch-depth: 0  # Fetch full history (tags + branches)
+
+      - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v1
+        continue-on-error: true
         with:
-          cache-downloads: true
-          cache-downloads-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}"
           environment-file: ci/requirements/environment.yml
           create-args: >-
             python=${{ matrix.python-version }}
-      - name: Install esgf-qa
+          environment-name: esgf-qa-tests
+          cache-downloads: true
+          cache-downloads-key: "${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}"
+
+      - name: Install esgf-qa (editable, no deps)
         run: |
-          python -m pip install --no-deps -e .
+          micromamba run -n esgf-qa-tests python -m pip install --no-deps -e .
+
       - name: Version info
         run: |
-          conda info -a
-          conda list
+          micromamba info
+          micromamba list
+
       - name: Import plugin
         run: |
-          python -c "import esgf_qa"
-      - name: Run tests
-        timeout-minutes: 5
-        run: python -u -m pytest -rA
-          --cov=esgf_qa
-          --cov-report=xml
-          --junitxml=test-results/${{ runner.os }}-${{ matrix.python-version }}.xml
+          micromamba run -n esgf-qa-tests python -c "import esgf_qa"
+
+      - name: Run tests with coverage
+        run: |
+          micromamba run -n esgf-qa-tests pytest -rA \
+            --cov=esgf_qa \
+            --cov-report=xml \
+            --junitxml=test-results/${{ runner.os }}-${{ matrix.python-version }}.xml
+
       - name: Upload code coverage to Codecov
         uses: codecov/codecov-action@v4
         with:

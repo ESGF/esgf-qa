@@ -64,7 +64,7 @@ esgvoc install
 
 - Test your installation
 
-The following command should now also list the `esgf-qc` checks next to all `cc_plugin_cc6` and `compliance_checker` checks:
+The following command should now also list the `cc-plugin-wcrp` checks next to all `cc_plugin_cc6` and `compliance_checker` checks:
 ```
 cchecker.py -l
 ```
@@ -119,8 +119,12 @@ The results will be stored in two `json` files:
 
 ### Web view
 The clustered results can be viewed using the following website:
-[https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
+- DKRZ: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html).
+- IPSL: coming soon
+
 This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
+You can select one of the recent QA runs conducted at the respective site or select a local QA run result file to be displayed.
+
 Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
 While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.
 

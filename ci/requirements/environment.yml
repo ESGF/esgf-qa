@@ -23,6 +23,6 @@ dependencies:
 # pypi packages
   - pip
   - pip:
-    - compliance-checker @ git+https://github.com/ioos/compliance-checker.git@develop
-    - cc-plugin-wcrp @ git+https://github.com/ESGF/cc-plugin-wcrp.git@main
+    - compliance-checker @ git+https://github.com/ioos/compliance-checker.git@main
+    - cc-plugin-wcrp @ git+https://github.com/ESGF/cc-plugin-wcrp.git@master
 #    - cc-plugin-wcrp
