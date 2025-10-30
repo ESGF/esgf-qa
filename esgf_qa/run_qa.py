@@ -1,7 +1,6 @@
 import argparse
 import csv
 import datetime
-import difflib
 import hashlib
 import json
 import multiprocessing
@@ -14,44 +13,18 @@ from pathlib import Path
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
 
+from esgf_qa._constants import (
+    DRS_path_parent,
+    checker_dict,
+    checker_dict_ext,
+    checker_release_versions,
+)
 from esgf_qa._version import version
+from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import compatibility_checks as comp  # noqa
 from esgf_qa.con_checks import consistency_checks as cons  # noqa
 from esgf_qa.con_checks import continuity_checks as cont  # noqa
 from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
-
-checker_dict = {
-    "cc6": "CORDEX-CMIP6",
-    "cf": "CF-Conventions",
-    "mip": "MIP",
-    "plugin_cmip6": "CMIP6",
-    # "wcrp-cmip5": "CMIP5",
-    "wcrp_cmip6": "CMIP6",
-    # "wcrp_cmip7": "CMIP7-AFT",
-    # "wcrp_cmip7": "CMIP7",
-    # "wcrp_cordex": "CORDEX",
-    "wcrp_cordex_cmip6": "CORDEX-CMIP6",
-    # "obs4mips": "Obs4MIPs",
-    # "input4mips": "Input4MIPs",
-}
-DRS_path_parent = {
-    "CMIP5": "CMIP5",
-    "CMIP6": "CMIP6",
-    "CMIP7": "CMIP7",
-    "CMIP7-AFT": "CMIP7",
-    "CORDEX": "CORDEX",
-    "CORDEX-CMIP6": "CORDEX-CMIP6",
-    "Obs4MIPs": "Obs4MIPs",
-    "Input4MIPs": "Input4MIPs",
-}
-checker_release_versions = {}
-checker_dict_ext = {
-    # "pcons": "ParentConsistency"
-    "cons": "Consistency",
-    "cont": "Continuity",
-    "comp": "Compatibility",
-    **checker_dict,
-}
 
 _timestamp_with_ms = datetime.datetime.now().strftime("%Y%m%d-%H%M%S%f")
 _timestamp_filename = datetime.datetime.strptime(
@@ -62,321 +35,15 @@ _timestamp_pprint = datetime.datetime.strptime(
 ).strftime("%Y-%m-%d %H:%M")
 
 
-class QAResultAggregator:
-    def __init__(self, checker_dict):
-        """
-        Initialize the aggregator with an empty summary.
-        """
-        self.summary = {
-            "error": defaultdict(
-                lambda: defaultdict(lambda: defaultdict(list))
-            ),  # No weight, just function -> error msg
-            "fail": defaultdict(
-                lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-            ),  # weight -> test -> msg -> dsid -> filenames
-        }
-        self.checker_dict = checker_dict
-
-    def update(self, result_dict, dsid, file_name):
-        """
-        Update the summary with a single result of a cc-run.
-        """
-        for checker in result_dict:
-            for test in result_dict[checker]:
-                if test == "errors":
-                    for function_name, error_msg in result_dict[checker][
-                        "errors"
-                    ].items():
-                        self.summary["error"][
-                            f"[{checker_dict[checker]}] " + function_name
-                        ][error_msg][dsid].append(file_name)
-                else:
-                    score, max_score = result_dict[checker][test]["value"]
-                    weight = result_dict[checker][test].get("weight", 3)
-                    msgs = result_dict[checker][test].get("msgs", [])
-                    if score < max_score:  # test outcome: fail
-                        for msg in msgs:
-                            self.summary["fail"][weight][
-                                f"[{checker_dict[checker]}] " + test
-                            ][msg][dsid].append(file_name)
-
-    def update_ds(self, result_dict, dsid):
-        """
-        Update the summary with a single result of a esgf-qa run.
-        """
-        for checker in result_dict:
-            for test in result_dict[checker]:
-                if test == "errors":
-                    for function_name, errdict in result_dict[checker][
-                        "errors"
-                    ].items():
-                        for file_name in errdict["files"]:
-                            self.summary["error"][
-                                f"[{checker_dict_ext[checker]}] " + function_name
-                            ][errdict["msg"]][dsid].append(file_name)
-                else:
-                    weight = result_dict[checker][test].get("weight", 3)
-                    fails = result_dict[checker][test].get("msgs", {})
-                    for msg, file_names in fails.items():
-                        for file_name in file_names:
-                            self.summary["fail"][weight][
-                                f"[{checker_dict_ext[checker]}] " + test
-                            ][msg][dsid].append(file_name)
-
-    def sort(self):
-        """
-        Sort the summary.
-        """
-        self.summary["fail"] = dict(sorted(self.summary["fail"].items(), reverse=True))
-        for key in self.summary["fail"]:
-            self.summary["fail"][key] = dict(sorted(self.summary["fail"][key].items()))
-
-        # Sort errors by function name
-        for checker in self.summary["error"]:
-            self.summary["error"][checker] = dict(
-                sorted(self.summary["error"][checker].items())
-            )
-
-    @staticmethod
-    def cluster_messages(messages, threshold):
-        clusters = []
-        while messages:
-            base = messages.pop(0)
-            cluster = [base]
-            to_remove = []
-            for msg in messages:
-                ratio = difflib.SequenceMatcher(None, base, msg).ratio()
-                if ratio >= threshold:
-                    cluster.append(msg)
-                    to_remove.append(msg)
-            for msg in to_remove:
-                messages.remove(msg)
-            clusters.append(cluster)
-        return clusters
-
-    @staticmethod
-    def generalize_message_group(messages):
-        if len(messages) == 1:
-            return messages[0], {}
-
-        # Split messages into tokens
-        split_messages = [re.findall(r"\w+|\W", m) for m in messages]
-        transposed = list(zip(*split_messages))
-        template = []
-        placeholders = {}
-        var_index = 0
-
-        for i, tokens in enumerate(transposed):
-            unique_tokens = set(tokens)
-            if len(unique_tokens) == 1:
-                template.append(tokens[0])
-            else:
-                var_name = chr(ord("A") + var_index)
-                template.append(f"{{{var_name}}}")
-                placeholders[var_name] = tokens[0]
-                var_index += 1
-
-        # Merge placeholders if possible
-        template, placeholders = QAResultAggregator.merge_placeholders(
-            template, placeholders
-        )
-
-        # Return the generalized message and the placeholders
-        generalized = "".join(template)
-        return generalized, placeholders
-
-    @staticmethod
-    def merge_placeholders(list_of_strings, dictionary, skip=0):
-        def find_next_two_placeholders(list_of_strings, skip):
-            placeholders = [
-                s for s in list_of_strings if s.startswith("{") and s.endswith("}")
-            ]
-            if len(placeholders) < 2:
-                return None, None
-            return placeholders[skip] if len(placeholders) >= skip + 1 else None, (
-                placeholders[skip + 1] if len(placeholders) >= skip + 2 else None
-            )
-
-        def extract_text_between_placeholders(
-            list_of_strings, placeholder1, placeholder2
-        ):
-            idx1 = list_of_strings.index(placeholder1)
-            idx2 = list_of_strings.index(placeholder2)
-            return "".join(list_of_strings[idx1 + 1 : idx2])
-
-        def merge_two_placeholders(
-            placeholder1, placeholder2, text_between, dictionary
-        ):
-            new_value = (
-                dictionary[placeholder1.lstrip("{").rstrip("}")]
-                + text_between
-                + dictionary[placeholder2.lstrip("{").rstrip("}")]
-            )
-            dictionary[placeholder1.lstrip("{").rstrip("}")] = new_value
-            del dictionary[placeholder2.lstrip("{").rstrip("}")]
-            return dictionary
-
-        def update_placeholder_names(list_of_strings, dictionary):
-            old_placeholders = sorted(list(dictionary.keys()))
-            new_placeholders = [
-                chr(ord("A") + i) for i in range(0, len(old_placeholders))
-            ]
-            new_dictionary = dict(
-                zip(new_placeholders, [dictionary[val] for val in old_placeholders])
-            )
-            for old, new in zip(old_placeholders, new_placeholders):
-                list_of_strings = [
-                    s.replace("{" + old + "}", "{" + new + "}") for s in list_of_strings
-                ]
-            return list_of_strings, new_dictionary
-
-        def replace_placeholders_with_new_one(
-            list_of_strings, placeholder1, placeholder2
-        ):
-            idx1 = list_of_strings.index(placeholder1)
-            idx2 = list_of_strings.index(placeholder2)
-            list_of_strings_new = list_of_strings[:idx1] + [placeholder1]
-            if idx2 < len(list_of_strings) + 1:
-                list_of_strings_new += list_of_strings[idx2 + 1 :]
-            return list_of_strings_new
-
-        if not any(s.startswith("{") and s.endswith("}") for s in list_of_strings):
-            return list_of_strings, dictionary
-
-        placeholder1, placeholder2 = find_next_two_placeholders(list_of_strings, skip)
-        if placeholder1 is None or placeholder2 is None:
-            return list_of_strings, dictionary
-
-        text_between = extract_text_between_placeholders(
-            list_of_strings, placeholder1, placeholder2
-        )
-        if len(text_between) < 5:
-            dictionary = merge_two_placeholders(
-                placeholder1, placeholder2, text_between, dictionary
-            )
-            list_of_strings = replace_placeholders_with_new_one(
-                list_of_strings, placeholder1, placeholder2
-            )
-            list_of_strings, dictionary = update_placeholder_names(
-                list_of_strings, dictionary
-            )
-            return QAResultAggregator.merge_placeholders(
-                list_of_strings, dictionary, skip
-            )
-        else:
-            return QAResultAggregator.merge_placeholders(
-                list_of_strings, dictionary, skip + 1
-            )
-
-    def cluster_summary(self, threshold=0.75):
-        self.clustered_summary = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
-        )
-        for status in self.summary:
-            if status == "error":
-                for test_id in self.summary[status]:
-                    messages = list(self.summary[status][test_id].keys())
-                    # Pass a copy of messages to cluster_messages to generate clusters
-                    clusters = QAResultAggregator.cluster_messages(
-                        messages[:], threshold
-                    )
-
-                    for cluster in clusters:
-                        generalized, placeholders = (
-                            QAResultAggregator.generalize_message_group(cluster)
-                        )
-                        example_parts = ", ".join(
-                            [
-                                (
-                                    f"{k}='{v[0]}'"
-                                    if isinstance(v, list)
-                                    else f"{k}='{v}'"
-                                )
-                                for k, v in placeholders.items()
-                            ]
-                        )
-                        if example_parts:
-                            msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
-                        else:
-                            msg_summary = f"{generalized}{' (' + str(len(cluster)) + ' occurrences)' if len(cluster) > 1 else ''}"
-
-                        # Gather all ds_ids and filenames across the cluster
-                        combined = defaultdict(set)
-                        for message in cluster:
-                            for ds_id, files in self.summary[status][test_id][
-                                message
-                            ].items():
-                                combined[ds_id].update(files)
-
-                        # Shorten file lists to one example
-                        formatted = {
-                            ds_id
-                            + " ("
-                            + str(len(files))
-                            + f" file{'s' if len(files) > 1 else ''} affected)": (
-                                [f"e.g. '{next(iter(files))}'"]
-                                if len(files) > 1
-                                else [f"'{next(iter(files))}'"]
-                            )
-                            for ds_id, files in combined.items()
-                        }
-
-                        self.clustered_summary[status][test_id][msg_summary] = formatted
-            elif status == "fail":
-                for weight in self.summary[status]:
-                    for test_id in self.summary[status][weight]:
-                        messages = list(self.summary[status][weight][test_id].keys())
-                        # Pass a copy of messages to cluster_messages to generate clusters
-                        clusters = QAResultAggregator.cluster_messages(
-                            messages[:], threshold
-                        )
-
-                        for cluster in clusters:
-                            generalized, placeholders = (
-                                QAResultAggregator.generalize_message_group(cluster)
-                            )
-                            example_parts = ", ".join(
-                                [
-                                    (
-                                        f"{k}='{v[0]}'"
-                                        if isinstance(v, list)
-                                        else f"{k}='{v}'"
-                                    )
-                                    for k, v in placeholders.items()
-                                ]
-                            )
-                            if example_parts:
-                                msg_summary = f"{generalized} ({len(cluster)} occurrences, e.g. {example_parts})"
-                            else:
-                                msg_summary = f"{generalized}{' (' + str(len(cluster)) + ' occurrences)' if len(cluster) > 1 else ''}"
-
-                            # Gather all ds_ids and filenames across the cluster
-                            combined = defaultdict(set)
-                            for message in cluster:
-                                for ds_id, files in self.summary[status][weight][
-                                    test_id
-                                ][message].items():
-                                    combined[ds_id].update(files)
-
-                            # Shorten file lists to one example
-                            formatted = {
-                                ds_id
-                                + " ("
-                                + str(len(files))
-                                + f" file{'s' if len(files) > 1 else ''} affected)": (
-                                    [f"e.g. '{next(iter(files))}'"]
-                                    if len(files) > 1
-                                    else [f"'{next(iter(files))}'"]
-                                )
-                                for ds_id, files in combined.items()
-                            }
-
-                            self.clustered_summary[status][weight][test_id][
-                                msg_summary
-                            ] = formatted
-
-
 def get_default_result_dir():
+    """
+    Get the default result directory.
+
+    Returns
+    -------
+    str
+        Default result directory.
+    """
     global _timestamp
     global _timestamp_with_ms
     hash_object = hashlib.md5(_timestamp_with_ms.encode())
@@ -385,7 +52,27 @@ def get_default_result_dir():
         + f"/esgf-qa-results_{_timestamp_filename}_{hash_object.hexdigest()}"
     )
 
+
 def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
+    """
+    Get the dataset id for a file.
+
+    Parameters
+    ----------
+    files_to_check_dict : dict
+        Dictionary of files to check.
+    dataset_files_map_ext : dict
+        Dictionary of dataset files.
+    file_path : str
+        Path to the file.
+    project_id : str
+        Project id.
+
+    Returns
+    -------
+    str
+        Dataset id.
+    """
     dir_id = files_to_check_dict[file_path]["id_dir"].split("/")
     fn_id = files_to_check_dict[file_path]["id_fn"].split("_")
     if project_id in dir_id:
@@ -397,7 +84,24 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
         dsid += "." + ".".join(fn_id)
     return dsid
 
+
 def get_checker_release_versions(checkers, checker_options={}):
+    """
+    Get the release versions of the checkers.
+
+    Parameters
+    ----------
+    checkers : list
+        A list of checkers to get the release versions for.
+    checker_options : dict, optional
+        A dictionary of options for the checkers.
+        Example format: {"cf": {"check_dimension_order": True}}
+
+    Returns
+    -------
+    None
+        Updates the global dictionary ``checker_release_versions``.
+    """
     global checker_release_versions
     global checker_dict
     global checker_dict_ext
@@ -419,11 +123,20 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     """
     Run the compliance checker on a file with the specified checkers and options.
 
-    Parameters:
-        file_path (str): Path to the file to be checked.
-        checkers (list): List of checkers to run.
-        checker_options (dict): Dictionary of options for each checker.
-                                Example format: {"cf": {"check_dimension_order": True}}
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to be checked.
+    checkers : list
+        A list of checkers to run.
+    checker_options : dict, optional
+        A dictionary of options for the checkers.
+        Example format: {"cf": {"check_dimension_order": True}}
+
+    Returns
+    -------
+    dict
+        A dictionary containing the results of the compliance checker.
     """
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
@@ -458,6 +171,21 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
+    """
+    Track checked datasets.
+
+    Parameters
+    ----------
+    checked_datasets_file : str
+        The path to the file to track checked datasets.
+    checked_datasets : list
+        A list of checked datasets.
+
+    Returns
+    -------
+    None
+        Writes the checked datasets to the file.
+    """
     with open(checked_datasets_file, "a") as file:
         writer = csv.writer(file)
         for dataset_id in checked_datasets:
@@ -472,6 +200,29 @@ def process_file(
     processed_files,
     progress_file,
 ):
+    """
+    Runs cc checks for a single file.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to be checked.
+    checkers : list
+        A list of checkers to run.
+    checker_options : dict
+        A dictionary of options for the checkers.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    processed_files : list
+        A list of files that have already been checked.
+    progress_file : str
+        The path to the progress file.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the file path and the results of the compliance checker.
+    """
     # Read result from disk if check was run previously
     result_file = files_to_check_dict[file_path]["result_file"]
     consistency_file = files_to_check_dict[file_path]["consistency_file"]
@@ -567,6 +318,31 @@ def process_dataset(
     processed_datasets,
     progress_file,
 ):
+    """
+    Runs esgf_qa checks on a dataset.
+
+    Parameters
+    ----------
+    ds : str
+        Dataset to process.
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    checkers : list
+        List of checkers to run.
+    checker_options : dict
+        Dictionary of checker options.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    processed_datasets : set
+        Set of processed datasets.
+    progress_file : str
+        Path to progress file.
+
+    Returns
+    -------
+    tuple
+        Dataset ID and check results.
+    """
     # Read result from disk if check was run previously
     result_file = files_to_check_dict[ds_map[ds][0]]["result_file_ds"]
     if ds in processed_datasets and os.path.isfile(result_file):
@@ -637,10 +413,14 @@ def parse_options(opts):
     is a colon. Adapted from
     https://github.com/ioos/compliance-checker/blob/cbb40ed1981c169b74c954f0775d5bd23005ed23/cchecker.py#L23
 
-    Parameters:
-        opts: Iterable of strings with options
+    Parameters
+    ----------
+    opts : Iterable of strings
+        Iterable of option strings
 
-    Returns:
+    Returns
+    -------
+    dict
         Dictionary with keys as checker type (i.e. "mip").
         Each value is a dictionary where keys are checker options and values
         are checker option values or None if not provided.
@@ -663,7 +443,9 @@ def parse_options(opts):
 
 
 def main():
-    # CLI
+    """
+    CLI entry point.
+    """
     parser = argparse.ArgumentParser(description="Run QA checks")
     parser.add_argument(
         "parent_dir",
@@ -908,7 +690,9 @@ def main():
     DRS_parent = "CORDEX-CMIP6"
     for cname in checkers:
         print(cname)
-        DRS_parent_tmp = DRS_path_parent.get(checker_dict.get(cname.split(":")[0], ""), "")
+        DRS_parent_tmp = DRS_path_parent.get(
+            checker_dict.get(cname.split(":")[0], ""), ""
+        )
         if DRS_parent_tmp:
             DRS_parent = DRS_parent_tmp
             break
@@ -1049,6 +833,23 @@ def main():
                 **cl_checker_options["cf"],
                 "enable_appendix_a_checks": True,
             },
+            "wcrp_cmip6": {
+                **cl_checker_options.get("wcrp_cmip6", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
+            "wcrp_cordex_cmip6": {
+                **cl_checker_options.get("wcrp_cordex_cmip6", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+                "tables_dir": result_dir + "/tables",
+                "force_table_download": file_path == files_to_check[0]
+                and (
+                    not resume or (resume and os.listdir(result_dir + "/tables") == [])
+                ),
+            },
         }
         checker_options[file_path].update(
             {
@@ -1090,7 +891,7 @@ def main():
     print()
 
     # Initialize the summary
-    summary = QAResultAggregator(checker_dict=checker_dict_ext)
+    summary = QAResultAggregator()
 
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
@@ -1140,8 +941,14 @@ def main():
 
     # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if "cc6:latest" in checkers or "mip:latest" in checkers:
-
+    if (
+        "cc6:latest" in checkers
+        or "mip:latest" in checkers
+        or "wcrp_cmip6:1.0" in checkers
+        or "wcrp_cmip6:latest" in checkers
+        or "wcrp_cordex_cmip6:1.0" in checkers
+        or "wcrp_cordex_cmip6:latest" in checkers
+    ):
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
         #########################################################
@@ -1252,7 +1059,7 @@ def main():
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks
-    if 'cc6:latest' in checkers or 'mip:latest' in checkers:
+    if "cc6:latest" in checkers or "mip:latest" in checkers:
         summary_info["inter_ds_con_checks_ref"] = reference_ds_dict
 
     dsid_common_prefix = os.path.commonprefix(list(dataset_files_map.keys()))

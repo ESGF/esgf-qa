@@ -32,6 +32,28 @@ def printtimedelta(d):
 
 
 def truncate_str(s, max_length=16):
+    """
+    Truncate string if too long.
+
+    Parameters
+    ----------
+    s : str
+        String to truncate.
+    max_length : int, optional
+        Maximum length of string. Default is 16.
+
+    Returns
+    -------
+    str
+        Truncated string.
+
+    Examples
+    --------
+    >>> truncate_str("This is a long string", 10)
+    'This...string'
+    >>> truncate_str("This is a short string", 16)
+    'This is a short string'
+    """
     if max_length <= 15 or len(s) <= max_length:
         return s
 
@@ -58,6 +80,23 @@ def truncate_str(s, max_length=16):
 
 
 def compare_dicts(dict1, dict2, exclude_keys=None):
+    """
+    Compare two dictionaries and return keys with differing values.
+
+    Parameters
+    ----------
+    dict1 : dict
+        First dictionary to compare.
+    dict2 : dict
+        Second dictionary to compare.
+    exclude_keys : list, optional
+        List of keys to exclude from comparison.
+
+    Returns
+    -------
+    list
+        List of keys with differing values.
+    """
     if exclude_keys is None:
         exclude_keys = set()
     else:
@@ -73,6 +112,23 @@ def compare_dicts(dict1, dict2, exclude_keys=None):
 
 
 def compare_nested_dicts(dict1, dict2, exclude_keys=None):
+    """
+    Compare two nested dictionaries and return keys with differing values.
+
+    Parameters
+    ----------
+    dict1 : dict
+        First dictionary to compare.
+    dict2 : dict
+        Second dictionary to compare.
+    exclude_keys : list, optional
+        List of keys to exclude from comparison.
+
+    Returns
+    -------
+    list
+        List of keys with differing values.
+    """
     diffs = {}
 
     all_root_keys = set(dict1) | set(dict2)
@@ -95,6 +151,31 @@ def compare_nested_dicts(dict1, dict2, exclude_keys=None):
 
 
 def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
+    """
+    Consistency checks.
+
+    Runs inter-file consistency checks on a dataset:
+        - Global attributes (values and data types)
+        - Variable attributes (values and data types)
+        - Coordinates (values)
+        - Dimensions (names and sizes)
+
+    Parameters
+    ----------
+    ds : str
+        Dataset to process.
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    checker_options : dict
+        Dictionary of checker options.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the results of the consistency checks.
+    """
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
@@ -251,6 +332,27 @@ def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
 
 
 def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
+    """
+    Checks inter-file time and time_bnds continuity for a dataset.
+
+    This check identifies gaps in time or time_bnds between files of a dataset.
+
+    Parameters
+    ----------
+    ds : str
+        Dataset to process.
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    checker_options : dict
+        Dictionary of checker options.
+
+    Returns
+    -------
+    dict
+        Dictionary of results.
+    """
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
@@ -337,23 +439,54 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
 
 
 def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
+    """
+    Compatibility checks for a dataset.
+
+    Checks for:
+        - xarray open_mfdataset (compat='override', join='outer')
+        - xarray open_mfdataset (compat='no_conflicts', join='exact')
+
+    Parameters
+    ----------
+    ds : str
+        Dataset to process.
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    checker_options : dict
+        Dictionary of checker options.
+
+    Returns
+    -------
+    dict
+        Dictionary of results.
+    """
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
 
     # open_mfdataset - override
-    test = "xarray open_mfdataset - override"
+    test = "xarray open_mfdataset (compat='override', join='outer')"
     results[test]["weight"] = 3
     try:
-        with xr.open_mfdataset(filelist, coords="minimal", compat="override") as ds:
+        with xr.open_mfdataset(
+            filelist, coords="minimal", compat="override", data_vars="all", join="outer"
+        ) as ds:
             pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
 
     # open_mfdataset - no_conflicts
-    test = "xarray open_mfdataset - no_conflicts"
+    test = "xarray open_mfdataset (compat='no_conflicts', join='exact')"
     results[test]["weight"] = 3
     try:
-        with xr.open_mfdataset(filelist, coords="minimal", compat="no_conflicts") as ds:
+        with xr.open_mfdataset(
+            filelist,
+            coords="minimal",
+            compat="no_conflicts",
+            data_vars="all",
+            join="exact",
+        ) as ds:
             pass
     except Exception as e:
         results[test]["msgs"][str(e)].extend(filelist)
@@ -362,6 +495,25 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
 
 
 def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
+    """
+    Checks consistency of dataset time coverage.
+
+    Variables that differ in their time coverage are reported.
+
+    Parameters
+    ----------
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    checker_options : dict
+        Dictionary of checker options.
+
+    Returns
+    -------
+    dict
+        Dictionary of results.
+    """
     results = defaultdict(level0_factory)
     test = "Time coverage"
 
@@ -450,6 +602,29 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
 
 
 def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_options):
+    """
+    Inter-dataset consistency checks.
+
+    Will group datasets by realm and grid for certain checks.
+    Runs inter-dataset consistency checks:
+        - Required and non-required global attributes (values and data types)
+        - Coordinates (values)
+        - Dimensions (names and sizes)
+
+    Parameters
+    ----------
+    ds_map : dict
+        Dictionary mapping dataset IDs to file paths.
+    files_to_check_dict : dict
+        A special dictionary mapping files to check to datasets.
+    checker_options : dict
+        Dictionary of checker options.
+
+    Returns
+    -------
+    dict
+        Dictionary of results.
+    """
     results = defaultdict(level0_factory)
     filedict = {}
     consistency_data = {}

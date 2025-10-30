@@ -1,0 +1,67 @@
+name: github CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }}-py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history (tags + branches)
+
+      - name: Set up micromamba
+        uses: mamba-org/setup-micromamba@v1
+        continue-on-error: true
+        with:
+          environment-file: ci/requirements/environment.yml
+          create-args: >-
+            python=${{ matrix.python-version }}
+          environment-name: esgf-qa-tests
+          cache-downloads: true
+          cache-downloads-key: "${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}"
+
+      - name: Install esgf-qa (editable, no deps)
+        run: |
+          micromamba run -n esgf-qa-tests python -m pip install --no-deps -e .
+
+      - name: Version info
+        run: |
+          micromamba info
+          micromamba list
+
+      - name: Import plugin
+        run: |
+          micromamba run -n esgf-qa-tests python -c "import esgf_qa"
+
+      - name: Run tests with coverage
+        run: |
+          micromamba run -n esgf-qa-tests pytest -rA \
+            --cov=esgf_qa \
+            --cov-report=xml \
+            --junitxml=test-results/${{ runner.os }}-${{ matrix.python-version }}.xml
+
+      - name: Upload code coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: RUNNER_OS,PYTHON_VERSION
+          name: codecov-umbrella
+          fail_ci_if_error: false
