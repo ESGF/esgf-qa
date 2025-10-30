@@ -1,0 +1,887 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+        <link rel="next" href="reference/esgf_qa_run_qa/">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.22">
+    
+    
+      
+        <title>esgf-qa Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#esgf-qa-quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="esgf-qa Documentation" class="md-header__button md-logo" aria-label="esgf-qa Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            esgf-qa Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ESGF/esgf-qa" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="esgf-qa Documentation" class="md-nav__button md-logo" aria-label="esgf-qa Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    esgf-qa Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ESGF/esgf-qa" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pip-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pip installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pip-installation-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pip installation from source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#installation-and-setup-of-esgvoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation and setup of esgvoc
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#displaying-the-check-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Displaying the check results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Displaying the check results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#web-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      Web view
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esgqaviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      esgqaviewer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-results-to-qa-results-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add results to QA results repository
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/esgf_qa_run_qa/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QA Workflow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/esgf_qa_qaviewer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QA Results Viewer
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/esgf_qa_cluster_results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QA Results Aggregator
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/esgf_qa_con_checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    esgf-qa Checks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pip-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pip installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pip-installation-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pip installation from source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#installation-and-setup-of-esgvoc" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation and setup of esgvoc
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#displaying-the-check-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Displaying the check results
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Displaying the check results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#web-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      Web view
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#esgqaviewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      esgqaviewer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-results-to-qa-results-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add results to QA results repository
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p><a href="https://pypi.org/project/esgf-qa/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/esgf-qa.svg" /></a></p>
+<h1 id="esgf-qa-quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp">esgf-qa: Quality Assurance Workflow Based on <code>compliance-checker</code> and <code>cc-plugin-wcrp</code></h1>
+<p><img src="https://raw.githubusercontent.com/ESGF/esgf-qa/master/docs/esgf-qa_Logo.png" align="left" width="120"></p>
+<p><code>esgf-qa</code> makes use of the frameworks and <a href="https://cfconventions.org/">CF</a>-compliance checks of the
+<a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a> and extensions coming with
+<a href="https://github.com/ESGF/cc-plugin-wcrp">ESGF/cc-plugin-wcrp</a> and
+<a href="https://github.com/euro-cordex/cc-plugin-cc6">euro-cordex/cc-plugin-cc6</a>.</p>
+<p>This tool is designed to run the desired file-based QC tests with
+<a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a> and
+<a href="https://github.com/euro-cordex/cc-plugin-wcrp">euro-cordex/cc-plugin-wcrp</a>,
+to conduct additional dataset-based checks (such as time axis continuity and
+consistency checks) as well as to summarize the test results.</p>
+<p><code>esgf-qa</code> is mainly aimed at a QA workflow testing compliance with various WCRP Project Specifications (see below).
+However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker,
+and it is easily extendable for any <code>cc-plugin</code> and for projects defining CORDEX or CMIP style CMOR-tables.</p>
+<table>
+<thead>
+<tr>
+<th>Standard</th>
+<th>Checker Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cv">cordex-cmip6-cv</a></td>
+<td>wcrp_cordex_cmip6, cc6</td>
+</tr>
+<tr>
+<td><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables">cordex-cmip6-cmor-tables</a></td>
+<td>wcrp_cordex_cmip6, cc6</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.5281/zenodo.10961069">CORDEX-CMIP6 Archive Specifications</a></td>
+<td>wcrp_cordex_cmip6, cc6</td>
+</tr>
+<tr>
+<td><a href="https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf">CMIP6 DRS</a></td>
+<td>wcrp_cmip6 / plugin_cmip6</td>
+</tr>
+<tr>
+<td><a href="https://github.com/PCMDI/cmip6-cmor-tables">cmip6-cmor-tables</a> (esgvoc)</td>
+<td>wcrp_cmip6 / plugin_cmip6</td>
+</tr>
+<tr>
+<td><a href="https://github.com/WCRP-CMIP/CMIP6_CVs">CMIP6 CVs</a> (esgvoc)</td>
+<td>wcrp_cmip6 / plugin_cmip6</td>
+</tr>
+<tr>
+<td><a href="https://github.com/eerie-project/dreq_tools">EERIE CMOR Tables &amp; CV</a></td>
+<td>eerie</td>
+</tr>
+<tr>
+<td>Custom MIP</td>
+<td>mip</td>
+</tr>
+</tbody>
+</table>
+<h2 id="installation">Installation</h2>
+<h3 id="pip-installation">Pip installation</h3>
+<pre><code class="language-shell">$ pip install esgf-qa
+</code></pre>
+<h3 id="pip-installation-from-source">Pip installation from source</h3>
+<p>Clone the repository and <code>cd</code> into the repository folder, then:</p>
+<pre><code class="language-shell">$ pip install -e .
+</code></pre>
+<p>Optionally install the dependencies for development:</p>
+<pre><code class="language-shell">$ pip install -e .[dev]
+</code></pre>
+<p>See the <a href="https://github.com/ioos/compliance-checker#installation">ioos/compliance-checker</a> for
+additional Installation notes if problems arise with the dependencies.</p>
+<h3 id="installation-and-setup-of-esgvoc">Installation and setup of <code>esgvoc</code></h3>
+<p>The <code>cc-plugin-wcrp</code> checker plugins require the <code>esgvoc</code> software to be installed and setup:</p>
+<pre><code>pip install esgvoc
+esgvoc config set universe:branch=esgvoc_dev
+esgvoc config add cordex-cmip6
+esgvoc install
+</code></pre>
+<ul>
+<li>Test your installation</li>
+</ul>
+<p>The following command should now also list the <code>cc-plugin-wcrp</code> checks next to all <code>cc_plugin_cc6</code> and <code>compliance_checker</code> checks:</p>
+<pre><code>cchecker.py -l
+</code></pre>
+<h2 id="usage">Usage</h2>
+<pre><code class="language-shell">$ esgqa [-h] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] &lt;parent_dir&gt;
+</code></pre>
+<ul>
+<li>positional arguments:</li>
+<li><code>parent_dir</code>: Parent directory to scan for netCDF-files to check</li>
+<li>options:</li>
+<li><code>-h, --help</code>: show this help message and exit</li>
+<li><code>-o, --output_dir OUTPUT_DIR</code>: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in <code>./cc-qa-check-results/YYYYMMDD-HHmm_&lt;hash&gt;</code>.</li>
+<li><code>-t, --test TEST</code>: The test to run (<code>'wcrp_cmip6:latest'</code>, <code>'wcrp_cordex_cmip6:latest'</code> or <code>'cf:&lt;version&gt;'</code>, can be specified multiple times, eg.: <code>'-t wcrp_cmip6:latest -t cf:1.7'</code>) - default: running latest CF checks <code>'cf:latest'</code>.</li>
+<li><code>-O, --option OPTION</code>: Additional options to be passed to the checkers. Format: <code>'&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]'</code>. Multiple invocations possible.</li>
+<li><code>-i, --info INFO</code>:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.</li>
+<li><code>-r, --resume</code>: Specify to continue a previous QC run. Requires the <code>&lt;output_dir&gt;</code> argument to be set.</li>
+<li><code>-C, --include_consistency_checks</code>: Include basic consistency and continuity checks. When using the <code>wcrp-*</code>, <code>cc6</code>, <code>mip</code> or <code>eerie</code> checkers, they are included by default.</li>
+</ul>
+<h3 id="example-usage">Example Usage</h3>
+<pre><code class="language-shell">$ esgqa -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i &quot;IAEVALL02&quot; ESGF_Buff/IAEVALL02/CORDEX-CMIP6
+</code></pre>
+<p>To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <code>&lt;parent_dir&gt;</code>
+(note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
+it will be marked as checked and checks will only be repeated if runtime errors occured):</p>
+<pre><code class="language-shell">$ esgqa -o QA_results/IAEVALL02_2025-10-20 -r
+</code></pre>
+<p>For a custom MIP with defined CMOR tables (<code>"mip"</code> is not a placeholder but an actual basic checker of the <code>cc_plugin_cc6</code>):</p>
+<pre><code class="language-shell">$ esgqa -o /path/to/test/results -t &quot;mip:latest&quot; -O &quot;mip:tables:/path/to/mip_cmor_tables/Tables&quot; /path/to/MIP/datasets/`
+</code></pre>
+<p>For CF checks and basic time and consistency / continuity checks:</p>
+<pre><code class="language-shell">$ esgqa -o /path/to/test/results -t &quot;cf:1.11&quot; -C /path/to/datasets/to/check
+</code></pre>
+<h2 id="displaying-the-check-results">Displaying the check results</h2>
+<p>The results will be stored in two <code>json</code> files:
+- <code>qa_result_*.json</code>: All failed checks incl. all affected datasets and files are listed. Depending on the number of failed checks and files affected, this file can be quite large in volume (up to GigaBytes).
+- <code>qa_result_*.cluster.json</code>: The failed checks are clustered and for affected datasets only a single file is referenced as example. This reduces the file size significantly (to usually below 1 MegaByte).</p>
+<h3 id="web-view">Web view</h3>
+<p>The clustered results can be viewed using the following website:</p>
+<ul>
+<li>DKRZ: <a href="https://cmiphub.dkrz.de/info/display_qc_results.html">https://cmiphub.dkrz.de/info/display_qc_results.html</a>.</li>
+<li>IPSL: coming soon</li>
+</ul>
+<p>This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
+You can select one of the recent QA runs conducted at the respective site or select a local QA run result file to be displayed.</p>
+<p>Alternatively, you can open the included <code>display_qc_results.html</code> file directly in your browser.
+While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.</p>
+<h3 id="esgqaviewer"><code>esgqaviewer</code></h3>
+<p>The <code>esgqaviewer</code> app can be used to view the result files inside a terminal:</p>
+<pre><code>esgqaviewer path/to/result.json
+</code></pre>
+<p>At the bottom of the viewer, all possible tools are listed. The results can be searched using a full text search for instance.
+A double click with the right mouse button on a node will expand / collapse it and below nodes fully, while a left click will collapse the current node only.</p>
+<h3 id="add-results-to-qa-results-repository">Add results to QA results repository</h3>
+<ul>
+<li>DKRZ: <a href="https://cmiphub.dkrz.de/info/display_qc_results.html">https://cmiphub.dkrz.de/info/display_qc_results.html</a> allows viewing QA results hosted
+in the GitLab Repository <a href="https://gitlab.dkrz.de/udag/qa-results">qa-results</a>. You can create a Merge Request in that repository to add your own results.</li>
+<li>IPSL: coming soon</li>
+<li>Feel free to set up repository for QA results for your institute as well. As example implementation can serve: <a href="https://gitlab.dkrz.de/udag/qa-results">qa-results</a></li>
+</ul>
+<h1 id="license">License</h1>
+<p>This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the <a href="./LICENSE">LICENSE</a> file for more details.</p>
+<blockquote>
+<p>[!NOTE]
+<strong>This project was originally developed by <a href="https://www.dkrz.de">DKRZ</a></strong> under the name <strong>cc-qa</strong> (see <a href="https://gitlab.dkrz.de/udag/cc-qa">DKRZ GitLab</a>), with funding from the German Ministry of Research, Technology and Space (<a href="https://www.bmftr.bund.de/en">BMFTR</a>, reference <code>01LP2326E</code>).
+It has since been renamed to <strong>esgf-qa</strong> and is now maintained under the <strong>Earth System Grid Federation (ESGF)</strong> organization on GitHub.</p>
+<p>If you previously used <code>cc-qa</code>, please update your installations as described above.</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": ["navigation.sections", "navigation.expand", "content.code.annotate", "content.tabs.link", "content.code.copy"], "search": "assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
