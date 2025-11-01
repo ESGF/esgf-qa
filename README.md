@@ -1,33 +1,35 @@
 [![PyPI version](https://img.shields.io/pypi/v/esgf-qa.svg)](https://pypi.org/project/esgf-qa/)
 
-# esgf-qa: Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp` 
+# esgf-qa
+### Quality Assurance Workflow Based on `compliance-checker` and `cc-plugin-wcrp` (or other cc-plugins)
 <img src="https://raw.githubusercontent.com/ESGF/esgf-qa/master/docs/esgf-qa_Logo.png" align="left" width="120">
 
-`esgf-qa` makes use of the frameworks and [CF](https://cfconventions.org/)-compliance checks of the
-[ioos/compliance-checker](https://github.com/ioos/compliance-checker) and extensions coming with
+`esgf-qa` provides a flexible quality assurance (QA) workflow for evaluating dataset compliance using the
+[ioos/compliance-checker](https://github.com/ioos/compliance-checker) framework 
+(including [CF](https://cfconventions.org/) compliance checks) 
+and various community plugins (`cc-plugin`s), such as
 [ESGF/cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp) and
 [euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
 
-This tool is designed to run the desired file-based QC tests with
-[ioos/compliance-checker](https://github.com/ioos/compliance-checker) and
-[euro-cordex/cc-plugin-wcrp](https://github.com/euro-cordex/cc-plugin-wcrp),
-to conduct additional dataset-based checks (such as time axis continuity and
-consistency checks) as well as to summarize the test results.
+The tool executes file-based quality control (QC) tests through the Compliance Checker, 
+and, where applicable, performs additional dataset-level checks to test inter-file time-axis continuity 
+and consistency in variable, coordinate and attribute definitions.
+Results from both file- and dataset-level checks are aggregated, summarized, and clustered for easier interpretation.
 
-`esgf-qa` is mainly aimed at a QA workflow testing compliance with various WCRP Project Specifications (see below).
-However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker,
-and it is easily extendable for any `cc-plugin` and for projects defining CORDEX or CMIP style CMOR-tables.
+### Currently supported checkers
+
+While `esgf-qa` has been primarily developed for workflows assessing compliance with WCRP project data specifications
+(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and easily extended to support any
+`cc-plugin` and projects following CORDEX- or CMIP-style CMOR table conventions.
 
 | Standard                                                                                             | Checker Name |
 | ---------------------------------------------------------------------------------------------------- | ------------ |
-| [cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)                                    |  wcrp_cordex_cmip6, cc6 |
-| [cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)                  |  wcrp_cordex_cmip6, cc6 |
-| [CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)                       |  wcrp_cordex_cmip6, cc6 |
-| [CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf) | wcrp_cmip6 / plugin_cmip6 |
-| [cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc) | wcrp_cmip6 / plugin_cmip6 |
-| [CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc) | wcrp_cmip6 / plugin_cmip6 |
-| [EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
-| Custom MIP | mip |
+| [CF Conventions](https://cfconventions.org/) (shipped with [ioos/compliance-checker](https://github.com/ioos/compliance-checker)) | cf |
+| [WCRP CMIP6](https://pcmdi.llnl.gov/CMIP6/):<br><ul><li>[CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf)</li><li>[CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc)</li></li><li>[cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc)</li></ul> | wcrp_cmip6 |
+| [WCRP CORDEX-CMIP6](https://cordex.org/):<br><ul><li>[CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)</li><li>[cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv) (esgvoc)</li><li>[cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables) (esgvoc)</li></ul> |  wcrp_cordex_cmip6 |
+|  [WCRP CORDEX-CMIP6](https://cordex.org/):<br><ul><li>[CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)</li><li>[cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)</li><li>[cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)</li></ul>  | cc6 |
+| [EERIE](https://eerie-project.eu/):<br>[EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
+| Custom MIP (CMOR/MIP tables have to be specified) | mip |
 
 ## Installation
 
@@ -67,6 +69,11 @@ esgvoc install
 The following command should now also list the `cc-plugin-wcrp` checks next to all `cc_plugin_cc6` and `compliance_checker` checks:
 ```
 cchecker.py -l
+```
+
+The following command should now list the necessary projects with metadata sources for `esgvoc`:
+```
+esgvoc status
 ```
 
 ## Usage
@@ -148,8 +155,9 @@ in the GitLab Repository [qa-results](https://gitlab.dkrz.de/udag/qa-results). Y
 
 This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the [LICENSE](./LICENSE) file for more details.
 
+
 > [!NOTE]
-> **This project was originally developed by [DKRZ](https://www.dkrz.de)** under the name **cc-qa** (see [DKRZ GitLab](https://gitlab.dkrz.de/udag/cc-qa)), with funding from the German Ministry of Research, Technology and Space ([BMFTR](https://www.bmftr.bund.de/en), reference `01LP2326E`).
+> **This project was originally developed by [DKRZ](https://www.dkrz.de)** under the name **cc-qa** (see [DKRZ GitLab](https://gitlab.dkrz.de/udag/cc-qa)), with funding from the _German Ministry of Research, Technology and Space_ ([BMFTR](https://www.bmftr.bund.de/en), reference `01LP2326E`).
 > It has since been renamed to **esgf-qa** and is now maintained under the **Earth System Grid Federation (ESGF)** organization on GitHub.
 >
 > If you previously used `cc-qa`, please update your installations as described above.
