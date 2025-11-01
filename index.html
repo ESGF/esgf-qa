@@ -62,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#esgf-qa-quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp" class="md-skip">
+        <a href="#esgf-qa" class="md-skip">
           Skip to content
         </a>
       
@@ -266,6 +266,24 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp-or-other-cc-plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quality Assurance Workflow Based on compliance-checker and cc-plugin-wcrp (or other cc-plugins)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#currently-supported-checkers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Currently supported checkers
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#installation" class="md-nav__link">
@@ -554,6 +572,24 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp-or-other-cc-plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quality Assurance Workflow Based on compliance-checker and cc-plugin-wcrp (or other cc-plugins)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#currently-supported-checkers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Currently supported checkers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
       Installation
@@ -681,20 +717,23 @@
 
 
 <p><a href="https://pypi.org/project/esgf-qa/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/esgf-qa.svg" /></a></p>
-<h1 id="esgf-qa-quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp">esgf-qa: Quality Assurance Workflow Based on <code>compliance-checker</code> and <code>cc-plugin-wcrp</code></h1>
+<h1 id="esgf-qa">esgf-qa</h1>
+<h3 id="quality-assurance-workflow-based-on-compliance-checker-and-cc-plugin-wcrp-or-other-cc-plugins">Quality Assurance Workflow Based on <code>compliance-checker</code> and <code>cc-plugin-wcrp</code> (or other cc-plugins)</h3>
 <p><img src="https://raw.githubusercontent.com/ESGF/esgf-qa/master/docs/esgf-qa_Logo.png" align="left" width="120"></p>
-<p><code>esgf-qa</code> makes use of the frameworks and <a href="https://cfconventions.org/">CF</a>-compliance checks of the
-<a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a> and extensions coming with
+<p><code>esgf-qa</code> provides a flexible quality assurance (QA) workflow for evaluating dataset compliance using the
+<a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a> framework 
+(including <a href="https://cfconventions.org/">CF</a> compliance checks) 
+and various community plugins (<code>cc-plugin</code>s), such as
 <a href="https://github.com/ESGF/cc-plugin-wcrp">ESGF/cc-plugin-wcrp</a> and
 <a href="https://github.com/euro-cordex/cc-plugin-cc6">euro-cordex/cc-plugin-cc6</a>.</p>
-<p>This tool is designed to run the desired file-based QC tests with
-<a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a> and
-<a href="https://github.com/euro-cordex/cc-plugin-wcrp">euro-cordex/cc-plugin-wcrp</a>,
-to conduct additional dataset-based checks (such as time axis continuity and
-consistency checks) as well as to summarize the test results.</p>
-<p><code>esgf-qa</code> is mainly aimed at a QA workflow testing compliance with various WCRP Project Specifications (see below).
-However, it is generally applicable to test for compliance with the CF conventions through application of the IOOS Compliance Checker,
-and it is easily extendable for any <code>cc-plugin</code> and for projects defining CORDEX or CMIP style CMOR-tables.</p>
+<p>The tool executes file-based quality control (QC) tests through the Compliance Checker, 
+and, where applicable, performs additional dataset-level checks to test inter-file time-axis continuity 
+and consistency in variable, coordinate and attribute definitions.
+Results from both file- and dataset-level checks are aggregated, summarized, and clustered for easier interpretation.</p>
+<h3 id="currently-supported-checkers">Currently supported checkers</h3>
+<p>While <code>esgf-qa</code> has been primarily developed for workflows assessing compliance with WCRP project data specifications
+(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and easily extended to support any
+<code>cc-plugin</code> and projects following CORDEX- or CMIP-style CMOR table conventions.</p>
 <table>
 <thead>
 <tr>
@@ -704,35 +743,27 @@ and it is easily extendable for any <code>cc-plugin</code> and for projects defi
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cv">cordex-cmip6-cv</a></td>
-<td>wcrp_cordex_cmip6, cc6</td>
+<td><a href="https://cfconventions.org/">CF Conventions</a> (shipped with <a href="https://github.com/ioos/compliance-checker">ioos/compliance-checker</a>)</td>
+<td>cf</td>
 </tr>
 <tr>
-<td><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables">cordex-cmip6-cmor-tables</a></td>
-<td>wcrp_cordex_cmip6, cc6</td>
+<td><a href="https://pcmdi.llnl.gov/CMIP6/">WCRP CMIP6</a>:<br><ul><li><a href="https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf">CMIP6 DRS</a></li><li><a href="https://github.com/WCRP-CMIP/CMIP6_CVs">CMIP6 CVs</a> (esgvoc)</li></li><li><a href="https://github.com/PCMDI/cmip6-cmor-tables">cmip6-cmor-tables</a> (esgvoc)</li></ul></td>
+<td>wcrp_cmip6</td>
 </tr>
 <tr>
-<td><a href="https://doi.org/10.5281/zenodo.10961069">CORDEX-CMIP6 Archive Specifications</a></td>
-<td>wcrp_cordex_cmip6, cc6</td>
+<td><a href="https://cordex.org/">WCRP CORDEX-CMIP6</a>:<br><ul><li><a href="https://doi.org/10.5281/zenodo.10961069">CORDEX-CMIP6 Archive Specifications</a></li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cv">cordex-cmip6-cv</a> (esgvoc)</li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables">cordex-cmip6-cmor-tables</a> (esgvoc)</li></ul></td>
+<td>wcrp_cordex_cmip6</td>
 </tr>
 <tr>
-<td><a href="https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf">CMIP6 DRS</a></td>
-<td>wcrp_cmip6 / plugin_cmip6</td>
+<td><a href="https://cordex.org/">WCRP CORDEX-CMIP6</a>:<br><ul><li><a href="https://doi.org/10.5281/zenodo.10961069">CORDEX-CMIP6 Archive Specifications</a></li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cv">cordex-cmip6-cv</a></li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables">cordex-cmip6-cmor-tables</a></li></ul></td>
+<td>cc6</td>
 </tr>
 <tr>
-<td><a href="https://github.com/PCMDI/cmip6-cmor-tables">cmip6-cmor-tables</a> (esgvoc)</td>
-<td>wcrp_cmip6 / plugin_cmip6</td>
-</tr>
-<tr>
-<td><a href="https://github.com/WCRP-CMIP/CMIP6_CVs">CMIP6 CVs</a> (esgvoc)</td>
-<td>wcrp_cmip6 / plugin_cmip6</td>
-</tr>
-<tr>
-<td><a href="https://github.com/eerie-project/dreq_tools">EERIE CMOR Tables &amp; CV</a></td>
+<td><a href="https://eerie-project.eu/">EERIE</a>:<br><a href="https://github.com/eerie-project/dreq_tools">EERIE CMOR Tables &amp; CV</a></td>
 <td>eerie</td>
 </tr>
 <tr>
-<td>Custom MIP</td>
+<td>Custom MIP (CMOR/MIP tables have to be specified)</td>
 <td>mip</td>
 </tr>
 </tbody>
@@ -762,6 +793,9 @@ esgvoc install
 </ul>
 <p>The following command should now also list the <code>cc-plugin-wcrp</code> checks next to all <code>cc_plugin_cc6</code> and <code>compliance_checker</code> checks:</p>
 <pre><code>cchecker.py -l
+</code></pre>
+<p>The following command should now list the necessary projects with metadata sources for <code>esgvoc</code>:</p>
+<pre><code>esgvoc status
 </code></pre>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-shell">$ esgqa [-h] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] &lt;parent_dir&gt;
@@ -823,7 +857,7 @@ in the GitLab Repository <a href="https://gitlab.dkrz.de/udag/qa-results">qa-res
 <p>This project is licensed under the Apache License 2.0, and includes the Inter font, which is licensed under the SIL Open Font License 1.1. See the <a href="LICENSE">LICENSE</a> file for more details.</p>
 <blockquote>
 <p>[!NOTE]
-<strong>This project was originally developed by <a href="https://www.dkrz.de">DKRZ</a></strong> under the name <strong>cc-qa</strong> (see <a href="https://gitlab.dkrz.de/udag/cc-qa">DKRZ GitLab</a>), with funding from the German Ministry of Research, Technology and Space (<a href="https://www.bmftr.bund.de/en">BMFTR</a>, reference <code>01LP2326E</code>).
+<strong>This project was originally developed by <a href="https://www.dkrz.de">DKRZ</a></strong> under the name <strong>cc-qa</strong> (see <a href="https://gitlab.dkrz.de/udag/cc-qa">DKRZ GitLab</a>), with funding from the <em>German Ministry of Research, Technology and Space</em> (<a href="https://www.bmftr.bund.de/en">BMFTR</a>, reference <code>01LP2326E</code>).
 It has since been renamed to <strong>esgf-qa</strong> and is now maintained under the <strong>Earth System Grid Federation (ESGF)</strong> organization on GitHub.</p>
 <p>If you previously used <code>cc-qa</code>, please update your installations as described above.</p>
 </blockquote>
