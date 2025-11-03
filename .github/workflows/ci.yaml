@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0  # Fetch full history (tags + branches)
 
       - name: Set up micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         continue-on-error: true
         with:
           environment-file: ci/requirements/environment.yml
