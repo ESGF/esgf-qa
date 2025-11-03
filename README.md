@@ -5,14 +5,14 @@
 <img src="https://raw.githubusercontent.com/ESGF/esgf-qa/master/docs/esgf-qa_Logo.png" align="left" width="120">
 
 `esgf-qa` provides a flexible quality assurance (QA) workflow for evaluating dataset compliance using the
-[ioos/compliance-checker](https://github.com/ioos/compliance-checker) framework 
-(including [CF](https://cfconventions.org/) compliance checks) 
+[ioos/compliance-checker](https://github.com/ioos/compliance-checker) framework
+(including [CF](https://cfconventions.org/) compliance checks)
 and various community plugins (`cc-plugin`s), such as
 [ESGF/cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp) and
 [euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
 
-The tool executes file-based quality control (QC) tests through the Compliance Checker, 
-and, where applicable, performs additional dataset-level checks to test inter-file time-axis continuity 
+The tool executes file-based quality control (QC) tests through the Compliance Checker,
+and, where applicable, performs additional dataset-level checks to test inter-file time-axis continuity
 and consistency in variable, coordinate and attribute definitions.
 Results from both file- and dataset-level checks are aggregated, summarized, and clustered for easier interpretation.
 

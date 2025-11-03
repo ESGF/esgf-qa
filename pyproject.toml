@@ -13,7 +13,7 @@ keywords = ["compliance checker", "plugin", "wcrp", "cmip", "cmip6", "cmip7", "c
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [
-  {name = "Martin Schupfner", email = "schupfner@dkrz.de"},
+  {name = "Martin Schupfner", email = "schupfner@dkrz.de"}
 ]
 maintainers = [
   {name = "Martin Schupfner", email = "schupfner@dkrz.de"}
@@ -61,13 +61,13 @@ dev = [
   "wheel"
 ]
 
-[project.urls]
-homepage = "https://github.com/ESGF/esgf-qa"
-repository = "https://github.com/ESGF/esgf-qa"
-
 [project.scripts]
 esgqa = "esgf_qa.run_qa:main"
 esgqaviewer = "esgf_qa.qaviewer:main"
+
+[project.urls]
+homepage = "https://github.com/ESGF/esgf-qa"
+repository = "https://github.com/ESGF/esgf-qa"
 
 [tool.black]
 target-version = [
@@ -115,9 +115,9 @@ ignore = ["E501"]
 known-first-party = ["esgf_qa"]
 lines-after-imports = 1
 
+[tool.setuptools.packages.find]
+exclude = ["fonts"]
+
 [tool.setuptools_scm]
 fallback_version = "999"
 write_to = "esgf_qa/_version.py"
-
-[tool.setuptools.packages.find]
-exclude = ["fonts"]

@@ -1,8 +1,8 @@
 import difflib
 import re
 from collections import defaultdict
-from esgf_qa._constants import checker_dict, checker_dict_ext
 
+from esgf_qa._constants import checker_dict, checker_dict_ext
 
 
 class QAResultAggregator:
@@ -65,6 +65,7 @@ class QAResultAggregator:
     >>> agg.clustered_summary["fail"]
     {3: {'[CF-Conventions] test_1': {'Missing attribute {A} (1 occurrences, e.g. A=\'units\')': {...}}}}
     """
+
     def __init__(self):
         """
         Initialize the aggregator with an empty summary.
@@ -259,6 +260,7 @@ class QAResultAggregator:
         dict
             Dictionary of placeholders.
         """
+
         def find_next_two_placeholders(list_of_strings, skip):
             placeholders = [
                 s for s in list_of_strings if s.startswith("{") and s.endswith("}")
