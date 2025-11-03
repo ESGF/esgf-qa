@@ -46,10 +46,6 @@ jobs:
           micromamba info
           micromamba list
 
-      - name: Install pre-commit
-        run: |
-          micromamba run -n esgf-qa-tests python -m pip install --no-deps pre-commit
-
       - name: Run pre-commit hooks
         run: |
           micromamba run -n esgf-qa-tests pre-commit run --all-files
