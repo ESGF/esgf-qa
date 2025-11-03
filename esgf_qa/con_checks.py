@@ -54,7 +54,7 @@ def truncate_str(s, max_length=16):
     >>> truncate_str("This is a short string", 16)
     'This is a short string'
     """
-    if max_length <= 15 or len(s) <= max_length:
+    if max_length <= 0 or max_length is None or len(s) <= max_length:
         return s
 
     # Select start and end of string
@@ -106,7 +106,9 @@ def compare_dicts(dict1, dict2, exclude_keys=None):
     all_keys = (set(dict1) | set(dict2)) - exclude_keys
 
     # Collect keys with differing values
-    differing_keys = [key for key in all_keys if dict1.get(key) != dict2.get(key)]
+    differing_keys = [
+        key for key in sorted(list(all_keys)) if dict1.get(key) != dict2.get(key)
+    ]
 
     return differing_keys
 
@@ -126,14 +128,14 @@ def compare_nested_dicts(dict1, dict2, exclude_keys=None):
 
     Returns
     -------
-    list
-        List of keys with differing values.
+    dict
+        Dictionary of keys with differing values.
     """
     diffs = {}
 
     all_root_keys = set(dict1) | set(dict2)
 
-    for root_key in all_root_keys:
+    for root_key in sorted(list(all_root_keys)):
         subdict1 = dict1.get(root_key, {})
         subdict2 = dict2.get(root_key, {})
 
