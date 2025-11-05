@@ -711,7 +711,6 @@ def main():
 
     DRS_parent = "CORDEX-CMIP6"
     for cname in checkers:
-        print(cname)
         DRS_parent_tmp = DRS_path_parent.get(
             checker_dict.get(cname.split(":")[0], ""), ""
         )
@@ -833,14 +832,14 @@ def main():
             dataset_files_map[files_to_check_dict[file_path]["id"]] = [file_path]
         checker_options[file_path] = {
             "mip": {
-                **cl_checker_options["mip"],
+                **cl_checker_options.get("mip", {}),
                 "consistency_output": files_to_check_dict[file_path][
                     "consistency_file"
                 ],
                 "time_checks_only": time_checks_only,
             },
             "cc6": {
-                **cl_checker_options["cc6"],
+                **cl_checker_options.get("cc6", {}),
                 "consistency_output": files_to_check_dict[file_path][
                     "consistency_file"
                 ],
@@ -852,7 +851,7 @@ def main():
                 "time_checks_only": time_checks_only,
             },
             "cf:": {
-                **cl_checker_options["cf"],
+                **cl_checker_options.get("cf", {}),
                 "enable_appendix_a_checks": True,
             },
             "wcrp_cmip6": {

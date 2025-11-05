@@ -381,6 +381,8 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     calendar=data["time_info"]["calendar"],
                 )
                 if data["time_info"]["timen"]
+                and data["time_info"]["units"]
+                and data["time_info"]["calendar"]
                 else None
             )
             boundn = (
@@ -390,6 +392,8 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     calendar=data["time_info"]["calendar"],
                 )
                 if data["time_info"]["boundn"]
+                and data["time_info"]["units"]
+                and data["time_info"]["calendar"]
                 else None
             )
             if i == 1:
@@ -401,6 +405,8 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     calendar=data["time_info"]["calendar"],
                 )
                 if data["time_info"]["time0"]
+                and data["time_info"]["units"]
+                and data["time_info"]["calendar"]
                 else None
             )
             bound0 = (
@@ -410,6 +416,8 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     calendar=data["time_info"]["calendar"],
                 )
                 if data["time_info"]["bound0"]
+                and data["time_info"]["units"]
+                and data["time_info"]["calendar"]
                 else None
             )
             freq = data["time_info"]["frequency"]
