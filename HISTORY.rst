@@ -1,3 +1,22 @@
+0.4.0 (2025-11-05)
+------------------
+
+New Features
+^^^^^^^^^^^^
+
+* Allowing checker options to be specified via command line for all checkers.
+* Improved support of ``cc-plugin-wcrp``: enabled inter-file/dataset consistency & continuity checks.
+
+Bug Fixes
+^^^^^^^^^
+
+* Time continuity check: No longer throwing exception on unsupported time coordinates.
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+* No longer allowing respecification of checkers and options when resuming QA run (3d2e082d40aef7c512ce828b1e4600ef81176e37).
+
 0.3.0 (2025-10-17)
 ------------------
 
