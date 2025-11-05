@@ -11,7 +11,8 @@ dependencies:
   - pandas
   - textual
   - xarray
-  - cc-plugin-cc6>=0.4.0
+#  - cc-plugin-cc6 >= 0.4.0
+#  - cc-plugin-wcrp > 1.0.0
 # for testing
   - pytest
   - pytest>=7.0.0
@@ -26,4 +27,5 @@ dependencies:
     - pre-commit
     - compliance-checker @ git+https://github.com/ioos/compliance-checker.git@main
     - cc-plugin-wcrp @ git+https://github.com/ESGF/cc-plugin-wcrp.git@master
-#    - cc-plugin-wcrp
+    - cc-plugin-cc6 @ git+https://github.com/euro-cordex/cc-plugin-cc6.git@main
+#    - cc-plugin-wcrp > 1.0.0

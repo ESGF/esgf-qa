@@ -429,17 +429,33 @@ def parse_options(opts):
     for opt_str in opts:
         try:
             checker_type, checker_opt, *checker_val = opt_str.split(":", 2)
-            checker_val = checker_val[0] if checker_val else None
+            checker_val = checker_val[0] if checker_val else True
         except ValueError:
             raise ValueError(
                 f"Could not split option '{opt_str}', seems illegally formatted. The required format is: '<checker>:<option_name>[:<option_value>]', eg. 'mip:tables:/path/to/Tables'."
             )
-        if checker_type != "mip":
-            raise ValueError(
-                f"Currently, only options for 'mip' checker are supported, got '{checker_type}'."
-            )
         options_dict[checker_type][checker_opt] = checker_val
     return options_dict
+
+
+def _verify_options_dict(options):
+    """
+    Helper function to verify that the options dictionary is correctly formatted.
+    """
+    if not isinstance(options, dict):
+        return False
+    if options == {}:
+        return True
+    try:
+        for checker_type in options.keys():
+            for checker_opt in options[checker_type].keys():
+                checker_val = options[checker_type][checker_opt]
+                if not isinstance(checker_val, (int, float, str, bool, type(None))):
+                    return False
+    except (AttributeError, KeyError):
+        return False
+    # Seems to match the required format
+    return True
 
 
 def main():
@@ -511,39 +527,51 @@ def main():
     # Resume information stored in a json file
     resume_info_file = Path(result_dir, ".resume_info")
 
+    # Do not allow arguments other than -o/--output_dir, -i/--info and -r/--resume if resuming previous QA run
+    if resume:
+        allowed_with_resume = {"output_dir", "info", "resume"}
+        # Convert Namespace to dict for easier checking
+        set_args = {k for k, v in vars(args).items() if v not in (None, False, [], "")}
+        invalid_args = set_args - allowed_with_resume
+        if invalid_args:
+            parser.error(
+                f"When using -r/--resume, only -o/--output_dir and -i/--info can be set. Invalid: {', '.join(invalid_args)}"
+            )
+
     # Deal with result_dir
     if not os.path.exists(result_dir):
         if resume:
-            resume = False
-            warnings.warn(
-                "Resume is set but specified output_directory does not exist. Starting a new QA run..."
+            raise FileNotFoundError(
+                f"Resume is set but specified output_directory does not exist: '{result_dir}'."
             )
         os.mkdir(result_dir)
     elif os.listdir(result_dir) != []:
+        required_files = [progress_file, resume_info_file]
+        required_paths = [os.path.join(result_dir, p) for p in ["tables"]]
         if resume:
-            required_files = [progress_file, resume_info_file]
-            required_paths = [os.path.join(result_dir, p) for p in ["tables"]]
             if not all(os.path.isfile(rfile) for rfile in required_files) or not all(
                 os.path.isdir(rpath) for rpath in required_paths
             ):
                 raise Exception(
-                    "Resume is set but specified output_directory cannot be identified as output_directory of a previous QA run."
+                    "Resume is set but specified output_directory cannot be identified as output directory of a previous QA run."
                 )
         else:
-            if "progress.txt" in os.listdir(
-                result_dir
-            ) and ".resume_info" in os.listdir(result_dir):
+            if all(os.path.isfile(rfile) for rfile in required_files) and all(
+                os.path.isdir(rpath) for rpath in required_paths
+            ):
                 raise Exception(
-                    "Specified output_directory is not empty but can be identified as output_directory of a previous QA run. Use'-r' or '--resume' (together with '-o' or '--output_dir') to continue the previous QA run or choose a different output_directory instead."
+                    "Specified output directory is not empty but can be identified as output directory of a previous QA run. Use'-r' or '--resume' (together with '-o' or '--output_dir') to continue the previous QA run or choose a different output_directory instead."
                 )
             else:
-                raise Exception("Specified output_directory is not empty.")
+                raise Exception("Specified output directory is not empty.")
     else:
         if resume:
             resume = False
-            warnings.warn(
-                "Resume is set but specified output_directory is empty. Starting a new QA run..."
+            raise FileNotFoundError(
+                f"Resume is set but specified output directory is empty: '{result_dir}'."
             )
+
+    # When resuming previous QA run
     if resume:
         print(f"Resuming previous QA run in '{result_dir}'")
         with open(os.path.join(result_dir, ".resume_info")) as f:
@@ -552,58 +580,54 @@ def main():
                 required_keys = ["parent_dir", "info", "tests"]
                 if not all(key in resume_info for key in required_keys):
                     raise Exception(
-                        "Invalid .resume_info file. It should contain the keys 'parent_dir', 'info', and 'tests'."
+                        f"Invalid .resume_info file in '{result_dir}'. It should contain the keys 'parent_dir', 'info', and 'tests'."
                     )
                 if not (
                     isinstance(resume_info["parent_dir"], str)
                     and isinstance(resume_info["info"], str)
                     and isinstance(resume_info["tests"], list)
+                    and isinstance(resume_info.get("cl_checker_options", {}), dict)
+                    and isinstance(
+                        resume_info.get("include_consistency_checks", False), bool
+                    )
+                    and _verify_options_dict(resume_info.get("cl_checker_options", {}))
                     and all(isinstance(test, str) for test in resume_info["tests"])
                 ):
                     raise Exception(
-                        "Invalid .resume_info file. 'parent_dir' and 'info' should be strings, and 'tests' should be a list of strings."
+                        f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and 'info' should be strings, and 'tests' should be a list of strings. "
+                        "'cl_checker_options' (optional) should be a nested dictionary of format 'checker:option_name:option_value', and "
+                        "'include_consistency_checks' (optional) should be a boolean."
                     )
             except json.JSONDecodeError:
                 raise Exception(
-                    "Invalid .resume_info file. It should be a valid JSON file."
+                    f"Invalid .resume_info file in '{result_dir}'. It needs to be a valid JSON file."
                 )
-            if tests and sorted(tests) != resume_info["tests"]:
-                raise Exception("Cannot resume a previous QA run with different tests.")
-            else:
-                tests = resume_info["tests"]
+            tests = resume_info["tests"]
+            parent_dir = resume_info["parent_dir"]
             if info and info != resume_info["info"]:
                 warnings.warn(
                     f"<info> argument differs from the originally specified <info> argument ('{resume_info['info']}'). Using the new specification."
                 )
-            if parent_dir is None:
-                parent_dir = resume_info["parent_dir"]
-            if parent_dir and Path(parent_dir) != Path(resume_info["parent_dir"]):
-                raise Exception(
-                    "Cannot resume a previous QA run with different <parent_dir>."
-                )
-            if cl_checker_options and cl_checker_options != resume_info.get(
-                "checker_options", {}
-            ):
-                raise Exception(
-                    "Cannot resume a previous QA run with different <option> arguments."
-                )
-            else:
-                parent_dir = Path(resume_info["parent_dir"])
-            if "include_consistency_checks" in resume_info:
-                include_consistency_checks = resume_info["include_consistency_checks"]
+            cl_checker_options = resume_info.get("checker_options", {})
+            include_consistency_checks = resume_info.get(
+                "include_consistency_checks", False
+            )
     else:
         print(f"Storing check results in '{result_dir}'")
 
     # Deal with tests
     if not tests:
-        checkers = ["cc6", "cf"]
-        checkers_versions = {"cc6": "latest", "cf": "1.11"}
+        checkers = ["cf"]
+        checkers_versions = {"cf": "latest"}
         checker_options = defaultdict(dict)
     else:
-        test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
+        # Require versions to be specified:
+        # test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
+        # Allow versions to be ommitted:
+        test_regex = re.compile(r"^[a-z0-9_]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
         if not all([test_regex.match(test) for test in tests]):
             raise Exception(
-                f"Invalid test(s) specified. Please specify tests in the format 'checker_name:version'. Currently supported are: {', '.join(list(checker_dict.keys()))}, eerie."
+                f"Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'. Currently supported are: {', '.join(list(checker_dict.keys()))}, eerie."
             )
         checkers = [test.split(":")[0] for test in tests]
         if sorted(checkers) != sorted(list(set(checkers))):
@@ -631,11 +655,9 @@ def main():
         if "eerie" in checkers_versions:
             checkers_versions["mip"] = "latest"
             del checkers_versions["eerie"]
-            if "tables" in cl_checker_options["eerie"]:
-                cl_checker_options["mip"]["tables"] = cl_checker_options["eerie"][
-                    "tables"
-                ]
-            elif "tables" not in cl_checker_options["mip"]:
+            if "eerie" in cl_checker_options:
+                cl_checker_options["mip"] = cl_checker_options.pop("eerie")
+            if "tables" not in cl_checker_options["mip"]:
                 cl_checker_options["mip"][
                     "tables"
                 ] = "/work/bm0021/cmor_tables/eerie_cmor_tables/Tables"
@@ -669,7 +691,7 @@ def main():
     if cl_checker_options:
         resume_info["checker_options"] = cl_checker_options
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
-        json.dump(resume_info, f)
+        json.dump(resume_info, f, sort_keys=True, indent=4)
 
     # If only cf checker is selected, run cc6 time checks only
     if (
@@ -689,7 +711,6 @@ def main():
 
     DRS_parent = "CORDEX-CMIP6"
     for cname in checkers:
-        print(cname)
         DRS_parent_tmp = DRS_path_parent.get(
             checker_dict.get(cname.split(":")[0], ""), ""
         )
@@ -811,14 +832,14 @@ def main():
             dataset_files_map[files_to_check_dict[file_path]["id"]] = [file_path]
         checker_options[file_path] = {
             "mip": {
-                **cl_checker_options["mip"],
+                **cl_checker_options.get("mip", {}),
                 "consistency_output": files_to_check_dict[file_path][
                     "consistency_file"
                 ],
                 "time_checks_only": time_checks_only,
             },
             "cc6": {
-                **cl_checker_options["cc6"],
+                **cl_checker_options.get("cc6", {}),
                 "consistency_output": files_to_check_dict[file_path][
                     "consistency_file"
                 ],
@@ -830,7 +851,7 @@ def main():
                 "time_checks_only": time_checks_only,
             },
             "cf:": {
-                **cl_checker_options["cf"],
+                **cl_checker_options.get("cf", {}),
                 "enable_appendix_a_checks": True,
             },
             "wcrp_cmip6": {
@@ -855,7 +876,7 @@ def main():
             {
                 k: v
                 for k, v in cl_checker_options.items()
-                if k not in ["cc6", "cf", "mip"]
+                if k not in ["cc6", "cf", "mip", "wcrp_cmip6", "wcrp_cordex_cmip6"]
             }
         )
 
@@ -892,6 +913,7 @@ def main():
 
     # Initialize the summary
     summary = QAResultAggregator()
+    reference_ds_dict = {}
 
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
@@ -1059,7 +1081,7 @@ def main():
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks
-    if "cc6:latest" in checkers or "mip:latest" in checkers:
+    if reference_ds_dict:
         summary_info["inter_ds_con_checks_ref"] = reference_ds_dict
 
     dsid_common_prefix = os.path.commonprefix(list(dataset_files_map.keys()))
