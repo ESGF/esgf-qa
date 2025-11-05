@@ -1,6 +1,8 @@
 include LICENSE
 include README.md
 
+exclude ci/*
+
 recursive-include tests *.py
 recursive-include fonts *
 
