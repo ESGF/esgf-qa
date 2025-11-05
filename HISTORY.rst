@@ -15,7 +15,7 @@ Bug Fixes
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
-* No longer allowing respecification of checkers and options when resuming QA run (3d2e082d40aef7c512ce828b1e4600ef81176e37).
+* No longer allowing respecification of checkers and options when resuming QA run (commit 3d2e082d40aef7c512ce828b1e4600ef81176e37).
 
 0.3.0 (2025-10-17)
 ------------------
