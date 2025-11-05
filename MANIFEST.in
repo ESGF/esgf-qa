@@ -1,9 +1,19 @@
 include LICENSE
 include README.md
 
-exclude ci/*
-
 recursive-include tests *.py
 recursive-include fonts *
 
-global-exclude __pycache__ *.py[co]
+Global-exclude __pycache__ *.py[co]
+
+# Exclude GitHub workflows and metadata
+exclude .github/*
+
+# Exclude project configuration files
+exclude ci/*
+exclude mkdocs.yaml
+exclude .pre-commit.yml
+exclude .gitignore
+
+# Exclude documentation
+exclude docs/*
