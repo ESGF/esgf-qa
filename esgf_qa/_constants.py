@@ -5,10 +5,9 @@ checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
     "mip": "MIP",
-    "plugin_cmip6": "CMIP6",
     # "wcrp-cmip5": "CMIP5",
     "wcrp_cmip6": "CMIP6",
-    # "wcrp_cmip7": "CMIP7-AFT",
+    # "wcrp_cmip7aft: "CMIP7-AFT",
     # "wcrp_cmip7": "CMIP7",
     # "wcrp_cordex": "CORDEX",
     "wcrp_cordex_cmip6": "CORDEX-CMIP6",
@@ -23,6 +22,7 @@ checker_dict_ext = {
     **checker_dict,
 }
 checker_release_versions = {}
+checker_supporting_cons_checks = {"mip", "cc6", "wcrp_cmip6", "wcrp_cordex_cmip6"}
 
 # DRS parent directory names
 DRS_path_parent = {

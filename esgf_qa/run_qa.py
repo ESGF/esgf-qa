@@ -18,6 +18,7 @@ from esgf_qa._constants import (
     checker_dict,
     checker_dict_ext,
     checker_release_versions,
+    checker_supporting_cons_checks,
 )
 from esgf_qa._version import version
 from esgf_qa.cluster_results import QAResultAggregator
@@ -507,6 +508,13 @@ def main():
         action="store_true",
         help="Include basic consistency and continuity checks. Default: False.",
     )
+    parser.add_argument(
+        "-P",
+        "--parallel_processes",
+        type=int,
+        default=0,
+        help="Specify the maximum number of parallel processes. Default: 0 (unlimited).",
+    )
     args = parser.parse_args()
 
     result_dir = os.path.abspath(args.output_dir)
@@ -518,6 +526,7 @@ def main():
         args.include_consistency_checks if args.include_consistency_checks else False
     )
     cl_checker_options = parse_options(args.option)
+    parallel_processes = args.parallel_processes
 
     # Progress file to track already checked files
     progress_file = Path(result_dir, "progress.txt")
@@ -529,7 +538,7 @@ def main():
 
     # Do not allow arguments other than -o/--output_dir, -i/--info and -r/--resume if resuming previous QA run
     if resume:
-        allowed_with_resume = {"output_dir", "info", "resume"}
+        allowed_with_resume = {"output_dir", "info", "resume", "parallel_processes"}
         # Convert Namespace to dict for easier checking
         set_args = {k for k, v in vars(args).items() if v not in (None, False, [], "")}
         invalid_args = set_args - allowed_with_resume
@@ -917,6 +926,8 @@ def main():
 
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
+    if parallel_processes > 0:
+        num_processes = min(num_processes, parallel_processes)
     print(f"Using {num_processes} parallel processes for cc checks.")
     print()
 
@@ -963,14 +974,7 @@ def main():
 
     # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if (
-        "cc6:latest" in checkers
-        or "mip:latest" in checkers
-        or "wcrp_cmip6:1.0" in checkers
-        or "wcrp_cmip6:latest" in checkers
-        or "wcrp_cordex_cmip6:1.0" in checkers
-        or "wcrp_cordex_cmip6:latest" in checkers
-    ):
+    if any(ch.split(":", 1)[0] in checker_supporting_cons_checks for ch in checkers):
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
         #########################################################
@@ -996,6 +1000,8 @@ def main():
         # Limit the number of processes for consistency checks since a lot
         #   of files will be opened at the same time
         num_processes = min(num_processes, 10)
+        if parallel_processes > 0:
+            num_processes = min(num_processes, parallel_processes)
         print(f"Using {num_processes} parallel processes for dataset checks.")
         print()
 
