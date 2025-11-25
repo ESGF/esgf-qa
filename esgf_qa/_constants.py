@@ -32,7 +32,13 @@ checker_supporting_consistency_checks = [
 # DRS parent directory names
 supported_project_ids = [
     "cmip5",
-    "cmip6" "cmip7" "cordex" "cordex-cmip6" "obs4mips" "input4mips" "c3scordex",
+    "cmip6",
+    "cmip7",
+    "cordex",
+    "cordex-cmip6",
+    "obs4mips",
+    "input4mips",
+    "c3scordex",
     "c3scmip5",
     "c3scmip6",
     "c3s-ipcc-ar6-atlas",
