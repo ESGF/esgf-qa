@@ -79,15 +79,16 @@ esgvoc status
 ## Usage
 
 ```shell
-$ esgqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
+$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
 ```
 
 - positional arguments:
   - `parent_dir`: Parent directory to scan for netCDF-files to check
 - options:
   - `-h, --help`: show this help message and exit
+  - `-P, --parallel_processes`: Specify the maximum number of parallel processes. Default: 0 (= number of cores).
   - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t, --test TEST`: The test to run (`'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks `'cf:latest'`.
+  - `-t, --test TEST`: The test to run (`'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks `'cf:latest'`. If the version is omitted, `latest` will be used.
   - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: `'<checker>:<option_name>[:<option_value>]'`. Multiple invocations possible.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
@@ -96,7 +97,7 @@ $ esgqa [-h] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <pa
 ### Example Usage
 
 ```shell
-$ esgqa -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i "IAEVALL02" ESGF_Buff/IAEVALL02/CORDEX-CMIP6
+$ esgqa -P 8 -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i "IAEVALL02" ESGF_Buff/IAEVALL02/CORDEX-CMIP6
 ```
 
 To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the `<parent_dir>`

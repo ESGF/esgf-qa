@@ -61,7 +61,7 @@ def test_get_dsid():
         },
     }
     file_path = f"/path/to/{project_id}/drs/elements/until/file1_1950-1960.nc"
-    dsid = get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id)
+    dsid = get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, [project_id])
     assert dsid == "my_project.drs.elements.until"
 
 

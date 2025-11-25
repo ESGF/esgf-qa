@@ -22,19 +22,28 @@ checker_dict_ext = {
     **checker_dict,
 }
 checker_release_versions = {}
-checker_supporting_cons_checks = {"mip", "cc6", "wcrp_cmip6", "wcrp_cordex_cmip6"}
+checker_supporting_consistency_checks = [
+    "wcrp_cmip6",
+    "wcrp_cordex_cmip6",
+    "cc6",
+    "mip",
+]
 
 # DRS parent directory names
-DRS_path_parent = {
-    "CMIP5": "CMIP5",
-    "CMIP6": "CMIP6",
-    "CMIP7": "CMIP7",
-    "CMIP7-AFT": "CMIP7",
-    "CORDEX": "CORDEX",
-    "CORDEX-CMIP6": "CORDEX-CMIP6",
-    "Obs4MIPs": "Obs4MIPs",
-    "Input4MIPs": "Input4MIPs",
-}
+supported_project_ids = [
+    "cmip5",
+    "cmip6" "cmip7" "cordex" "cordex-cmip6" "obs4mips" "input4mips" "c3scordex",
+    "c3scmip5",
+    "c3scmip6",
+    "c3s-ipcc-ar6-atlas",
+    "c3satlas",
+    "c3s-cica-atlas",
+    "c3satlas_v1",
+    "c3s-atlas-dataset" "c3satlas_v2",
+    "eerie",
+    "happi",
+    "cosmo-rea",
+]
 
 # Definition of maximum permitted deviations from the given frequency
 deltdic = {}

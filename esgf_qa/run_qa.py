@@ -14,11 +14,11 @@ from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
 
 from esgf_qa._constants import (
-    DRS_path_parent,
     checker_dict,
     checker_dict_ext,
     checker_release_versions,
-    checker_supporting_cons_checks,
+    checker_supporting_consistency_checks,
+    supported_project_ids,
 )
 from esgf_qa._version import version
 from esgf_qa.cluster_results import QAResultAggregator
@@ -54,7 +54,7 @@ def get_default_result_dir():
     )
 
 
-def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
+def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_ids):
     """
     Get the dataset id for a file.
 
@@ -66,8 +66,8 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
         Dictionary of dataset files.
     file_path : str
         Path to the file.
-    project_id : str
-        Project id.
+    project_ids: list of str
+        List of supported project_ids
 
     Returns
     -------
@@ -76,11 +76,13 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
     """
     dir_id = files_to_check_dict[file_path]["id_dir"].split("/")
     fn_id = files_to_check_dict[file_path]["id_fn"].split("_")
-    if project_id in dir_id:
-        last_index = len(dir_id) - 1 - dir_id[::-1].index(project_id)
-        dsid = ".".join(dir_id[last_index:])
-    else:
-        dsid = ".".join(dir_id)
+    dsid = ".".join(dir_id)
+    dir_id_lower = [el.lower() for el in dir_id]
+    for project_id in project_ids:
+        if project_id in dir_id_lower:
+            last_index = len(dir_id_lower) - 1 - dir_id_lower[::-1].index(project_id)
+            dsid = ".".join(dir_id[last_index:])
+            break
     if len(dataset_files_map_ext[files_to_check_dict[file_path]["id_dir"]].keys()) > 1:
         dsid += "." + ".".join(fn_id)
     return dsid
@@ -167,8 +169,13 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
                         ds, [checker], include_checks=None, skip_checks=[]
                     )
                 )
+        if hasattr(ds, "close"):
+            ds.close()
         return results
-    return check_suite.run_all(ds, checkers, include_checks=None, skip_checks=[])
+    results = check_suite.run_all(ds, checkers, include_checks=None, skip_checks=[])
+    if hasattr(ds, "close"):
+        ds.close()
+    return results
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
@@ -513,7 +520,7 @@ def main():
         "--parallel_processes",
         type=int,
         default=0,
-        help="Specify the maximum number of parallel processes. Default: 0 (unlimited).",
+        help="Specify the maximum number of parallel processes. Default: 0 (= number of cores).",
     )
     args = parser.parse_args()
 
@@ -718,15 +725,6 @@ def main():
     progress_file.touch()
     dataset_file.touch()
 
-    DRS_parent = "CORDEX-CMIP6"
-    for cname in checkers:
-        DRS_parent_tmp = DRS_path_parent.get(
-            checker_dict.get(cname.split(":")[0], ""), ""
-        )
-        if DRS_parent_tmp:
-            DRS_parent = DRS_parent_tmp
-            break
-
     # Check if progress files exist and read already processed files/datasets
     processed_files = set()
     with open(progress_file) as file:
@@ -825,7 +823,7 @@ def main():
     files_to_check = sorted(files_to_check)
     for file_path in files_to_check:
         files_to_check_dict[file_path]["id"] = get_dsid(
-            files_to_check_dict, dataset_files_map_ext, file_path, DRS_parent
+            files_to_check_dict, dataset_files_map_ext, file_path, supported_project_ids
         )
         files_to_check_dict[file_path]["result_file_ds"] = (
             result_dir
@@ -974,7 +972,9 @@ def main():
 
     # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if any(ch.split(":", 1)[0] in checker_supporting_cons_checks for ch in checkers):
+    if any(
+        ch.split(":", 1)[0] in checker_supporting_consistency_checks for ch in checkers
+    ):
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
         #########################################################
@@ -1052,7 +1052,9 @@ def main():
     else:
         print()
         warnings.warn(
-            "Continuity & Consistency checks skipped since no cc6 checks were run."
+            "Continuity & consistency checks skipped since no appropriate checkers were run."
+            " The following checkers support the continuity & consistency checks: "
+            f"{', '.join(checker_supporting_consistency_checks)}"
         )
 
     #########################################################
