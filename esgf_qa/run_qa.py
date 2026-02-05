@@ -695,15 +695,17 @@ def main():
                 invalid_checkers.append(checker_i)
             elif checker_i == "eerie":
                 pass
-            elif checker_iv not in checkers_versions[checker_i] and checker_i not in [
+            elif checker_iv not in cc_checker_versions[checker_i] and checker_i not in [
                 "cc6",
                 "mip",
             ]:
                 invalid_checkers_versions.append(checker_i)
         if invalid_checkers:
-            invalid_checkers_errmsg = "The following checkers are not supported or installed: {', '.join(invalid_checkers)}. "
+            invalid_checkers_errmsg = f"ERROR: Invalid test(s) specified. The following checkers are not supported or installed: {', '.join(invalid_checkers)}. "
         for checker_i in invalid_checkers_versions:
-            invalid_checkers_errmsg += "For checker {checker_i} only the following versions are currently supported / installed: {', '.join(cc_checker_versions[checker_i])}. "
+            if not invalid_checkers_errmsg:
+                invalid_checkers_errmsg = "ERROR: Invalid test(s) specified. "
+            invalid_checkers_errmsg += f"For checker {checker_i} only the following versions are currently supported / installed: {', '.join(cc_checker_versions[checker_i])}. "
         if invalid_checkers_errmsg:
             raise ValueError(invalid_checkers_errmsg)
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
