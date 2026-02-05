@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-# Collection of supported checkers
+# Mapping of checker names to project names for better readability
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
@@ -22,6 +22,8 @@ checker_dict_ext = {
     **checker_dict,
 }
 checker_release_versions = {}
+
+# Checkers for which consistency checks should be run
 checker_supporting_consistency_checks = [
     "wcrp_cmip7",
     "wcrp_cmip6",
@@ -30,7 +32,7 @@ checker_supporting_consistency_checks = [
     "mip",
 ]
 
-# DRS parent directory names
+# DRS parent directory names (for identifying project root and building dataset id)
 supported_project_ids = [
     "cmip7",
     "cmip6plus",

@@ -306,14 +306,6 @@ def process_file(
         checker = checkerv.split(":")[0]
         check_results[checker] = dict()
         check_results[checker]["errors"] = {}
-        # print()
-        # print("name",result[checker][0][0].name)
-        # print("weight", result[checker][0][0].weight)
-        # print("value", result[checker][0][0].value)
-        # print("msgs", result[checker][0][0].msgs)
-        # print("method", result[checker][0][0].check_method)
-        # print("children", result[checker][0][0].children)
-        # quit()
         for check in result[checkerv][0]:
             check_results[checker][check.name] = {}
             check_results[checker][check.name]["weight"] = check.weight
@@ -578,7 +570,7 @@ def main():
     # Resume information stored in a json file
     resume_info_file = Path(result_dir, ".resume_info")
 
-    # Do not allow arguments other than -o/--output_dir, -i/--info and -r/--resume if resuming previous QA run
+    # Do not allow any but certain arguments if resuming previous QA run
     if resume:
         allowed_with_resume = {"output_dir", "info", "resume", "parallel_processes"}
         # Convert Namespace to dict for easier checking
@@ -586,7 +578,7 @@ def main():
         invalid_args = set_args - allowed_with_resume
         if invalid_args:
             parser.error(
-                f"When using -r/--resume, only -o/--output_dir and -i/--info can be set. Invalid: {', '.join(invalid_args)}"
+                f"When using -r/--resume, the following arguments are not allowed: {', '.join(invalid_args)}"
             )
 
     # Deal with result_dir
@@ -944,22 +936,27 @@ def main():
         raise Exception("No files found to check.")
     else:
         print(
-            f"Found {len(files_to_check)} files (organized in {len(dataset_files_map)} datasets) to check."
+            f"\nFound {len(files_to_check)} files (organized in {len(dataset_files_map)} datasets) to check."
         )
 
-    print()
-    print("Files to check:")
-    print(json.dumps(files_to_check, indent=4))
-    print()
-    print("Dataset - Files mapping (extended):")
-    print(json.dumps(dataset_files_map_ext, indent=4))
-    print()
-    print("Dataset - Files mapping:")
-    print(json.dumps(dataset_files_map, indent=4))
-    print()
-    print("Files to check dict:")
-    print(json.dumps(files_to_check_dict, indent=4))
-    print()
+    # Save dictionaries to disk for information
+    with open(os.path.join(result_dir, "files_to_check.json"), "w") as f:
+        json.dump(files_to_check, f, indent=4)
+    with open(os.path.join(result_dir, "files_to_check_dict.json"), "w") as f:
+        json.dump(files_to_check_dict, f, indent=4)
+    with open(os.path.join(result_dir, "dataset_files_map.json"), "w") as f:
+        json.dump(dataset_files_map, f, indent=4)
+    with open(os.path.join(result_dir, "dataset_files_map_ext.json"), "w") as f:
+        json.dump(dataset_files_map_ext, f, indent=4)
+    print(
+        "Information on which files have been found and how these are organized into datasets was saved to disk:"
+    )
+    print(
+        f" - {os.path.join(result_dir, 'files_to_check.json')}\n"
+        f" - {os.path.join(result_dir, 'files_to_check_dict.json')}\n"
+        f" - {os.path.join(result_dir, 'dataset_files_map.json')}\n"
+        f" - {os.path.join(result_dir, 'dataset_files_map_ext.json')}"
+    )
 
     #########################################################
     # QA Part 1 - Run all compliance-checker checks
