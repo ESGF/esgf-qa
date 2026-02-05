@@ -23,6 +23,7 @@ checker_dict_ext = {
 }
 checker_release_versions = {}
 checker_supporting_consistency_checks = [
+    "wcrp_cmip7",
     "wcrp_cmip6",
     "wcrp_cordex_cmip6",
     "cc6",
@@ -31,11 +32,13 @@ checker_supporting_consistency_checks = [
 
 # DRS parent directory names
 supported_project_ids = [
-    "cmip5",
-    "cmip6",
     "cmip7",
+    "cmip6plus",
+    "cmip6",
+    "cmip5",
     "cordex",
     "cordex-cmip6",
+    "cordex-fpsconv",
     "obs4mips",
     "input4mips",
     "c3scordex",
@@ -45,7 +48,8 @@ supported_project_ids = [
     "c3satlas",
     "c3s-cica-atlas",
     "c3satlas_v1",
-    "c3s-atlas-dataset" "c3satlas_v2",
+    "c3s-atlas-dataset",
+    "c3satlas_v2",
     "eerie",
     "happi",
     "cosmo-rea",
