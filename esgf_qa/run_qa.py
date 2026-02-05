@@ -12,6 +12,7 @@ from pathlib import Path
 
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
+from packaging import version as pversion
 
 from esgf_qa._constants import (
     checker_dict,
@@ -88,6 +89,34 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_ids)
     return dsid
 
 
+def get_installed_checker_versions():
+    """
+    Get all available versions of installed cc-plugins.
+
+    Returns
+    -------
+    dict
+        A dictionary of {checker_name: [version1, version2, latest], ...}.
+    """
+    check_suite = CheckSuite()
+    check_suite.load_all_available_checkers()
+    installed_versions = {}
+    for checker in check_suite.checkers:
+        try:
+            name, version = checker.split(":")
+        except ValueError:
+            name, version = checker, "latest"
+        if version == "latest":
+            continue
+        if name not in installed_versions:
+            installed_versions[name] = []
+        installed_versions[name].append(version)
+    for name, versions in installed_versions.items():
+        installed_versions[name] = sorted(versions, key=pversion.parse) + ["latest"]
+
+    return installed_versions
+
+
 def get_checker_release_versions(checkers, checker_options={}):
     """
     Get the release versions of the checkers.
@@ -120,6 +149,12 @@ def get_checker_release_versions(checkers, checker_options={}):
                 )
             elif checker.split(":")[0] in checker_dict_ext:
                 checker_release_versions[checker.split(":")[0]] = version
+            else:
+                checker_release_versions[checker.split(":")[0]] = (
+                    check_suite.checkers.get(
+                        checker, "unknown version"
+                    )._cc_spec_version
+                )
 
 
 def run_compliance_checker(file_path, checkers, checker_options={}):
@@ -638,12 +673,13 @@ def main():
         checker_options = defaultdict(dict)
     else:
         # Require versions to be specified:
-        # test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
+        # test_regex = re.compile(r"^[a-zA-Z0-9_-]+:(latest|[0-9]+(\.[0-9]+)*)$")
         # Allow versions to be ommitted:
-        test_regex = re.compile(r"^[a-z0-9_]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
+        test_regex = re.compile(r"^[a-zA-Z0-9_-]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
+        # Check format of specified checkers and separate checker, version, options
         if not all([test_regex.match(test) for test in tests]):
             raise Exception(
-                f"Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'. Currently supported are: {', '.join(list(checker_dict.keys()))}, eerie."
+                "Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'."
             )
         checkers = [test.split(":")[0] for test in tests]
         if sorted(checkers) != sorted(list(set(checkers))):
@@ -657,6 +693,27 @@ def main():
             for test in tests
         }
         checker_options = defaultdict(dict)
+        # Check if specified checkers (or their requested versions) exist / are currently installed
+        cc_checker_versions = get_installed_checker_versions()
+        invalid_checkers = []
+        invalid_checkers_versions = []
+        invalid_checkers_errmsg = ""
+        for checker_i, checker_iv in checkers_versions.items():
+            if checker_i not in cc_checker_versions and checker_i != "eerie":
+                invalid_checkers.append(checker_i)
+            elif checker_i == "eerie":
+                pass
+            elif checker_iv not in checkers_versions[checker_i] and checker_i not in [
+                "cc6",
+                "mip",
+            ]:
+                invalid_checkers_versions.append(checker_i)
+        if invalid_checkers:
+            invalid_checkers_errmsg = "The following checkers are not supported or installed: {', '.join(invalid_checkers)}. "
+        for checker_i in invalid_checkers_versions:
+            invalid_checkers_errmsg += "For checker {checker_i} only the following versions are currently supported / installed: {', '.join(cc_checker_versions[checker_i])}. "
+        if invalid_checkers_errmsg:
+            raise ValueError(invalid_checkers_errmsg)
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
             checkers_versions["cc6"] = "latest"
             warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
@@ -680,10 +737,6 @@ def main():
         if sum(1 for ci in checkers_versions if ci in ["mip", "cc6"]) > 1:
             raise Exception(
                 "ERROR: Cannot run both 'cc6' and 'mip' checkers at the same time."
-            )
-        if any(test not in checker_dict.keys() for test in checkers_versions):
-            raise Exception(
-                f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
             )
 
     # Combine checkers and versions

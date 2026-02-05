@@ -8,7 +8,7 @@ checker_dict = {
     # "wcrp-cmip5": "CMIP5",
     "wcrp_cmip6": "CMIP6",
     # "wcrp_cmip7aft: "CMIP7-AFT",
-    # "wcrp_cmip7": "CMIP7",
+    "wcrp_cmip7": "CMIP7",
     # "wcrp_cordex": "CORDEX",
     "wcrp_cordex_cmip6": "CORDEX-CMIP6",
     # "obs4mips": "Obs4MIPs",
