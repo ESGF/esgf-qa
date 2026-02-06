@@ -1134,7 +1134,7 @@ def main():
         "cc_version": cc_version,
         "checkers": ", ".join(
             [
-                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}"
+                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}".strip()
                 for checker in checkers
             ]
         ),
