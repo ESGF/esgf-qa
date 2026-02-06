@@ -19,8 +19,8 @@ Results from both file- and dataset-level checks are aggregated, summarized, and
 ### Currently supported checkers
 
 While `esgf-qa` has been primarily developed for workflows assessing compliance with WCRP project data specifications
-(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and easily extended to support any
-`cc-plugin` and projects following CORDEX- or CMIP-style CMOR table conventions.
+(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and generally supports any
+`cc-plugin`. It can be easily extended to support any projects following CORDEX- or CMIP-style CMOR table conventions.
 
 | Standard                                                                                             | Checker Name |
 | ---------------------------------------------------------------------------------------------------- | ------------ |
