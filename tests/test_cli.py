@@ -252,7 +252,11 @@ class TestQACommandLine:
             )
             json_files = list(output_dir.glob("*.json"))
             assert len(json_files) == 6
-            with open(json_files[0]) as f:
+            json_result_files = [
+                f for f in json_files if f.name.startswith("qa_result_")
+            ]
+            assert len(json_result_files) == 2
+            with open(json_result_files[0]) as f:
                 data = json.load(f)
             # "info" is the only required field
             assert "info" in data
