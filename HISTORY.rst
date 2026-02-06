@@ -1,3 +1,14 @@
+0.5.0 (2026-02-06)
+------------------
+
+New Features
+^^^^^^^^^^^^
+
+* Allowing to limit the number of parallel processes with the ``-P <max_processes>`` command line parameter.
+* Generally, any ``cc-plugin`` is now supported.
+* Creation of dataset-ids now supports a variety of projects. The list can be updated if needed.
+* Information on found files and organization into datasets now stored to disk rather than being output to stdout.
+
 0.4.0 (2025-11-05)
 ------------------
 
