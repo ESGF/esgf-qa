@@ -7,7 +7,7 @@
 `esgf-qa` provides a flexible quality assurance (QA) workflow for evaluating dataset compliance using the
 [ioos/compliance-checker](https://github.com/ioos/compliance-checker) framework
 (including [CF](https://cfconventions.org/) compliance checks)
-and various community plugins (`cc-plugin`s), such as
+and any community plugins (`cc-plugin`s), such as
 [ESGF/cc-plugin-wcrp](https://github.com/ESGF/cc-plugin-wcrp) and
 [euro-cordex/cc-plugin-cc6](https://github.com/euro-cordex/cc-plugin-cc6).
 
@@ -88,7 +88,7 @@ $ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION]
   - `-h, --help`: show this help message and exit
   - `-P, --parallel_processes`: Specify the maximum number of parallel processes. Default: 0 (= number of cores).
   - `-o, --output_dir OUTPUT_DIR`: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in `./cc-qa-check-results/YYYYMMDD-HHmm_<hash>`.
-  - `-t, --test TEST`: The test to run (`'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks `'cf:latest'`. If the version is omitted, `latest` will be used.
+  - `-t, --test TEST`: The test to run (eg. `'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks `'cf:latest'`. If the version is omitted, `latest` will be used.
   - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: `'<checker>:<option_name>[:<option_value>]'`. Multiple invocations possible.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
@@ -111,7 +111,7 @@ $ esgqa -o QA_results/IAEVALL02_2025-10-20 -r
 For a custom MIP with defined CMOR tables (`"mip"` is not a placeholder but an actual basic checker of the `cc_plugin_cc6`):
 
 ```shell
-$ esgqa -o /path/to/test/results -t "mip:latest" -O "mip:tables:/path/to/mip_cmor_tables/Tables" /path/to/MIP/datasets/`
+$ esgqa -o /path/to/test/results -t "mip:latest" -O "mip:tables:/path/to/mip_cmor_tables/Tables" /path/to/MIP/datasets/
 ```
 
 For CF checks and basic time and consistency / continuity checks:

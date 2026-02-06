@@ -516,13 +516,17 @@ def main():
         "--option",
         default=[],
         action="append",
-        help="Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. Multiple invocations possible.",
+        help="Additional options to be passed to the checkers. Format: '<checker>:<option_name>[:<option_value>]'. "
+        "Multiple invocations possible.",
     )
     parser.add_argument(
         "-t",
         "--test",
         action="append",
-        help="The test to run ('cc6:latest' or 'cf:<version>', can be specified multiple times, eg.: '-t cc6:latest -t cf:1.8') - default: running 'cc6:latest' and 'cf:1.11'.",
+        help="The test(s) to run in format '<checker>[:<version>]', (eg. 'wcrp_cmip7', "
+        "'wcrp_cmip6:latest' or 'cf:<version>', can be specified multiple times, "
+        "eg.: '-t cc6:latest -t cf:1.11') - default: running 'cf:latest'. "
+        "The default version selected for each checker is 'latest'.",
     )
     parser.add_argument(
         "-i",
