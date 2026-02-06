@@ -2003,7 +2003,11 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="normal">1174</span>
 <span class="normal">1175</span>
 <span class="normal">1176</span>
-<span class="normal">1177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="normal">1177</span>
+<span class="normal">1178</span>
+<span class="normal">1179</span>
+<span class="normal">1180</span>
+<span class="normal">1181</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CLI entry point.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2026,13 +2030,17 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="s2">&quot;--option&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Additional options to be passed to the checkers. Format: &#39;&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]&#39;. Multiple invocations possible.&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Additional options to be passed to the checkers. Format: &#39;&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]&#39;. &quot;</span>
+        <span class="s2">&quot;Multiple invocations possible.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--test&quot;</span><span class="p">,</span>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;append&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The test to run (&#39;cc6:latest&#39; or &#39;cf:&lt;version&gt;&#39;, can be specified multiple times, eg.: &#39;-t cc6:latest -t cf:1.8&#39;) - default: running &#39;cc6:latest&#39; and &#39;cf:1.11&#39;.&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The test(s) to run in format &#39;&lt;checker&gt;[:&lt;version&gt;]&#39;, (eg. &#39;wcrp_cmip7&#39;, &quot;</span>
+        <span class="s2">&quot;&#39;wcrp_cmip6:latest&#39; or &#39;cf:&lt;version&gt;&#39;, can be specified multiple times, &quot;</span>
+        <span class="s2">&quot;eg.: &#39;-t cc6:latest -t cf:1.11&#39;) - default: running &#39;cf:latest&#39;. &quot;</span>
+        <span class="s2">&quot;The default version selected for each checker is &#39;latest&#39;.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
