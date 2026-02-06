@@ -230,7 +230,7 @@ class TestQACommandLine:
             ),
             (
                 ["-r", "-t", "cf:latest", "-o", "some_dir"],
-                "When using -r/--resume, only -o/--output_dir and -i/--info can be set",
+                "When using -r/--resume, the following arguments are not allowed",
             ),
         ],
     )
@@ -251,8 +251,12 @@ class TestQACommandLine:
                 ["-t", "cf:latest", "-o", str(output_dir), str(self.cmip6_dir)]
             )
             json_files = list(output_dir.glob("*.json"))
-            assert len(json_files) == 2
-            with open(json_files[0]) as f:
+            assert len(json_files) == 6
+            json_result_files = [
+                f for f in json_files if f.name.startswith("qa_result_")
+            ]
+            assert len(json_result_files) == 2
+            with open(json_result_files[0]) as f:
                 data = json.load(f)
             # "info" is the only required field
             assert "info" in data

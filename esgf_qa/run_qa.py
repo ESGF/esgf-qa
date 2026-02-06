@@ -12,12 +12,14 @@ from pathlib import Path
 
 from compliance_checker import __version__ as cc_version
 from compliance_checker.runner import CheckSuite
+from packaging import version as pversion
 
 from esgf_qa._constants import (
-    DRS_path_parent,
     checker_dict,
     checker_dict_ext,
     checker_release_versions,
+    checker_supporting_consistency_checks,
+    supported_project_ids,
 )
 from esgf_qa._version import version
 from esgf_qa.cluster_results import QAResultAggregator
@@ -53,7 +55,7 @@ def get_default_result_dir():
     )
 
 
-def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
+def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_ids):
     """
     Get the dataset id for a file.
 
@@ -65,8 +67,8 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
         Dictionary of dataset files.
     file_path : str
         Path to the file.
-    project_id : str
-        Project id.
+    project_ids: list of str
+        List of supported project_ids
 
     Returns
     -------
@@ -75,14 +77,44 @@ def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_id):
     """
     dir_id = files_to_check_dict[file_path]["id_dir"].split("/")
     fn_id = files_to_check_dict[file_path]["id_fn"].split("_")
-    if project_id in dir_id:
-        last_index = len(dir_id) - 1 - dir_id[::-1].index(project_id)
-        dsid = ".".join(dir_id[last_index:])
-    else:
-        dsid = ".".join(dir_id)
+    dsid = ".".join(dir_id)
+    dir_id_lower = [el.lower() for el in dir_id]
+    for project_id in project_ids:
+        if project_id in dir_id_lower:
+            last_index = len(dir_id_lower) - 1 - dir_id_lower[::-1].index(project_id)
+            dsid = ".".join(dir_id[last_index:])
+            break
     if len(dataset_files_map_ext[files_to_check_dict[file_path]["id_dir"]].keys()) > 1:
         dsid += "." + ".".join(fn_id)
     return dsid
+
+
+def get_installed_checker_versions():
+    """
+    Get all available versions of installed cc-plugins.
+
+    Returns
+    -------
+    dict
+        A dictionary of {checker_name: [version1, version2, latest], ...}.
+    """
+    check_suite = CheckSuite()
+    check_suite.load_all_available_checkers()
+    installed_versions = {}
+    for checker in check_suite.checkers:
+        try:
+            name, version = checker.split(":")
+        except ValueError:
+            name, version = checker, "latest"
+        if version == "latest":
+            continue
+        if name not in installed_versions:
+            installed_versions[name] = []
+        installed_versions[name].append(version)
+    for name, versions in installed_versions.items():
+        installed_versions[name] = sorted(versions, key=pversion.parse) + ["latest"]
+
+    return installed_versions
 
 
 def get_checker_release_versions(checkers, checker_options={}):
@@ -117,6 +149,12 @@ def get_checker_release_versions(checkers, checker_options={}):
                 )
             elif checker.split(":")[0] in checker_dict_ext:
                 checker_release_versions[checker.split(":")[0]] = version
+            else:
+                checker_release_versions[checker.split(":")[0]] = (
+                    check_suite.checkers.get(
+                        checker, "unknown version"
+                    )._cc_spec_version
+                )
 
 
 def run_compliance_checker(file_path, checkers, checker_options={}):
@@ -166,8 +204,13 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
                         ds, [checker], include_checks=None, skip_checks=[]
                     )
                 )
+        if hasattr(ds, "close"):
+            ds.close()
         return results
-    return check_suite.run_all(ds, checkers, include_checks=None, skip_checks=[])
+    results = check_suite.run_all(ds, checkers, include_checks=None, skip_checks=[])
+    if hasattr(ds, "close"):
+        ds.close()
+    return results
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):
@@ -263,14 +306,6 @@ def process_file(
         checker = checkerv.split(":")[0]
         check_results[checker] = dict()
         check_results[checker]["errors"] = {}
-        # print()
-        # print("name",result[checker][0][0].name)
-        # print("weight", result[checker][0][0].weight)
-        # print("value", result[checker][0][0].value)
-        # print("msgs", result[checker][0][0].msgs)
-        # print("method", result[checker][0][0].check_method)
-        # print("children", result[checker][0][0].children)
-        # quit()
         for check in result[checkerv][0]:
             check_results[checker][check.name] = {}
             check_results[checker][check.name]["weight"] = check.weight
@@ -507,6 +542,13 @@ def main():
         action="store_true",
         help="Include basic consistency and continuity checks. Default: False.",
     )
+    parser.add_argument(
+        "-P",
+        "--parallel_processes",
+        type=int,
+        default=0,
+        help="Specify the maximum number of parallel processes. Default: 0 (= number of cores).",
+    )
     args = parser.parse_args()
 
     result_dir = os.path.abspath(args.output_dir)
@@ -518,6 +560,7 @@ def main():
         args.include_consistency_checks if args.include_consistency_checks else False
     )
     cl_checker_options = parse_options(args.option)
+    parallel_processes = args.parallel_processes
 
     # Progress file to track already checked files
     progress_file = Path(result_dir, "progress.txt")
@@ -527,15 +570,15 @@ def main():
     # Resume information stored in a json file
     resume_info_file = Path(result_dir, ".resume_info")
 
-    # Do not allow arguments other than -o/--output_dir, -i/--info and -r/--resume if resuming previous QA run
+    # Do not allow any but certain arguments if resuming previous QA run
     if resume:
-        allowed_with_resume = {"output_dir", "info", "resume"}
+        allowed_with_resume = {"output_dir", "info", "resume", "parallel_processes"}
         # Convert Namespace to dict for easier checking
         set_args = {k for k, v in vars(args).items() if v not in (None, False, [], "")}
         invalid_args = set_args - allowed_with_resume
         if invalid_args:
             parser.error(
-                f"When using -r/--resume, only -o/--output_dir and -i/--info can be set. Invalid: {', '.join(invalid_args)}"
+                f"When using -r/--resume, the following arguments are not allowed: {', '.join(invalid_args)}"
             )
 
     # Deal with result_dir
@@ -622,12 +665,13 @@ def main():
         checker_options = defaultdict(dict)
     else:
         # Require versions to be specified:
-        # test_regex = re.compile(r"^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$")
+        # test_regex = re.compile(r"^[a-zA-Z0-9_-]+:(latest|[0-9]+(\.[0-9]+)*)$")
         # Allow versions to be ommitted:
-        test_regex = re.compile(r"^[a-z0-9_]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
+        test_regex = re.compile(r"^[a-zA-Z0-9_-]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
+        # Check format of specified checkers and separate checker, version, options
         if not all([test_regex.match(test) for test in tests]):
             raise Exception(
-                f"Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'. Currently supported are: {', '.join(list(checker_dict.keys()))}, eerie."
+                "Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'."
             )
         checkers = [test.split(":")[0] for test in tests]
         if sorted(checkers) != sorted(list(set(checkers))):
@@ -641,6 +685,29 @@ def main():
             for test in tests
         }
         checker_options = defaultdict(dict)
+        # Check if specified checkers (or their requested versions) exist / are currently installed
+        cc_checker_versions = get_installed_checker_versions()
+        invalid_checkers = []
+        invalid_checkers_versions = []
+        invalid_checkers_errmsg = ""
+        for checker_i, checker_iv in checkers_versions.items():
+            if checker_i not in cc_checker_versions and checker_i != "eerie":
+                invalid_checkers.append(checker_i)
+            elif checker_i == "eerie":
+                pass
+            elif checker_iv not in cc_checker_versions[checker_i] and checker_i not in [
+                "cc6",
+                "mip",
+            ]:
+                invalid_checkers_versions.append(checker_i)
+        if invalid_checkers:
+            invalid_checkers_errmsg = f"ERROR: Invalid test(s) specified. The following checkers are not supported or installed: {', '.join(invalid_checkers)}. "
+        for checker_i in invalid_checkers_versions:
+            if not invalid_checkers_errmsg:
+                invalid_checkers_errmsg = "ERROR: Invalid test(s) specified. "
+            invalid_checkers_errmsg += f"For checker {checker_i} only the following versions are currently supported / installed: {', '.join(cc_checker_versions[checker_i])}. "
+        if invalid_checkers_errmsg:
+            raise ValueError(invalid_checkers_errmsg)
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
             checkers_versions["cc6"] = "latest"
             warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
@@ -664,10 +731,6 @@ def main():
         if sum(1 for ci in checkers_versions if ci in ["mip", "cc6"]) > 1:
             raise Exception(
                 "ERROR: Cannot run both 'cc6' and 'mip' checkers at the same time."
-            )
-        if any(test not in checker_dict.keys() for test in checkers_versions):
-            raise Exception(
-                f"Invalid test(s) specified. Supported are: {', '.join(checker_dict.keys())}"
             )
 
     # Combine checkers and versions
@@ -708,15 +771,6 @@ def main():
     os.makedirs(result_dir + "/tables", exist_ok=True)
     progress_file.touch()
     dataset_file.touch()
-
-    DRS_parent = "CORDEX-CMIP6"
-    for cname in checkers:
-        DRS_parent_tmp = DRS_path_parent.get(
-            checker_dict.get(cname.split(":")[0], ""), ""
-        )
-        if DRS_parent_tmp:
-            DRS_parent = DRS_parent_tmp
-            break
 
     # Check if progress files exist and read already processed files/datasets
     processed_files = set()
@@ -816,7 +870,7 @@ def main():
     files_to_check = sorted(files_to_check)
     for file_path in files_to_check:
         files_to_check_dict[file_path]["id"] = get_dsid(
-            files_to_check_dict, dataset_files_map_ext, file_path, DRS_parent
+            files_to_check_dict, dataset_files_map_ext, file_path, supported_project_ids
         )
         files_to_check_dict[file_path]["result_file_ds"] = (
             result_dir
@@ -884,22 +938,27 @@ def main():
         raise Exception("No files found to check.")
     else:
         print(
-            f"Found {len(files_to_check)} files (organized in {len(dataset_files_map)} datasets) to check."
+            f"\nFound {len(files_to_check)} files (organized in {len(dataset_files_map)} datasets) to check."
         )
 
-    print()
-    print("Files to check:")
-    print(json.dumps(files_to_check, indent=4))
-    print()
-    print("Dataset - Files mapping (extended):")
-    print(json.dumps(dataset_files_map_ext, indent=4))
-    print()
-    print("Dataset - Files mapping:")
-    print(json.dumps(dataset_files_map, indent=4))
-    print()
-    print("Files to check dict:")
-    print(json.dumps(files_to_check_dict, indent=4))
-    print()
+    # Save dictionaries to disk for information
+    with open(os.path.join(result_dir, "files_to_check.json"), "w") as f:
+        json.dump(files_to_check, f, indent=4)
+    with open(os.path.join(result_dir, "files_to_check_dict.json"), "w") as f:
+        json.dump(files_to_check_dict, f, indent=4)
+    with open(os.path.join(result_dir, "dataset_files_map.json"), "w") as f:
+        json.dump(dataset_files_map, f, indent=4)
+    with open(os.path.join(result_dir, "dataset_files_map_ext.json"), "w") as f:
+        json.dump(dataset_files_map_ext, f, indent=4)
+    print(
+        "Information on which files have been found and how these are organized into datasets was saved to disk:"
+    )
+    print(
+        f" - {os.path.join(result_dir, 'files_to_check.json')}\n"
+        f" - {os.path.join(result_dir, 'files_to_check_dict.json')}\n"
+        f" - {os.path.join(result_dir, 'dataset_files_map.json')}\n"
+        f" - {os.path.join(result_dir, 'dataset_files_map_ext.json')}"
+    )
 
     #########################################################
     # QA Part 1 - Run all compliance-checker checks
@@ -917,6 +976,8 @@ def main():
 
     # Calculate the number of processes
     num_processes = max(multiprocessing.cpu_count() - 4, 1)
+    if parallel_processes > 0:
+        num_processes = min(num_processes, parallel_processes)
     print(f"Using {num_processes} parallel processes for cc checks.")
     print()
 
@@ -963,13 +1024,8 @@ def main():
 
     # Skip continuity and consistency checks if no cc6/mip checks were run
     #   (and thus no consistency output file was created)
-    if (
-        "cc6:latest" in checkers
-        or "mip:latest" in checkers
-        or "wcrp_cmip6:1.0" in checkers
-        or "wcrp_cmip6:latest" in checkers
-        or "wcrp_cordex_cmip6:1.0" in checkers
-        or "wcrp_cordex_cmip6:latest" in checkers
+    if any(
+        ch.split(":", 1)[0] in checker_supporting_consistency_checks for ch in checkers
     ):
         #########################################################
         # QA Part 2 - Run all consistency & continuity checks
@@ -996,6 +1052,8 @@ def main():
         # Limit the number of processes for consistency checks since a lot
         #   of files will be opened at the same time
         num_processes = min(num_processes, 10)
+        if parallel_processes > 0:
+            num_processes = min(num_processes, parallel_processes)
         print(f"Using {num_processes} parallel processes for dataset checks.")
         print()
 
@@ -1046,7 +1104,9 @@ def main():
     else:
         print()
         warnings.warn(
-            "Continuity & Consistency checks skipped since no cc6 checks were run."
+            "Continuity & consistency checks skipped since no appropriate checkers were run."
+            " The following checkers support the continuity & consistency checks: "
+            f"{', '.join(checker_supporting_consistency_checks)}"
         )
 
     #########################################################
@@ -1074,7 +1134,7 @@ def main():
         "cc_version": cc_version,
         "checkers": ", ".join(
             [
-                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}"
+                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}".strip()
                 for checker in checkers
             ]
         ),

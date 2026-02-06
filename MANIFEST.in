@@ -17,5 +17,5 @@ prune docs
 
 # Exclude project config files
 exclude mkdocs.yml
-exclude .pre-commit.yml
+exclude .pre-commit-config.yaml
 exclude .gitignore

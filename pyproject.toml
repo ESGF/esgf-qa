@@ -32,6 +32,7 @@ dependencies = [
   "compliance-checker>=5.3.0",
   "dask",
   "netCDF4",
+  "packaging",
   "pandas",
   "textual",
   "xarray",

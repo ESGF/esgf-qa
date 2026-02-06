@@ -1,15 +1,14 @@
 from datetime import timedelta
 
-# Collection of supported checkers
+# Mapping of checker names to project names for better readability
 checker_dict = {
     "cc6": "CORDEX-CMIP6",
     "cf": "CF-Conventions",
     "mip": "MIP",
-    "plugin_cmip6": "CMIP6",
     # "wcrp-cmip5": "CMIP5",
     "wcrp_cmip6": "CMIP6",
-    # "wcrp_cmip7": "CMIP7-AFT",
-    # "wcrp_cmip7": "CMIP7",
+    # "wcrp_cmip7aft: "CMIP7-AFT",
+    "wcrp_cmip7": "CMIP7",
     # "wcrp_cordex": "CORDEX",
     "wcrp_cordex_cmip6": "CORDEX-CMIP6",
     # "obs4mips": "Obs4MIPs",
@@ -24,17 +23,39 @@ checker_dict_ext = {
 }
 checker_release_versions = {}
 
-# DRS parent directory names
-DRS_path_parent = {
-    "CMIP5": "CMIP5",
-    "CMIP6": "CMIP6",
-    "CMIP7": "CMIP7",
-    "CMIP7-AFT": "CMIP7",
-    "CORDEX": "CORDEX",
-    "CORDEX-CMIP6": "CORDEX-CMIP6",
-    "Obs4MIPs": "Obs4MIPs",
-    "Input4MIPs": "Input4MIPs",
-}
+# Checkers for which consistency checks should be run
+checker_supporting_consistency_checks = [
+    "wcrp_cmip7",
+    "wcrp_cmip6",
+    "wcrp_cordex_cmip6",
+    "cc6",
+    "mip",
+]
+
+# DRS parent directory names (for identifying project root and building dataset id)
+supported_project_ids = [
+    "cmip7",
+    "cmip6plus",
+    "cmip6",
+    "cmip5",
+    "cordex",
+    "cordex-cmip6",
+    "cordex-fpsconv",
+    "obs4mips",
+    "input4mips",
+    "c3scordex",
+    "c3scmip5",
+    "c3scmip6",
+    "c3s-ipcc-ar6-atlas",
+    "c3satlas",
+    "c3s-cica-atlas",
+    "c3satlas_v1",
+    "c3s-atlas-dataset",
+    "c3satlas_v2",
+    "eerie",
+    "happi",
+    "cosmo-rea",
+]
 
 # Definition of maximum permitted deviations from the given frequency
 deltdic = {}

@@ -101,7 +101,7 @@ class QAResultAggregator:
                         "errors"
                     ].items():
                         self.summary["error"][
-                            f"[{checker_dict[checker]}] " + function_name
+                            f"[{checker_dict.get(checker, checker)}] " + function_name
                         ][error_msg][dsid].append(file_name)
                 else:
                     score, max_score = result_dict[checker][test]["value"]
@@ -110,7 +110,7 @@ class QAResultAggregator:
                     if score < max_score:  # test outcome: fail
                         for msg in msgs:
                             self.summary["fail"][weight][
-                                f"[{checker_dict[checker]}] " + test
+                                f"[{checker_dict.get(checker, checker)}] " + test
                             ][msg][dsid].append(file_name)
 
     def update_ds(self, result_dict, dsid):
@@ -132,7 +132,8 @@ class QAResultAggregator:
                     ].items():
                         for file_name in errdict["files"]:
                             self.summary["error"][
-                                f"[{checker_dict_ext[checker]}] " + function_name
+                                f"[{checker_dict_ext.get(checker, checker)}] "
+                                + function_name
                             ][errdict["msg"]][dsid].append(file_name)
                 else:
                     weight = result_dict[checker][test].get("weight", 3)
@@ -140,7 +141,7 @@ class QAResultAggregator:
                     for msg, file_names in fails.items():
                         for file_name in file_names:
                             self.summary["fail"][weight][
-                                f"[{checker_dict_ext[checker]}] " + test
+                                f"[{checker_dict_ext.get(checker, checker)}] " + test
                             ][msg][dsid].append(file_name)
 
     def sort(self):
