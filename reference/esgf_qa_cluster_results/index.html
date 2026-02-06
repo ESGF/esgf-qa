@@ -1420,7 +1420,8 @@ that come with esgf-qa.</p>
 <span class="normal">463</span>
 <span class="normal">464</span>
 <span class="normal">465</span>
-<span class="normal">466</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QAResultAggregator</span><span class="p">:</span>
+<span class="normal">466</span>
+<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QAResultAggregator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Aggregate, organize, and cluster the results of multiple ESGF-Quality Assurance (QA)</span>
 <span class="sd">    or Climate Checker (cc) runs.</span>
@@ -1516,7 +1517,7 @@ that come with esgf-qa.</p>
                         <span class="s2">&quot;errors&quot;</span>
                     <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
                         <span class="p">][</span><span class="n">error_msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
@@ -1525,7 +1526,7 @@ that come with esgf-qa.</p>
                     <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="n">max_score</span><span class="p">:</span>  <span class="c1"># test outcome: fail</span>
                         <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
                             <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
@@ -1547,7 +1548,8 @@ that come with esgf-qa.</p>
                     <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                         <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                                <span class="o">+</span> <span class="n">function_name</span>
                             <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;msg&quot;</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">weight</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -1555,7 +1557,7 @@ that come with esgf-qa.</p>
                     <span class="k">for</span> <span class="n">msg</span><span class="p">,</span> <span class="n">file_names</span> <span class="ow">in</span> <span class="n">fails</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                         <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
                             <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2034,8 +2036,7 @@ that come with esgf-qa.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
-<span class="normal">163</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">163</span>
 <span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
@@ -2064,7 +2065,8 @@ that come with esgf-qa.</p>
 <span class="normal">189</span>
 <span class="normal">190</span>
 <span class="normal">191</span>
-<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">192</span>
+<span class="normal">193</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">cluster_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cluster messages based on similarity.</span>
@@ -2173,8 +2175,7 @@ large numbers of check failure messages.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">346</span>
 <span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
@@ -2294,7 +2295,8 @@ large numbers of check failure messages.</p>
 <span class="normal">463</span>
 <span class="normal">464</span>
 <span class="normal">465</span>
-<span class="normal">466</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
+<span class="normal">466</span>
+<span class="normal">467</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cluster messages in the summary into groups of similar messages.</span>
 
@@ -2506,8 +2508,7 @@ large numbers of check failure messages.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
-<span class="normal">195</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
@@ -2550,7 +2551,8 @@ large numbers of check failure messages.</p>
 <span class="normal">235</span>
 <span class="normal">236</span>
 <span class="normal">237</span>
-<span class="normal">238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">238</span>
+<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">generalize_message_group</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generalize a group of messages.</span>
@@ -2718,8 +2720,7 @@ large numbers of check failure messages.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
-<span class="normal">241</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
@@ -2821,7 +2822,8 @@ large numbers of check failure messages.</p>
 <span class="normal">340</span>
 <span class="normal">341</span>
 <span class="normal">342</span>
-<span class="normal">343</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">343</span>
+<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Merge adjacent placeholders in message templates where possible.</span>
@@ -2948,8 +2950,7 @@ large numbers of check failure messages.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cluster_results.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">146</span>
-<span class="normal">147</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
@@ -2962,7 +2963,8 @@ large numbers of check failure messages.</p>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
-<span class="normal">160</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sort the summary by test weight and test name for consistent output ordering.</span>
 
@@ -3112,7 +3114,7 @@ large numbers of check failure messages.</p>
                     <span class="s2">&quot;errors&quot;</span>
                 <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                        <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                        <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
                     <span class="p">][</span><span class="n">error_msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
@@ -3121,7 +3123,7 @@ large numbers of check failure messages.</p>
                 <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="n">max_score</span><span class="p">:</span>  <span class="c1"># test outcome: fail</span>
                     <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
                         <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -3220,7 +3222,8 @@ large numbers of check failure messages.</p>
 <span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span>
-<span class="normal">144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
+<span class="normal">144</span>
+<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Update the summary with a single result of an esgf-qa (inter-file/dataset) run.</span>
 
@@ -3239,7 +3242,8 @@ large numbers of check failure messages.</p>
                 <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                            <span class="o">+</span> <span class="n">function_name</span>
                         <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;msg&quot;</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">weight</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -3247,7 +3251,7 @@ large numbers of check failure messages.</p>
                 <span class="k">for</span> <span class="n">msg</span><span class="p">,</span> <span class="n">file_names</span> <span class="ow">in</span> <span class="n">fails</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
                         <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>

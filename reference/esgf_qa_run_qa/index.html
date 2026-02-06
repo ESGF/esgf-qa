@@ -407,6 +407,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#esgf_qa.run_qa.get_installed_checker_versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_installed_checker_versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#esgf_qa.run_qa.main" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -643,6 +654,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#esgf_qa.run_qa.get_installed_checker_versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_installed_checker_versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#esgf_qa.run_qa.main" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -845,38 +867,44 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_checker_release_versions</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="p">{}):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_checker_release_versions</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the release versions of the checkers.</span>
 
@@ -908,6 +936,12 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">checker_dict_ext</span><span class="p">:</span>
                 <span class="n">checker_release_versions</span><span class="p">[</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">version</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">checker_release_versions</span><span class="p">[</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="n">checker</span><span class="p">,</span> <span class="s2">&quot;unknown version&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">_cc_spec_version</span>
+                <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -953,9 +987,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
-<span class="normal">39</span>
-<span class="normal">40</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">40</span>
 <span class="normal">41</span>
 <span class="normal">42</span>
 <span class="normal">43</span>
@@ -968,7 +1000,9 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_result_dir</span><span class="p">():</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_result_dir</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the default result directory.</span>
 
@@ -994,7 +1028,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
 
 <h2 id="esgf_qa.run_qa.get_dsid" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_dsid</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">get_dsid</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">project_ids</span><span class="p">)</span></code>
 
 </h2>
 
@@ -1065,14 +1099,13 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>project_id</code>
+                <code>project_ids</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Project id.</p>
+                <p>List of supported project_ids</p>
               </div>
             </td>
             <td>
@@ -1108,9 +1141,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
@@ -1137,7 +1168,11 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dsid</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">project_id</span><span class="p">):</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dsid</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">project_ids</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the dataset id for a file.</span>
 
@@ -1149,8 +1184,8 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="sd">        Dictionary of dataset files.</span>
 <span class="sd">    file_path : str</span>
 <span class="sd">        Path to the file.</span>
-<span class="sd">    project_id : str</span>
-<span class="sd">        Project id.</span>
+<span class="sd">    project_ids: list of str</span>
+<span class="sd">        List of supported project_ids</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1159,14 +1194,112 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dir_id</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_dir&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
     <span class="n">fn_id</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_fn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">dir_id</span><span class="p">:</span>
-        <span class="n">last_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dir_id</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">dir_id</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
-        <span class="n">dsid</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_id</span><span class="p">[</span><span class="n">last_index</span><span class="p">:])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">dsid</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_id</span><span class="p">)</span>
+    <span class="n">dsid</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_id</span><span class="p">)</span>
+    <span class="n">dir_id_lower</span> <span class="o">=</span> <span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">dir_id</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">project_ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">dir_id_lower</span><span class="p">:</span>
+            <span class="n">last_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dir_id_lower</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">dir_id_lower</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+            <span class="n">dsid</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_id</span><span class="p">[</span><span class="n">last_index</span><span class="p">:])</span>
+            <span class="k">break</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset_files_map_ext</span><span class="p">[</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_dir&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">dsid</span> <span class="o">+=</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fn_id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dsid</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="esgf_qa.run_qa.get_installed_checker_versions" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_installed_checker_versions</span><span class="p">()</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get all available versions of installed cc-plugins.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A dictionary of {checker_name: [version1, version2, latest], ...}.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_installed_checker_versions</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get all available versions of installed cc-plugins.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary of {checker_name: [version1, version2, latest], ...}.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_suite</span> <span class="o">=</span> <span class="n">CheckSuite</span><span class="p">()</span>
+    <span class="n">check_suite</span><span class="o">.</span><span class="n">load_all_available_checkers</span><span class="p">()</span>
+    <span class="n">installed_versions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">version</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">version</span> <span class="o">=</span> <span class="n">checker</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="s2">&quot;latest&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">installed_versions</span><span class="p">:</span>
+            <span class="n">installed_versions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">installed_versions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">versions</span> <span class="ow">in</span> <span class="n">installed_versions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">installed_versions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">versions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">pversion</span><span class="o">.</span><span class="n">parse</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">installed_versions</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1189,42 +1322,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 461</span>
-<span class="normal"> 462</span>
-<span class="normal"> 463</span>
-<span class="normal"> 464</span>
-<span class="normal"> 465</span>
-<span class="normal"> 466</span>
-<span class="normal"> 467</span>
-<span class="normal"> 468</span>
-<span class="normal"> 469</span>
-<span class="normal"> 470</span>
-<span class="normal"> 471</span>
-<span class="normal"> 472</span>
-<span class="normal"> 473</span>
-<span class="normal"> 474</span>
-<span class="normal"> 475</span>
-<span class="normal"> 476</span>
-<span class="normal"> 477</span>
-<span class="normal"> 478</span>
-<span class="normal"> 479</span>
-<span class="normal"> 480</span>
-<span class="normal"> 481</span>
-<span class="normal"> 482</span>
-<span class="normal"> 483</span>
-<span class="normal"> 484</span>
-<span class="normal"> 485</span>
-<span class="normal"> 486</span>
-<span class="normal"> 487</span>
-<span class="normal"> 488</span>
-<span class="normal"> 489</span>
-<span class="normal"> 490</span>
-<span class="normal"> 491</span>
-<span class="normal"> 492</span>
-<span class="normal"> 493</span>
-<span class="normal"> 494</span>
-<span class="normal"> 495</span>
-<span class="normal"> 496</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 496</span>
 <span class="normal"> 497</span>
 <span class="normal"> 498</span>
 <span class="normal"> 499</span>
@@ -1845,7 +1943,67 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="normal">1114</span>
 <span class="normal">1115</span>
 <span class="normal">1116</span>
-<span class="normal">1117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="normal">1117</span>
+<span class="normal">1118</span>
+<span class="normal">1119</span>
+<span class="normal">1120</span>
+<span class="normal">1121</span>
+<span class="normal">1122</span>
+<span class="normal">1123</span>
+<span class="normal">1124</span>
+<span class="normal">1125</span>
+<span class="normal">1126</span>
+<span class="normal">1127</span>
+<span class="normal">1128</span>
+<span class="normal">1129</span>
+<span class="normal">1130</span>
+<span class="normal">1131</span>
+<span class="normal">1132</span>
+<span class="normal">1133</span>
+<span class="normal">1134</span>
+<span class="normal">1135</span>
+<span class="normal">1136</span>
+<span class="normal">1137</span>
+<span class="normal">1138</span>
+<span class="normal">1139</span>
+<span class="normal">1140</span>
+<span class="normal">1141</span>
+<span class="normal">1142</span>
+<span class="normal">1143</span>
+<span class="normal">1144</span>
+<span class="normal">1145</span>
+<span class="normal">1146</span>
+<span class="normal">1147</span>
+<span class="normal">1148</span>
+<span class="normal">1149</span>
+<span class="normal">1150</span>
+<span class="normal">1151</span>
+<span class="normal">1152</span>
+<span class="normal">1153</span>
+<span class="normal">1154</span>
+<span class="normal">1155</span>
+<span class="normal">1156</span>
+<span class="normal">1157</span>
+<span class="normal">1158</span>
+<span class="normal">1159</span>
+<span class="normal">1160</span>
+<span class="normal">1161</span>
+<span class="normal">1162</span>
+<span class="normal">1163</span>
+<span class="normal">1164</span>
+<span class="normal">1165</span>
+<span class="normal">1166</span>
+<span class="normal">1167</span>
+<span class="normal">1168</span>
+<span class="normal">1169</span>
+<span class="normal">1170</span>
+<span class="normal">1171</span>
+<span class="normal">1172</span>
+<span class="normal">1173</span>
+<span class="normal">1174</span>
+<span class="normal">1175</span>
+<span class="normal">1176</span>
+<span class="normal">1177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CLI entry point.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1894,6 +2052,13 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Include basic consistency and continuity checks. Default: False.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-P&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--parallel_processes&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify the maximum number of parallel processes. Default: 0 (= number of cores).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="n">result_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
@@ -1905,6 +2070,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="n">args</span><span class="o">.</span><span class="n">include_consistency_checks</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">include_consistency_checks</span> <span class="k">else</span> <span class="kc">False</span>
     <span class="p">)</span>
     <span class="n">cl_checker_options</span> <span class="o">=</span> <span class="n">parse_options</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">option</span><span class="p">)</span>
+    <span class="n">parallel_processes</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">parallel_processes</span>
 
     <span class="c1"># Progress file to track already checked files</span>
     <span class="n">progress_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;progress.txt&quot;</span><span class="p">)</span>
@@ -1914,15 +2080,15 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
     <span class="c1"># Resume information stored in a json file</span>
     <span class="n">resume_info_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;.resume_info&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Do not allow arguments other than -o/--output_dir, -i/--info and -r/--resume if resuming previous QA run</span>
+    <span class="c1"># Do not allow any but certain arguments if resuming previous QA run</span>
     <span class="k">if</span> <span class="n">resume</span><span class="p">:</span>
-        <span class="n">allowed_with_resume</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;output_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;resume&quot;</span><span class="p">}</span>
+        <span class="n">allowed_with_resume</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;output_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">,</span> <span class="s2">&quot;resume&quot;</span><span class="p">,</span> <span class="s2">&quot;parallel_processes&quot;</span><span class="p">}</span>
         <span class="c1"># Convert Namespace to dict for easier checking</span>
         <span class="n">set_args</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="p">[],</span> <span class="s2">&quot;&quot;</span><span class="p">)}</span>
         <span class="n">invalid_args</span> <span class="o">=</span> <span class="n">set_args</span> <span class="o">-</span> <span class="n">allowed_with_resume</span>
         <span class="k">if</span> <span class="n">invalid_args</span><span class="p">:</span>
             <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;When using -r/--resume, only -o/--output_dir and -i/--info can be set. Invalid: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid_args</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;When using -r/--resume, the following arguments are not allowed: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid_args</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
     <span class="c1"># Deal with result_dir</span>
@@ -2009,12 +2175,13 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="n">checker_options</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Require versions to be specified:</span>
-        <span class="c1"># test_regex = re.compile(r&quot;^[a-z0-9_]+:(latest|[0-9]+(\.[0-9]+)*)$&quot;)</span>
+        <span class="c1"># test_regex = re.compile(r&quot;^[a-zA-Z0-9_-]+:(latest|[0-9]+(\.[0-9]+)*)$&quot;)</span>
         <span class="c1"># Allow versions to be ommitted:</span>
-        <span class="n">test_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[a-z0-9_]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$&quot;</span><span class="p">)</span>
+        <span class="n">test_regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[a-zA-Z0-9_-]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$&quot;</span><span class="p">)</span>
+        <span class="c1"># Check format of specified checkers and separate checker, version, options</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">test_regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">test</span><span class="p">)</span> <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">]):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid test(s) specified. Please specify tests in the format &#39;checker_name&#39; or&#39;checker_name:version&#39;. Currently supported are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span><span class="si">}</span><span class="s2">, eerie.&quot;</span>
+                <span class="s2">&quot;Invalid test(s) specified. Please specify tests in the format &#39;checker_name&#39; or&#39;checker_name:version&#39;.&quot;</span>
             <span class="p">)</span>
         <span class="n">checkers</span> <span class="o">=</span> <span class="p">[</span><span class="n">test</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">tests</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">checkers</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">checkers</span><span class="p">))):</span>
@@ -2028,6 +2195,29 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
             <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">tests</span>
         <span class="p">}</span>
         <span class="n">checker_options</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="c1"># Check if specified checkers (or their requested versions) exist / are currently installed</span>
+        <span class="n">cc_checker_versions</span> <span class="o">=</span> <span class="n">get_installed_checker_versions</span><span class="p">()</span>
+        <span class="n">invalid_checkers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">invalid_checkers_versions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">invalid_checkers_errmsg</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">checker_i</span><span class="p">,</span> <span class="n">checker_iv</span> <span class="ow">in</span> <span class="n">checkers_versions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">checker_i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cc_checker_versions</span> <span class="ow">and</span> <span class="n">checker_i</span> <span class="o">!=</span> <span class="s2">&quot;eerie&quot;</span><span class="p">:</span>
+                <span class="n">invalid_checkers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checker_i</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">checker_i</span> <span class="o">==</span> <span class="s2">&quot;eerie&quot;</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">checker_iv</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cc_checker_versions</span><span class="p">[</span><span class="n">checker_i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">checker_i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;cc6&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mip&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="n">invalid_checkers_versions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checker_i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">invalid_checkers</span><span class="p">:</span>
+            <span class="n">invalid_checkers_errmsg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ERROR: Invalid test(s) specified. The following checkers are not supported or installed: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid_checkers</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="k">for</span> <span class="n">checker_i</span> <span class="ow">in</span> <span class="n">invalid_checkers_versions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">invalid_checkers_errmsg</span><span class="p">:</span>
+                <span class="n">invalid_checkers_errmsg</span> <span class="o">=</span> <span class="s2">&quot;ERROR: Invalid test(s) specified. &quot;</span>
+            <span class="n">invalid_checkers_errmsg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;For checker </span><span class="si">{</span><span class="n">checker_i</span><span class="si">}</span><span class="s2"> only the following versions are currently supported / installed: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cc_checker_versions</span><span class="p">[</span><span class="n">checker_i</span><span class="p">])</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="k">if</span> <span class="n">invalid_checkers_errmsg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">invalid_checkers_errmsg</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;cc6&quot;</span> <span class="ow">in</span> <span class="n">checkers_versions</span> <span class="ow">and</span> <span class="n">checkers_versions</span><span class="p">[</span><span class="s2">&quot;cc6&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;latest&quot;</span><span class="p">:</span>
             <span class="n">checkers_versions</span><span class="p">[</span><span class="s2">&quot;cc6&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Version of checker &#39;cc6&#39; must be &#39;latest&#39;. Using &#39;latest&#39;.&quot;</span><span class="p">)</span>
@@ -2051,10 +2241,6 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">checkers_versions</span> <span class="k">if</span> <span class="n">ci</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mip&quot;</span><span class="p">,</span> <span class="s2">&quot;cc6&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;ERROR: Cannot run both &#39;cc6&#39; and &#39;mip&#39; checkers at the same time.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">test</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">checker_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">checkers_versions</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Invalid test(s) specified. Supported are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
     <span class="c1"># Combine checkers and versions</span>
@@ -2095,15 +2281,6 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
     <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">result_dir</span> <span class="o">+</span> <span class="s2">&quot;/tables&quot;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">progress_file</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
     <span class="n">dataset_file</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
-
-    <span class="n">DRS_parent</span> <span class="o">=</span> <span class="s2">&quot;CORDEX-CMIP6&quot;</span>
-    <span class="k">for</span> <span class="n">cname</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
-        <span class="n">DRS_parent_tmp</span> <span class="o">=</span> <span class="n">DRS_path_parent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="s2">&quot;&quot;</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">DRS_parent_tmp</span><span class="p">:</span>
-            <span class="n">DRS_parent</span> <span class="o">=</span> <span class="n">DRS_parent_tmp</span>
-            <span class="k">break</span>
 
     <span class="c1"># Check if progress files exist and read already processed files/datasets</span>
     <span class="n">processed_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -2203,7 +2380,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
     <span class="n">files_to_check</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">files_to_check</span><span class="p">:</span>
         <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_dsid</span><span class="p">(</span>
-            <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">DRS_parent</span>
+            <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">supported_project_ids</span>
         <span class="p">)</span>
         <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;result_file_ds&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">result_dir</span>
@@ -2271,22 +2448,27 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No files found to check.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">)</span><span class="si">}</span><span class="s2"> files (organized in </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset_files_map</span><span class="p">)</span><span class="si">}</span><span class="s2"> datasets) to check.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">)</span><span class="si">}</span><span class="s2"> files (organized in </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset_files_map</span><span class="p">)</span><span class="si">}</span><span class="s2"> datasets) to check.&quot;</span>
         <span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Files to check:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset - Files mapping (extended):&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset - Files mapping:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dataset_files_map</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Files to check dict:&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">()</span>
+    <span class="c1"># Save dictionaries to disk for information</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;files_to_check.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">files_to_check</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;files_to_check_dict.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;dataset_files_map.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dataset_files_map</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;dataset_files_map_ext.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;Information on which files have been found and how these are organized into datasets was saved to disk:&quot;</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;files_to_check.json&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;files_to_check_dict.json&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dataset_files_map.json&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result_dir</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dataset_files_map_ext.json&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
 
     <span class="c1">#########################################################</span>
     <span class="c1"># QA Part 1 - Run all compliance-checker checks</span>
@@ -2304,6 +2486,8 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
     <span class="c1"># Calculate the number of processes</span>
     <span class="n">num_processes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parallel_processes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">num_processes</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_processes</span><span class="p">,</span> <span class="n">parallel_processes</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using </span><span class="si">{</span><span class="n">num_processes</span><span class="si">}</span><span class="s2"> parallel processes for cc checks.&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span>
 
@@ -2350,13 +2534,8 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
     <span class="c1"># Skip continuity and consistency checks if no cc6/mip checks were run</span>
     <span class="c1">#   (and thus no consistency output file was created)</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="s2">&quot;cc6:latest&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
-        <span class="ow">or</span> <span class="s2">&quot;mip:latest&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
-        <span class="ow">or</span> <span class="s2">&quot;wcrp_cmip6:1.0&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
-        <span class="ow">or</span> <span class="s2">&quot;wcrp_cmip6:latest&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
-        <span class="ow">or</span> <span class="s2">&quot;wcrp_cordex_cmip6:1.0&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
-        <span class="ow">or</span> <span class="s2">&quot;wcrp_cordex_cmip6:latest&quot;</span> <span class="ow">in</span> <span class="n">checkers</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">ch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">checker_supporting_consistency_checks</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">checkers</span>
     <span class="p">):</span>
         <span class="c1">#########################################################</span>
         <span class="c1"># QA Part 2 - Run all consistency &amp; continuity checks</span>
@@ -2383,6 +2562,8 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="c1"># Limit the number of processes for consistency checks since a lot</span>
         <span class="c1">#   of files will be opened at the same time</span>
         <span class="n">num_processes</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_processes</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parallel_processes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">num_processes</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_processes</span><span class="p">,</span> <span class="n">parallel_processes</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using </span><span class="si">{</span><span class="n">num_processes</span><span class="si">}</span><span class="s2"> parallel processes for dataset checks.&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">()</span>
 
@@ -2433,7 +2614,9 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">()</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;Continuity &amp; Consistency checks skipped since no cc6 checks were run.&quot;</span>
+            <span class="s2">&quot;Continuity &amp; consistency checks skipped since no appropriate checkers were run.&quot;</span>
+            <span class="s2">&quot; The following checkers support the continuity &amp; consistency checks: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">checker_supporting_consistency_checks</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="c1">#########################################################</span>
@@ -2461,7 +2644,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
         <span class="s2">&quot;cc_version&quot;</span><span class="p">:</span> <span class="n">cc_version</span><span class="p">,</span>
         <span class="s2">&quot;checkers&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_release_versions</span><span class="p">[</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_release_versions</span><span class="p">[</span><span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                 <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span>
             <span class="p">]</span>
         <span class="p">),</span>
@@ -2583,36 +2766,36 @@ are checker option values or None if not provided.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_options</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_options</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to parse possible options. Splits option into key/value</span>
 <span class="sd">    pairs and optionally a value for the checker option. The separator</span>
@@ -2814,42 +2997,7 @@ are checker option values or None if not provided.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
 <span class="normal">350</span>
@@ -2900,7 +3048,42 @@ are checker option values or None if not provided.</p>
 <span class="normal">395</span>
 <span class="normal">396</span>
 <span class="normal">397</span>
-<span class="normal">398</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataset</span><span class="p">(</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataset</span><span class="p">(</span>
     <span class="n">ds</span><span class="p">,</span>
     <span class="n">ds_map</span><span class="p">,</span>
     <span class="n">checkers</span><span class="p">,</span>
@@ -3143,50 +3326,7 @@ are checker option values or None if not provided.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">238</span>
 <span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
@@ -3257,7 +3397,42 @@ are checker option values or None if not provided.</p>
 <span class="normal">306</span>
 <span class="normal">307</span>
 <span class="normal">308</span>
-<span class="normal">309</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_file</span><span class="p">(</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_file</span><span class="p">(</span>
     <span class="n">file_path</span><span class="p">,</span>
     <span class="n">checkers</span><span class="p">,</span>
     <span class="n">checker_options</span><span class="p">,</span>
@@ -3328,14 +3503,6 @@ are checker option values or None if not provided.</p>
         <span class="n">checker</span> <span class="o">=</span> <span class="n">checkerv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="c1"># print()</span>
-        <span class="c1"># print(&quot;name&quot;,result[checker][0][0].name)</span>
-        <span class="c1"># print(&quot;weight&quot;, result[checker][0][0].weight)</span>
-        <span class="c1"># print(&quot;value&quot;, result[checker][0][0].value)</span>
-        <span class="c1"># print(&quot;msgs&quot;, result[checker][0][0].msgs)</span>
-        <span class="c1"># print(&quot;method&quot;, result[checker][0][0].check_method)</span>
-        <span class="c1"># print(&quot;children&quot;, result[checker][0][0].children)</span>
-        <span class="c1"># quit()</span>
         <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">checkerv</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
             <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">check</span><span class="o">.</span><span class="n">weight</span>
@@ -3481,45 +3648,7 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">160</span>
 <span class="normal">161</span>
 <span class="normal">162</span>
 <span class="normal">163</span>
@@ -3529,7 +3658,50 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="p">{}):</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="p">{}):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run the compliance checker on a file with the specified checkers and options.</span>
 
@@ -3576,8 +3748,13 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
                         <span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">checker</span><span class="p">],</span> <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_checks</span><span class="o">=</span><span class="p">[]</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">):</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">results</span>
-    <span class="k">return</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">run_all</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_checks</span><span class="o">=</span><span class="p">[])</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">run_all</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_checks</span><span class="o">=</span><span class="p">[])</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">):</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3670,26 +3847,26 @@ Example format: {"cf": {"check_dimension_order": True}}</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/run_qa.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Track checked datasets.</span>
 

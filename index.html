@@ -822,8 +822,8 @@ and consistency in variable, coordinate and attribute definitions.
 Results from both file- and dataset-level checks are aggregated, summarized, and clustered for easier interpretation.</p>
 <h3 id="currently-supported-checkers">Currently supported checkers</h3>
 <p>While <code>esgf-qa</code> has been primarily developed for workflows assessing compliance with WCRP project data specifications
-(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and easily extended to support any
-<code>cc-plugin</code> and projects following CORDEX- or CMIP-style CMOR table conventions.</p>
+(e.g., CMIP, CORDEX), it can also be used for general CF-compliance testing and generally supports any
+<code>cc-plugin</code>. It can be easily extended to support any projects following CORDEX- or CMIP-style CMOR table conventions.</p>
 <table>
 <thead>
 <tr>
@@ -888,22 +888,23 @@ esgvoc install
 <pre><code>esgvoc status
 </code></pre>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-shell">$ esgqa [-h] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] &lt;parent_dir&gt;
+<pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] &lt;parent_dir&gt;
 </code></pre>
 <ul>
 <li>positional arguments:</li>
 <li><code>parent_dir</code>: Parent directory to scan for netCDF-files to check</li>
 <li>options:</li>
 <li><code>-h, --help</code>: show this help message and exit</li>
+<li><code>-P, --parallel_processes</code>: Specify the maximum number of parallel processes. Default: 0 (= number of cores).</li>
 <li><code>-o, --output_dir OUTPUT_DIR</code>: Directory to store QA results. Needs to be non-existing or empty or from previous QA run. If not specified, will store results in <code>./cc-qa-check-results/YYYYMMDD-HHmm_&lt;hash&gt;</code>.</li>
-<li><code>-t, --test TEST</code>: The test to run (<code>'wcrp_cmip6:latest'</code>, <code>'wcrp_cordex_cmip6:latest'</code> or <code>'cf:&lt;version&gt;'</code>, can be specified multiple times, eg.: <code>'-t wcrp_cmip6:latest -t cf:1.7'</code>) - default: running latest CF checks <code>'cf:latest'</code>.</li>
+<li><code>-t, --test TEST</code>: The test to run (<code>'wcrp_cmip6:latest'</code>, <code>'wcrp_cordex_cmip6:latest'</code> or <code>'cf:&lt;version&gt;'</code>, can be specified multiple times, eg.: <code>'-t wcrp_cmip6:latest -t cf:1.7'</code>) - default: running latest CF checks <code>'cf:latest'</code>. If the version is omitted, <code>latest</code> will be used.</li>
 <li><code>-O, --option OPTION</code>: Additional options to be passed to the checkers. Format: <code>'&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]'</code>. Multiple invocations possible.</li>
 <li><code>-i, --info INFO</code>:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.</li>
 <li><code>-r, --resume</code>: Specify to continue a previous QC run. Requires the <code>&lt;output_dir&gt;</code> argument to be set.</li>
 <li><code>-C, --include_consistency_checks</code>: Include basic consistency and continuity checks. When using the <code>wcrp-*</code>, <code>cc6</code>, <code>mip</code> or <code>eerie</code> checkers, they are included by default.</li>
 </ul>
 <h3 id="example-usage">Example Usage</h3>
-<pre><code class="language-shell">$ esgqa -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i &quot;IAEVALL02&quot; ESGF_Buff/IAEVALL02/CORDEX-CMIP6
+<pre><code class="language-shell">$ esgqa -P 8 -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i &quot;IAEVALL02&quot; ESGF_Buff/IAEVALL02/CORDEX-CMIP6
 </code></pre>
 <p>To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <code>&lt;parent_dir&gt;</code>
 (note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
