@@ -337,8 +337,15 @@
         }
 
 
-	    // Function to handle the file processing
+        // Function to handle the file processing
         function processQCResults(data) {
+
+            // Remove previously added Reference Datasets block (if any)
+            const oldDetails = document.getElementById("referenceOptionalDetails");
+            if (oldDetails) {
+                oldDetails.remove();
+            }
+
             const info = data.info;
             document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
             document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`;
