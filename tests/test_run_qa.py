@@ -179,3 +179,13 @@ def test_parse_options():
         },
     )
     assert _verify_options_dict(opt_dict) is True
+
+from esgf_qa.run_qa import resolve_latest_version
+
+def test_resolve_latest_version():
+    installed = {"cf": ["1.10", "1.11", "latest"]}
+    assert resolve_latest_version("cf", installed) == "1.11"
+    # checker not installed -> stays as "latest"
+    assert resolve_latest_version("unknown", installed) == "latest"
+    # only one version
+    assert resolve_latest_version("cf", {"cf": ["1.6", "latest"]}) == "1.6"

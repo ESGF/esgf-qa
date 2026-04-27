@@ -117,6 +117,33 @@ def get_installed_checker_versions():
     return installed_versions
 
 
+def resolve_latest_version(checker_name, installed_versions):
+    """
+    Resolve 'latest' to the actual latest installed version number.
+
+    Needed because compliance-checker >= 6.0.0 removed the ':latest' alias
+    from all checkers. esgf-qa still accepts 'latest' as a convenience alias
+    and maps it to the highest installed version here.
+
+    Parameters
+    ----------
+    checker_name : str
+        The checker name (e.g. 'cf').
+    installed_versions : dict
+        Mapping returned by ``get_installed_checker_versions()``.
+
+    Returns
+    -------
+    str
+        The actual latest version string (e.g. '1.11'), or 'latest' if the
+        version cannot be resolved (e.g. checker not installed).
+    """
+    versions = [v for v in installed_versions.get(checker_name, []) if v != "latest"]
+    if versions:
+        return versions[-1]  # list is already sorted ascending; last = highest
+    return "latest"
+
+
 def get_checker_release_versions(checkers, checker_options={}):
     """
     Get the release versions of the checkers.
@@ -140,20 +167,27 @@ def get_checker_release_versions(checkers, checker_options={}):
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     for checker in checkers:
-        if checker.split(":")[0] not in checker_release_versions:
-            if checker.split(":")[0] in checker_dict:
-                checker_release_versions[checker.split(":")[0]] = (
-                    check_suite.checkers.get(
-                        checker, "unknown version"
-                    )._cc_spec_version
-                )
-            elif checker.split(":")[0] in checker_dict_ext:
-                checker_release_versions[checker.split(":")[0]] = version
+        checker_name = checker.split(":")[0]
+        if checker_name not in checker_release_versions:
+            if checker_name in checker_dict_ext and checker_name not in checker_dict:
+                # Internal esgf-qa checker (cons, cont, comp) - use esgf-qa version
+                checker_release_versions[checker_name] = version
             else:
-                checker_release_versions[checker.split(":")[0]] = (
-                    check_suite.checkers.get(
-                        checker, "unknown version"
-                    )._cc_spec_version
+                # compliance-checker plugin: look up _cc_spec_version.
+                # CC >= 6.0.0 removed :latest, so fall back to the highest
+                # explicitly versioned key when the requested key is missing.
+                checker_obj = check_suite.checkers.get(checker)
+                if checker_obj is None:
+                    prefix = checker_name + ":"
+                    candidates = [k for k in check_suite.checkers if k.startswith(prefix)]
+                    if candidates:
+                        resolved_key = max(
+                            candidates,
+                            key=lambda k: pversion.parse(k.split(":")[1]),
+                        )
+                        checker_obj = check_suite.checkers.get(resolved_key)
+                checker_release_versions[checker_name] = (
+                    checker_obj._cc_spec_version if checker_obj is not None else "unknown"
                 )
 
 
@@ -194,7 +228,7 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     if include_checks:
         results = {}
         for checker in checkers:
-            if include_checks and "cc6:latest" in checker or "mip:latest" in checker:
+            if include_checks and checker.split(":")[0] in ("cc6", "mip"):
                 results.update(
                     check_suite.run_all(ds, [checker], include_checks, skip_checks=[])
                 )
@@ -736,6 +770,22 @@ def main():
             raise Exception(
                 "ERROR: Cannot run both 'cc6' and 'mip' checkers at the same time."
             )
+
+    # Resolve :latest to the actual highest installed version number.
+    # compliance-checker >= 6.0.0 removed the :latest alias, so passing
+    # e.g. 'cf:latest' to CheckSuite.run_all() raises a KeyError there.
+    # esgf-qa keeps accepting 'latest' from the user and maps it here.
+    if any(v == "latest" for v in checkers_versions.values()):
+        _installed = (
+            cc_checker_versions
+            if "cc_checker_versions" in locals()
+            else get_installed_checker_versions()
+        )
+        for _checker_i in list(checkers_versions.keys()):
+            if checkers_versions[_checker_i] == "latest":
+                checkers_versions[_checker_i] = resolve_latest_version(
+                    _checker_i, _installed
+                )
 
     # Combine checkers and versions
     #  (checker_options are hardcoded)
