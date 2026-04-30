@@ -117,33 +117,6 @@ def get_installed_checker_versions():
     return installed_versions
 
 
-def resolve_latest_version(checker_name, installed_versions):
-    """
-    Resolve 'latest' to the actual latest installed version number.
-
-    Needed because compliance-checker >= 6.0.0 removed the ':latest' alias
-    from all checkers. esgf-qa still accepts 'latest' as a convenience alias
-    and maps it to the highest installed version here.
-
-    Parameters
-    ----------
-    checker_name : str
-        The checker name (e.g. 'cf').
-    installed_versions : dict
-        Mapping returned by ``get_installed_checker_versions()``.
-
-    Returns
-    -------
-    str
-        The actual latest version string (e.g. '1.11'), or 'latest' if the
-        version cannot be resolved (e.g. checker not installed).
-    """
-    versions = [v for v in installed_versions.get(checker_name, []) if v != "latest"]
-    if versions:
-        return versions[-1]  # list is already sorted ascending; last = highest
-    return "latest"
-
-
 def get_checker_release_versions(checkers, checker_options={}):
     """
     Get the release versions of the checkers.
@@ -179,7 +152,9 @@ def get_checker_release_versions(checkers, checker_options={}):
                 checker_obj = check_suite.checkers.get(checker)
                 if checker_obj is None:
                     prefix = checker_name + ":"
-                    candidates = [k for k in check_suite.checkers if k.startswith(prefix)]
+                    candidates = [
+                        k for k in check_suite.checkers if k.startswith(prefix)
+                    ]
                     if candidates:
                         resolved_key = max(
                             candidates,
@@ -187,8 +162,33 @@ def get_checker_release_versions(checkers, checker_options={}):
                         )
                         checker_obj = check_suite.checkers.get(resolved_key)
                 checker_release_versions[checker_name] = (
-                    checker_obj._cc_spec_version if checker_obj is not None else "unknown"
+                    checker_obj._cc_spec_version
+                    if checker_obj is not None
+                    else "unknown"
                 )
+
+
+def normalize_checker_specs(checkers_versions):
+    """
+    Normalize checker specifications for compliance-checker.
+
+    Parameters
+    ----------
+    checkers_versions : dict
+        Mapping of checker name to requested version string.
+
+    Returns
+    -------
+    list
+        Sorted checker specs where explicit versions are kept as
+        '<checker>:<version>' and 'latest' maps to unversioned '<checker>'.
+    """
+    return sorted(
+        [
+            checker if checker_version == "latest" else f"{checker}:{checker_version}"
+            for checker, checker_version in checkers_versions.items()
+        ]
+    )
 
 
 def run_compliance_checker(file_path, checkers, checker_options={}):
@@ -308,7 +308,10 @@ def process_file(
         and os.path.isfile(result_file)
         and (
             os.path.isfile(consistency_file)
-            or not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers)
+            or not any(
+                cn.split(":", 1)[0] in checker_supporting_consistency_checks
+                for cn in checkers
+            )
         )
     ):
         with open(result_file) as file:
@@ -771,25 +774,11 @@ def main():
                 "ERROR: Cannot run both 'cc6' and 'mip' checkers at the same time."
             )
 
-    # Resolve :latest to the actual highest installed version number.
-    # compliance-checker >= 6.0.0 removed the :latest alias, so passing
-    # e.g. 'cf:latest' to CheckSuite.run_all() raises a KeyError there.
-    # esgf-qa keeps accepting 'latest' from the user and maps it here.
-    if any(v == "latest" for v in checkers_versions.values()):
-        _installed = (
-            cc_checker_versions
-            if "cc_checker_versions" in locals()
-            else get_installed_checker_versions()
-        )
-        for _checker_i in list(checkers_versions.keys()):
-            if checkers_versions[_checker_i] == "latest":
-                checkers_versions[_checker_i] = resolve_latest_version(
-                    _checker_i, _installed
-                )
-
-    # Combine checkers and versions
-    #  (checker_options are hardcoded)
-    checkers = sorted([f"{c}:{v}" for c, v in checkers_versions.items()])
+    # Normalize checker specifications for compliance-checker:
+    # - explicit versions are forwarded as '<checker>:<version>'
+    # - omitted versions and ':latest' are both forwarded as '<checker>'
+    #   so compliance-checker selects the highest installed version.
+    checkers = normalize_checker_specs(checkers_versions)
 
     # Does parent_dir exist?
     if parent_dir is None:
@@ -810,13 +799,17 @@ def main():
     with open(os.path.join(result_dir, ".resume_info"), "w") as f:
         json.dump(resume_info, f, sort_keys=True, indent=4)
 
-    # If only cf checker is selected, run cc6 time checks only
+    # If none of the selected checkers support consistency checks,
+    # add mip time checks so consistency output can be generated.
     if (
-        not any(cn.startswith("cc6") or cn.startswith("mip") for cn in checkers)
+        not any(
+            cn.split(":", 1)[0] in checker_supporting_consistency_checks
+            for cn in checkers
+        )
         and include_consistency_checks
     ):
         time_checks_only = True
-        checkers.append("mip:latest")
+        checkers.append("mip")
         checkers.sort()
     else:
         time_checks_only = False
@@ -1076,7 +1069,7 @@ def main():
                 )
                 del result
 
-    # Skip continuity and consistency checks if no cc6/mip checks were run
+    # Skip continuity and consistency checks if no appropriate checkers were run
     #   (and thus no consistency output file was created)
     if any(
         ch.split(":", 1)[0] in checker_supporting_consistency_checks for ch in checkers
@@ -1170,7 +1163,7 @@ def main():
     print()
     print("#" * 50)
     print(
-        f"# QA Part {'3' if 'cc6:latest' in checkers or 'mip:latest' in checkers else '2'} - Summarizing and clustering the results"
+        f"# QA Part {'3' if any(cn.split(':')[0] in checker_supporting_consistency_checks for cn in checkers) else '2'} - Summarizing and clustering the results"
     )
     print("#" * 50)
     print()

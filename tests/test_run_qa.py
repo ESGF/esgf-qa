@@ -13,6 +13,7 @@ from esgf_qa.run_qa import (
     get_checker_release_versions,
     get_default_result_dir,
     get_dsid,
+    normalize_checker_specs,
     parse_options,
     track_checked_datasets,
 )
@@ -180,12 +181,13 @@ def test_parse_options():
     )
     assert _verify_options_dict(opt_dict) is True
 
-from esgf_qa.run_qa import resolve_latest_version
 
-def test_resolve_latest_version():
-    installed = {"cf": ["1.10", "1.11", "latest"]}
-    assert resolve_latest_version("cf", installed) == "1.11"
-    # checker not installed -> stays as "latest"
-    assert resolve_latest_version("unknown", installed) == "latest"
-    # only one version
-    assert resolve_latest_version("cf", {"cf": ["1.6", "latest"]}) == "1.6"
+def test_latest_and_omitted_versions_are_equivalent_in_internal_specs():
+    checkers_versions = {"cf": "latest", "cc6": "latest", "wcrp_cmip6": "1.7"}
+    checkers = normalize_checker_specs(checkers_versions)
+
+    assert "cf" in checkers
+    assert "cc6" in checkers
+    assert "wcrp_cmip6:1.7" in checkers
+    assert "cf:latest" not in checkers
+    assert "cc6:latest" not in checkers
