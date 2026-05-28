@@ -29,7 +29,7 @@ classifiers = [
 dependencies = [
   "cftime",
   "cf_xarray",
-  "compliance-checker>=6.0.0",
+  "compliance-checker>=6.1.0",
   "dask",
   "netCDF4",
   "packaging",
@@ -37,7 +37,7 @@ dependencies = [
   "textual",
   "xarray",
   "cc-plugin-cc6>=0.4.3",
-  "cc-plugin-wcrp>=2.1.0"
+  "cc-plugin-wcrp>=2.3.0"
 ]
 dynamic = [
   "version"

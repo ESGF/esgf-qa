@@ -961,6 +961,12 @@ def main():
                     "consistency_file"
                 ],
             },
+            "wcrp_cmip7": {
+                **cl_checker_options.get("wcrp_cmip7", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
             "wcrp_cordex_cmip6": {
                 **cl_checker_options.get("wcrp_cordex_cmip6", {}),
                 "consistency_output": files_to_check_dict[file_path][
@@ -977,7 +983,15 @@ def main():
             {
                 k: v
                 for k, v in cl_checker_options.items()
-                if k not in ["cc6", "cf", "mip", "wcrp_cmip6", "wcrp_cordex_cmip6"]
+                if k
+                not in [
+                    "cc6",
+                    "cf",
+                    "mip",
+                    "wcrp_cmip6",
+                    "wcrp_cmip7",
+                    "wcrp_cordex_cmip6",
+                ]
             }
         )
 
