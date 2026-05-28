@@ -1,3 +1,13 @@
+0.5.1 (2026-05-28)
+------------------
+
+Bug Fixes
+^^^^^^^^^
+
+* Fix for reference dataset blocks accumulating when viewing multiple QC results one after another with ``display_qc_results.html`` (commit caffe55e85408464ec4bf12ac57922d138119f39).
+* Compatibility fix for newer ``compliance-checker`` versions (>= 6.1.0): Handling ``:latest`` as supplied checker version (commit 62263ea7dc3c8cb59e282886b4dcb665f95f2771).
+* Fixed checker ``wcrp_cmip7`` lacking configuration (checker options) for inter-file and inter-dataset consistency checks (commit 83358b38ad734e19a9dee851980441dbeea65a7d).
+
 0.5.0 (2026-02-06)
 ------------------
 
