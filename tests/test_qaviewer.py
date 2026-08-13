@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from textual.widgets import Input
+from textual.widgets import Input, Static
 
 from esgf_qa.qaviewer import QCViewer, iter_nodes, transform_keys
 
@@ -39,6 +39,52 @@ def test_iter_nodes_flat_tree():
 # ------------------------
 # Async tests for QCViewer
 # ------------------------
+@pytest.mark.asyncio
+async def test_toggle_mouse_support(monkeypatch):
+    app = QCViewer({"Info": {"Dataset-ID": "DS1"}})
+    driver_calls = []
+
+    async with app.run_test() as pilot:
+        monkeypatch.setattr(
+            app._driver,
+            "_disable_mouse_support",
+            lambda: driver_calls.append("disabled"),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            app._driver,
+            "_enable_mouse_support",
+            lambda: driver_calls.append("enabled"),
+            raising=False,
+        )
+
+        app.action_focus_search()
+        await pilot.press("f2")
+        await pilot.pause()
+
+        assert not app.mouse_enabled
+        assert not app._driver._mouse
+        assert driver_calls == ["disabled"]
+        guidance = str(app.query_one("#mouse-guidance", Static).render())
+        assert "Text-selection mode" in guidance
+        assert "Ctrl+Shift+C" in guidance
+        assert "not Ctrl+C" in guidance
+        assert "right-click the selection" in guidance
+        assert "F2: disable text selection" in guidance
+        assert "Text selection enabled" in str(app.query_one("#status", Static).render())
+
+        await pilot.press("f2")
+        await pilot.pause()
+
+        assert app.mouse_enabled
+        assert app._driver._mouse
+        assert driver_calls == ["disabled", "enabled"]
+        guidance = str(app.query_one("#mouse-guidance", Static).render())
+        assert "Left-click: toggle node" in guidance
+        assert "Right-click: expand/collapse subtree" in guidance
+        assert "F2: enable text selection" in guidance
+
+
 @pytest.mark.asyncio
 async def test_qcviewer_tree_population():
     """
