@@ -1,5 +1,6 @@
 import json
 import os
+from types import SimpleNamespace
 
 import pytest
 
@@ -105,6 +106,59 @@ class TestDummyQA:
         assert "cf" in data
         assert "errors" in data["cf"]
 
+    def test_process_file_preserves_multiple_severities(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """Results with the same name and different severities must all be stored."""
+        checks = [
+            SimpleNamespace(
+                name="shared_check",
+                weight=3,
+                value=(0, 1),
+                msgs=["Required failure"],
+                check_method="check_shared",
+                children=[],
+            ),
+            SimpleNamespace(
+                name="shared_check",
+                weight=1,
+                value=(0, 1),
+                msgs=["Suggested failure"],
+                check_method="check_shared",
+                children=[],
+            ),
+        ]
+        monkeypatch.setattr(
+            "esgf_qa.run_qa.run_compliance_checker",
+            lambda *args, **kwargs: {"cf": (checks, {})},
+        )
+        result_file = tmp_env["results"] / "multiple-severities.json"
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "cons.json"),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cf"],
+            {},
+            files_to_check_dict,
+            [],
+            str(tmp_env["progress"]),
+        )
+
+        saved_results = result["cf"]["shared_check"]
+        assert isinstance(saved_results, list)
+        assert [check["weight"] for check in saved_results] == [3, 1]
+        saved_to_disk = json.loads(result_file.read_text())["cf"]["shared_check"]
+        assert [check["weight"] for check in saved_to_disk] == [3, 1]
+        assert [check["msgs"] for check in saved_to_disk] == [
+            ["Required failure"],
+            ["Suggested failure"],
+        ]
+
     def test_process_file_cached_result(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read from disk if result already exists and no errors."""
         result_file = tmp_env["results"] / "res.json"
@@ -164,6 +218,45 @@ class TestDummyQA:
         assert "unknown_checker" in data
         assert "errors" in data["unknown_checker"]
         assert "msg" in data["unknown_checker"]["errors"]["unknown_checker"]
+
+    def test_process_dataset_preserves_multiple_severities(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """ESGF-QA checks can persist multiple severities under one check name."""
+        check_results = {
+            "shared_consistency_check": [
+                {
+                    "weight": 3,
+                    "msgs": {"Required mismatch": [dummy_nc_file]},
+                },
+                {
+                    "weight": 1,
+                    "msgs": {"Suggested mismatch": [dummy_nc_file]},
+                },
+            ]
+        }
+        monkeypatch.setattr(
+            "esgf_qa.run_qa.cons", lambda *args, **kwargs: check_results
+        )
+        result_file = tmp_env["results"] / "multiple-dataset-severities.json"
+        files_to_check_dict = {
+            dummy_nc_file: {"result_file_ds": str(result_file)}
+        }
+
+        _, result = process_dataset(
+            "dataset1",
+            {"dataset1": [dummy_nc_file]},
+            ["cons"],
+            {"cons": {}},
+            files_to_check_dict,
+            set(),
+            str(tmp_env["progress"]),
+        )
+
+        saved_results = result["cons"]["shared_consistency_check"]
+        assert [check["weight"] for check in saved_results] == [3, 1]
+        saved_to_disk = json.loads(result_file.read_text())
+        assert saved_to_disk == result
 
     def test_process_dataset_cached(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read dataset result if already processed and valid."""
