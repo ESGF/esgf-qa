@@ -28,7 +28,6 @@ jobs:
 
       - name: Set up micromamba
         uses: mamba-org/setup-micromamba@v3
-        continue-on-error: true
         with:
           environment-file: ci/requirements/environment.yml
           create-args: >-
