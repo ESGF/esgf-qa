@@ -239,9 +239,7 @@ class TestDummyQA:
             "esgf_qa.run_qa.cons", lambda *args, **kwargs: check_results
         )
         result_file = tmp_env["results"] / "multiple-dataset-severities.json"
-        files_to_check_dict = {
-            dummy_nc_file: {"result_file_ds": str(result_file)}
-        }
+        files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
 
         _, result = process_dataset(
             "dataset1",
