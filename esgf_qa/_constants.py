@@ -22,9 +22,6 @@ checker_dict_ext = {
     "comp": "Compatibility",
     **checker_dict,
 }
-checker_release_versions = {}
-checker_package_versions = {}
-
 # Checkers for which consistency checks should be run
 checker_supporting_consistency_checks = [
     "wcrp_cmip7",
