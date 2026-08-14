@@ -26,6 +26,8 @@ While `esgf-qa` has been primarily developed for workflows assessing compliance 
 | ---------------------------------------------------------------------------------------------------- | ------------ |
 | [CF Conventions](https://cfconventions.org/) (shipped with [ioos/compliance-checker](https://github.com/ioos/compliance-checker)) | cf |
 | [WCRP CMIP6](https://pcmdi.llnl.gov/CMIP6/):<br><ul><li>[CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf)</li><li>[CMIP6 CVs](https://github.com/WCRP-CMIP/CMIP6_CVs) (esgvoc)</li></li><li>[cmip6-cmor-tables](https://github.com/PCMDI/cmip6-cmor-tables) (esgvoc)</li></ul> | wcrp_cmip6 |
+| [WCRP CMIP6Plus](https://wcrp-cmip.org/cmip-phases/cmip6plus/):<br><ul><li>[CMIP6 DRS](https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf)</li><li>[CMIP6Plus CVs](https://github.com/WCRP-CMIP/CMIP6Plus_CVs) (esgvoc)</li></li><li>[mip-cmor-tables](https://github.com/PCMDI/mip-cmor-tables) (esgvoc)</li></ul> | wcrp_cmip6plus |
+| [WCRP CMIP7](https://wcrp-cmip.org/cmip-phases/cmip7/) ([CMIP7 Guidance](https://wcrp-cmip.github.io/cmip7-guidance/docs/)):<br><ul><li>[CMIP7 DRS](https://doi.org/10.5281/zenodo.17250296)</li><li>[CMIP7 CVs](https://github.com/WCRP-CMIP/CMIP7_CVs) (esgvoc)</li></li><li>[cmip7-cmor-tables](https://github.com/WCRP-CMIP/cmip7-cmor-tables) (esgvoc)</li></ul> | wcrp_cmip7 |
 | [WCRP CORDEX-CMIP6](https://cordex.org/):<br><ul><li>[CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)</li><li>[cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv) (esgvoc)</li><li>[cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables) (esgvoc)</li></ul> |  wcrp_cordex_cmip6 |
 |  [WCRP CORDEX-CMIP6](https://cordex.org/):<br><ul><li>[CORDEX-CMIP6 Archive Specifications](https://doi.org/10.5281/zenodo.10961069)</li><li>[cordex-cmip6-cv](https://github.com/WCRP-CORDEX/cordex-cmip6-cv)</li><li>[cordex-cmip6-cmor-tables](https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables)</li></ul>  | cc6 |
 | [EERIE](https://eerie-project.eu/):<br>[EERIE CMOR Tables & CV](https://github.com/eerie-project/dreq_tools) | eerie |
@@ -59,9 +61,18 @@ additional Installation notes if problems arise with the dependencies.
 The `cc-plugin-wcrp` checker plugins require the `esgvoc` software to be installed and setup:
 ```
 pip install esgvoc
-esgvoc config set universe:branch=esgvoc_dev
-esgvoc config add cordex-cmip6
-esgvoc install
+```
+
+Run `esgvoc use <project>@latest` for the projects specifications you want to verify against:
+```
+esgvoc use universe@latest
+esgvoc use cmip6@latest cmip6plus@latest cmip7@latest cordex-cmip6@latest
+```
+
+Please make sure to keep both, `esgvoc` and the project specifications up-to-date by running the following before conducting a QC-run for a simulation:
+```
+pip install --upgrade esgvoc
+esgvoc update
 ```
 
 - Test your installation
@@ -75,6 +86,8 @@ The following command should now list the necessary projects with metadata sourc
 ```
 esgvoc status
 ```
+
+Please see the [esgvoc user guide](https://esgf.github.io/esgf-vocab/user/introduction.html) for more information.
 
 ## Usage
 
