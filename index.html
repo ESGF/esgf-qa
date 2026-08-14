@@ -841,6 +841,14 @@ Results from both file- and dataset-level checks are aggregated, summarized, and
 <td>wcrp_cmip6</td>
 </tr>
 <tr>
+<td><a href="https://wcrp-cmip.org/cmip-phases/cmip6plus/">WCRP CMIP6Plus</a>:<br><ul><li><a href="https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf">CMIP6 DRS</a></li><li><a href="https://github.com/WCRP-CMIP/CMIP6Plus_CVs">CMIP6Plus CVs</a> (esgvoc)</li></li><li><a href="https://github.com/PCMDI/mip-cmor-tables">mip-cmor-tables</a> (esgvoc)</li></ul></td>
+<td>wcrp_cmip6plus</td>
+</tr>
+<tr>
+<td><a href="https://wcrp-cmip.org/cmip-phases/cmip7/">WCRP CMIP7</a> (<a href="https://wcrp-cmip.github.io/cmip7-guidance/docs/">CMIP7 Guidance</a>):<br><ul><li><a href="https://doi.org/10.5281/zenodo.17250296">CMIP7 DRS</a></li><li><a href="https://github.com/WCRP-CMIP/CMIP7_CVs">CMIP7 CVs</a> (esgvoc)</li></li><li><a href="https://github.com/WCRP-CMIP/cmip7-cmor-tables">cmip7-cmor-tables</a> (esgvoc)</li></ul></td>
+<td>wcrp_cmip7</td>
+</tr>
+<tr>
 <td><a href="https://cordex.org/">WCRP CORDEX-CMIP6</a>:<br><ul><li><a href="https://doi.org/10.5281/zenodo.10961069">CORDEX-CMIP6 Archive Specifications</a></li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cv">cordex-cmip6-cv</a> (esgvoc)</li><li><a href="https://github.com/WCRP-CORDEX/cordex-cmip6-cmor-tables">cordex-cmip6-cmor-tables</a> (esgvoc)</li></ul></td>
 <td>wcrp_cordex_cmip6</td>
 </tr>
@@ -874,9 +882,14 @@ additional Installation notes if problems arise with the dependencies.</p>
 <h3 id="installation-and-setup-of-esgvoc">Installation and setup of <code>esgvoc</code></h3>
 <p>The <code>cc-plugin-wcrp</code> checker plugins require the <code>esgvoc</code> software to be installed and setup:</p>
 <pre><code>pip install esgvoc
-esgvoc config set universe:branch=esgvoc_dev
-esgvoc config add cordex-cmip6
-esgvoc install
+</code></pre>
+<p>Run <code>esgvoc use &lt;project&gt;@latest</code> for the projects specifications you want to verify against:</p>
+<pre><code>esgvoc use universe@latest
+esgvoc use cmip6@latest cmip6plus@latest cmip7@latest cordex-cmip6@latest
+</code></pre>
+<p>Please make sure to keep both, <code>esgvoc</code> and the project specifications up-to-date by running the following before conducting a QC-run for a simulation:</p>
+<pre><code>pip install --upgrade esgvoc
+esgvoc update
 </code></pre>
 <ul>
 <li>Test your installation</li>
@@ -887,6 +900,7 @@ esgvoc install
 <p>The following command should now list the necessary projects with metadata sources for <code>esgvoc</code>:</p>
 <pre><code>esgvoc status
 </code></pre>
+<p>Please see the <a href="https://esgf.github.io/esgf-vocab/user/introduction.html">esgvoc user guide</a> for more information.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] &lt;parent_dir&gt;
 </code></pre>
