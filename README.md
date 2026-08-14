@@ -145,8 +145,6 @@ esgqaviewer path/to/result.json
 At the bottom of the viewer, all possible tools are listed. The results can be searched using a full text search for instance.
 Mouse controls are enabled by default. Left-click toggles the current node; right-click expands or collapses its subtree. `F2` toggles text-selection mode. After enabling it, drag over the terminal lines and copy them with `Ctrl+Shift+C` (not plain `Ctrl+C`), `Cmd+C` on macOS, or by right-clicking the selected text and using the terminal's context menu. Press `F2` again to disable text selection and restore mouse controls.
 
-The viewer cannot use `Ctrl+C` to copy a dragged selection because text-selection mode hands selection handling to the terminal, so the selected text is not available to the application. A terminal can be configured to use `Ctrl+C` for copying, but the viewer cannot do that portably without overriding the terminal's normal interrupt key.
-
 ### Add results to QA results repository
 
 - DKRZ: [https://cmiphub.dkrz.de/info/display_qc_results.html](https://cmiphub.dkrz.de/info/display_qc_results.html) allows viewing QA results hosted
