@@ -951,7 +951,7 @@ def main():
                 ),
                 "time_checks_only": time_checks_only,
             },
-            "cf:": {
+            "cf": {
                 **cl_checker_options.get("cf", {}),
                 "enable_appendix_a_checks": True,
             },

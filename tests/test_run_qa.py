@@ -1,8 +1,10 @@
 import csv
 import os
 import re
+import sys
 from collections import defaultdict
 
+from esgf_qa import run_qa
 from esgf_qa._constants import (
     checker_dict,
     checker_dict_ext,
@@ -17,6 +19,48 @@ from esgf_qa.run_qa import (
     parse_options,
     track_checked_datasets,
 )
+
+
+def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
+    """The main workflow passes Appendix A under Compliance Checker's CF key."""
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    (input_dir / "sample.nc").touch()
+    output_dir = tmp_path / "output"
+    captured_options = {}
+
+    monkeypatch.setattr(
+        run_qa, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+
+    def capture_process_file(
+        file_path,
+        checkers,
+        checker_options,
+        files_to_check_dict,
+        processed_files,
+        progress_file,
+    ):
+        captured_options.update(checker_options)
+        return file_path, {"cf": {"errors": {}}}
+
+    def set_checker_release_versions(checkers):
+        monkeypatch.setitem(run_qa.checker_release_versions, "cf", "test")
+
+    monkeypatch.setattr(run_qa, "process_file", capture_process_file)
+    monkeypatch.setattr(
+        run_qa, "get_checker_release_versions", set_checker_release_versions
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["esgqa", "-t", "cf", "-o", str(output_dir), str(input_dir)],
+    )
+
+    run_qa.main()
+
+    assert captured_options["cf"]["enable_appendix_a_checks"] is True
+    assert "cf:" not in captured_options
 
 
 # Test get_default_result_dir
