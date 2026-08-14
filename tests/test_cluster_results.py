@@ -55,6 +55,32 @@ def test_update_adds_fail_entries(aggregator):
     assert "file1.nc" in fail_summary[2][test_name]["Missing attribute 'units'"]["ds1"]
 
 
+def test_update_adds_same_check_at_multiple_severities(aggregator):
+    """All severities are aggregated when a named check has multiple results."""
+    result_dict = {
+        "cf": {
+            "check_units": [
+                {
+                    "value": (0, 1),
+                    "weight": 3,
+                    "msgs": ["Required failure"],
+                },
+                {
+                    "value": (0, 1),
+                    "weight": 1,
+                    "msgs": ["Suggested failure"],
+                },
+            ]
+        }
+    }
+
+    aggregator.update(result_dict, dsid="ds1", file_name="file1.nc")
+
+    test_name = "[CF] check_units"
+    assert "Required failure" in aggregator.summary["fail"][3][test_name]
+    assert "Suggested failure" in aggregator.summary["fail"][1][test_name]
+
+
 def test_update_adds_error_entries(aggregator):
     """Verify that an error test adds entries to the summary."""
     result_dict = {"cf": {"errors": {"test_func": "Some internal error"}}}
@@ -87,6 +113,30 @@ def test_update_ds_uses_checker_dict_ext(aggregator):
     # Check both sections populated and use extended prefix
     assert any("[CF-EXT]" in key for key in error_summary.keys())
     assert any("[CF-EXT]" in key for key in fail_summary[3].keys())
+
+
+def test_update_ds_adds_same_check_at_multiple_severities(aggregator):
+    """ESGF-QA check results retain every severity for the same check name."""
+    result_dict = {
+        "cons": {
+            "shared_consistency_check": [
+                {
+                    "weight": 3,
+                    "msgs": {"Required mismatch": ["required.nc"]},
+                },
+                {
+                    "weight": 1,
+                    "msgs": {"Suggested mismatch": ["suggested.nc"]},
+                },
+            ]
+        }
+    }
+
+    aggregator.update_ds(result_dict, dsid="dataset_42")
+
+    test_name = "[cons] shared_consistency_check"
+    assert "Required mismatch" in aggregator.summary["fail"][3][test_name]
+    assert "Suggested mismatch" in aggregator.summary["fail"][1][test_name]
 
 
 def test_sort_orders_failures_by_weight(aggregator):

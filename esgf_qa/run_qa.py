@@ -348,12 +348,25 @@ def process_file(
         check_results[checker] = {}
         check_results[checker]["errors"] = {}
         for check in result[checkerv][0]:
-            check_results[checker][check.name] = {}
-            check_results[checker][check.name]["weight"] = check.weight
-            check_results[checker][check.name]["value"] = check.value
-            check_results[checker][check.name]["msgs"] = check.msgs
-            check_results[checker][check.name]["method"] = check.check_method
-            check_results[checker][check.name]["children"] = check.children
+            check_result = {
+                "weight": check.weight,
+                "value": check.value,
+                "msgs": check.msgs,
+                "method": check.check_method,
+                "children": check.children,
+            }
+            previous_result = check_results[checker].get(check.name)
+            if previous_result is None:
+                check_results[checker][check.name] = check_result
+            elif isinstance(previous_result, list):
+                previous_result.append(check_result)
+            else:
+                # Compliance Checker may return the same named check at more than
+                # one severity. Keep all records instead of replacing the first.
+                check_results[checker][check.name] = [
+                    previous_result,
+                    check_result,
+                ]
         for check_method in result[checkerv][1]:
             a = result[checkerv][1][check_method][1]
             while True:

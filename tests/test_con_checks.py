@@ -6,6 +6,7 @@ from datetime import timedelta
 import pytest
 
 from esgf_qa import con_checks as cc
+from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import (
     compare_dicts,
     compare_nested_dicts,
@@ -212,6 +213,33 @@ class TestConChecks:
         results = cc.consistency_checks("ds1", ds_map, files_to_check_dict, {})
         assert isinstance(results, dict)
         assert "Required global attributes" in results
+
+    def test_consistency_checks_aggregate_multiple_severities(
+        self, temp_files, ds_map, files_to_check_dict
+    ):
+        """Real consistency results retain Required and Suggested failures."""
+        changed_file = temp_files["ds1"][1]
+        with open(changed_file) as file:
+            changed_data = json.load(file)
+        changed_data["global_attributes"]["title"] = "different required value"
+        changed_data["global_attributes_non_required"][
+            "notes"
+        ] = "different suggested value"
+        with open(changed_file, "w") as file:
+            json.dump(changed_data, file)
+
+        results = cc.consistency_checks("ds1", ds_map, files_to_check_dict, {})
+        aggregator = QAResultAggregator()
+        aggregator.update_ds({"cons": results}, "ds1")
+
+        assert any(
+            name.endswith("Required global attributes")
+            for name in aggregator.summary["fail"][3]
+        )
+        assert any(
+            name.endswith("Non-required global attributes")
+            for name in aggregator.summary["fail"][1]
+        )
 
     def test_continuity_checks(self, ds_map, files_to_check_dict):
         results = cc.continuity_checks("ds1", ds_map, files_to_check_dict, {})

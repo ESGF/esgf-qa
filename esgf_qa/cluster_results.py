@@ -104,14 +104,18 @@ class QAResultAggregator:
                             f"[{checker_dict.get(checker, checker)}] " + function_name
                         ][error_msg][dsid].append(file_name)
                 else:
-                    score, max_score = result_dict[checker][test]["value"]
-                    weight = result_dict[checker][test].get("weight", 3)
-                    msgs = result_dict[checker][test].get("msgs", [])
-                    if score < max_score:  # test outcome: fail
-                        for msg in msgs:
-                            self.summary["fail"][weight][
-                                f"[{checker_dict.get(checker, checker)}] " + test
-                            ][msg][dsid].append(file_name)
+                    test_results = result_dict[checker][test]
+                    if not isinstance(test_results, list):
+                        test_results = [test_results]
+                    for test_result in test_results:
+                        score, max_score = test_result["value"]
+                        weight = test_result.get("weight", 3)
+                        msgs = test_result.get("msgs", [])
+                        if score < max_score:  # test outcome: fail
+                            for msg in msgs:
+                                self.summary["fail"][weight][
+                                    f"[{checker_dict.get(checker, checker)}] " + test
+                                ][msg][dsid].append(file_name)
 
     def update_ds(self, result_dict, dsid):
         """
@@ -136,13 +140,18 @@ class QAResultAggregator:
                                 + function_name
                             ][errdict["msg"]][dsid].append(file_name)
                 else:
-                    weight = result_dict[checker][test].get("weight", 3)
-                    fails = result_dict[checker][test].get("msgs", {})
-                    for msg, file_names in fails.items():
-                        for file_name in file_names:
-                            self.summary["fail"][weight][
-                                f"[{checker_dict_ext.get(checker, checker)}] " + test
-                            ][msg][dsid].append(file_name)
+                    test_results = result_dict[checker][test]
+                    if not isinstance(test_results, list):
+                        test_results = [test_results]
+                    for test_result in test_results:
+                        weight = test_result.get("weight", 3)
+                        fails = test_result.get("msgs", {})
+                        for msg, file_names in fails.items():
+                            for file_name in file_names:
+                                self.summary["fail"][weight][
+                                    f"[{checker_dict_ext.get(checker, checker)}] "
+                                    + test
+                                ][msg][dsid].append(file_name)
 
     def sort(self):
         """
