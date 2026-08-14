@@ -109,8 +109,7 @@ extend-select = [
   "A",
   "B006",
   "B008",
-  "C4",
-  # "T20",  # Intentional print calls are used for CLI output.
+  "C4"
 ]
 ignore = ["E501"]
 
