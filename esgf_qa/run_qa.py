@@ -6,6 +6,7 @@ import json
 import multiprocessing
 import os
 import re
+import traceback
 import warnings
 from collections import defaultdict
 from importlib.metadata import entry_points
@@ -449,6 +450,61 @@ def process_file(
     return file_path, check_results
 
 
+def _format_dataset_check_runtime_error(error):
+    """Format an exception with its most relevant consistency-check frame."""
+    frames = traceback.extract_tb(error.__traceback__)
+    frame = next(
+        (
+            frame
+            for frame in reversed(frames)
+            if os.path.basename(frame.filename) == "con_checks.py"
+        ),
+        frames[-1] if frames else None,
+    )
+    if frame is None:
+        return f"Exception: {error}"
+    return (
+        f"Exception: {error} at {frame.filename}:{frame.lineno} "
+        f"in function/method '{frame.name}'."
+    )
+
+
+def _dataset_check_runtime_error(function_name, error, files):
+    """Build the dataset-level error structure consumed by the aggregator."""
+    return {
+        "errors": {
+            function_name: {
+                "msg": _format_dataset_check_runtime_error(error),
+                "files": sorted(files),
+            }
+        }
+    }
+
+
+def run_dataset_collection_check(
+    summary,
+    checker,
+    checker_fct,
+    ds_map,
+    files_to_check_dict,
+    checker_options,
+):
+    """Run an all-dataset check and aggregate a runtime error if it fails."""
+    try:
+        return checker_fct(ds_map, files_to_check_dict, checker_options)
+    except Exception as error:
+        for ds, files in ds_map.items():
+            summary.update_ds(
+                {
+                    checker: _dataset_check_runtime_error(
+                        checker_fct.__name__, error, files
+                    )
+                },
+                ds,
+            )
+        return None
+
+
 def process_dataset(
     ds,
     ds_map,
@@ -514,9 +570,14 @@ def process_dataset(
         checker = checkerv.split(":")[0]
         if checker in globals():
             checker_fct = globals()[checker]
-            result[checker] = checker_fct(
-                ds, ds_map, files_to_check_dict, checker_options[checker]
-            )
+            try:
+                result[checker] = checker_fct(
+                    ds, ds_map, files_to_check_dict, checker_options[checker]
+                )
+            except Exception as error:
+                result[checker] = _dataset_check_runtime_error(
+                    checker_fct.__name__, error, ds_map[ds]
+                )
         else:
             result[checker] = {
                 "errors": {
@@ -1218,18 +1279,31 @@ def main():
         print()
 
         # Attributes and Coordinates
-        results_extra, reference_ds_dict = inter_dataset_consistency_checks(
-            dataset_files_map, files_to_check_dict, checker_options={}
+        inter_dataset_results = run_dataset_collection_check(
+            summary,
+            "cons",
+            inter_dataset_consistency_checks,
+            dataset_files_map,
+            files_to_check_dict,
+            {},
         )
-        for ds in results_extra.keys():
-            summary.update_ds({"cons": results_extra[ds]}, ds)
+        if inter_dataset_results is not None:
+            results_extra, reference_ds_dict = inter_dataset_results
+            for ds in results_extra.keys():
+                summary.update_ds({"cons": results_extra[ds]}, ds)
 
         # Time coverage
-        results_extra = dataset_coverage_checks(
-            dataset_files_map, files_to_check_dict, checker_options={}
+        results_extra = run_dataset_collection_check(
+            summary,
+            "cons",
+            dataset_coverage_checks,
+            dataset_files_map,
+            files_to_check_dict,
+            {},
         )
-        for ds in results_extra.keys():
-            summary.update_ds({"cons": results_extra[ds]}, ds)
+        if results_extra is not None:
+            for ds in results_extra.keys():
+                summary.update_ds({"cons": results_extra[ds]}, ds)
     else:
         print()
         warnings.warn(
