@@ -48,15 +48,10 @@ dev = [
   "black",
   "build",
   "isort",
-  "flake8",
-  "flake8-builtins",
-  "flake8-comprehensions",
-  "flake8-mutable",
-  "flake8-print",
   "pre-commit",
-  "pytest>=7.0.0",
-  "pytest-flake8",
+  "pytest>=9,<10",
   "pytest-asyncio",
+  "pytest-cov",
   "ruff>=0.1.0",
   "twine",
   "wheel"
@@ -110,6 +105,13 @@ target-version = "py310"
 line-ending = "auto"
 
 [tool.ruff.lint]
+extend-select = [
+  "A",
+  "B006",
+  "B008",
+  "C4",
+  # "T20",  # Intentional print calls are used for CLI output.
+]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]

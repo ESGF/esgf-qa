@@ -117,7 +117,7 @@ def get_installed_checker_versions():
     return installed_versions
 
 
-def get_checker_release_versions(checkers, checker_options={}):
+def get_checker_release_versions(checkers, checker_options=None):
     """
     Get the release versions of the checkers.
 
@@ -137,6 +137,8 @@ def get_checker_release_versions(checkers, checker_options={}):
     global checker_release_versions
     global checker_dict
     global checker_dict_ext
+    if checker_options is None:
+        checker_options = {}
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     for checker in checkers:
@@ -191,7 +193,7 @@ def normalize_checker_specs(checkers_versions):
     )
 
 
-def run_compliance_checker(file_path, checkers, checker_options={}):
+def run_compliance_checker(file_path, checkers, checker_options=None):
     """
     Run the compliance checker on a file with the specified checkers and options.
 
@@ -210,6 +212,8 @@ def run_compliance_checker(file_path, checkers, checker_options={}):
     dict
         A dictionary containing the results of the compliance checker.
     """
+    if checker_options is None:
+        checker_options = {}
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
     ds = check_suite.load_dataset(file_path)
@@ -335,13 +339,13 @@ def process_file(
     result = run_compliance_checker(file_path, checkers, checker_options)
 
     # Check result
-    check_results = dict()
+    check_results = {}
     # Note: the key in the errors dict is not the same as the check name!
     #       The key is the checker function name, while the check.name
     #       is the description.
     for checkerv in checkers:
         checker = checkerv.split(":")[0]
-        check_results[checker] = dict()
+        check_results[checker] = {}
         check_results[checker]["errors"] = {}
         for check in result[checkerv][0]:
             check_results[checker][check.name] = {}
@@ -360,15 +364,15 @@ def process_file(
             check_results[checker]["errors"][
                 check_method
             ] = f"Exception: {result[checkerv][1][check_method][0]} at {a.tb_frame.f_code.co_filename}:{a.tb_frame.f_lineno} in function/method '{a.tb_frame.f_code.co_name}'."
-            vars = [
+            affected_variables = [
                 j
                 for i, j in a.tb_frame.f_locals.items()
                 if "var" in i and isinstance(j, str)
             ]
-            if vars:
+            if affected_variables:
                 check_results[checker]["errors"][
                     check_method
-                ] += f" Potentially affected variables: {', '.join(vars)}."
+                ] += f" Potentially affected variables: {', '.join(affected_variables)}."
 
     # Write result to disk
     with open(result_file, "w") as f:
@@ -441,7 +445,7 @@ def process_dataset(
         print(f"Running checks for '{ds}'.")
 
     # Else run check
-    result = dict()
+    result = {}
     for checkerv in checkers:
         checker = checkerv.split(":")[0]
         if checker in globals():
@@ -710,12 +714,12 @@ def main():
         # Allow versions to be ommitted:
         test_regex = re.compile(r"^[a-zA-Z0-9_-]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
         # Check format of specified checkers and separate checker, version, options
-        if not all([test_regex.match(test) for test in tests]):
+        if not all(test_regex.match(test) for test in tests):
             raise Exception(
                 "Invalid test(s) specified. Please specify tests in the format 'checker_name' or'checker_name:version'."
             )
         checkers = [test.split(":")[0] for test in tests]
-        if sorted(checkers) != sorted(list(set(checkers))):
+        if sorted(checkers) != sorted(set(checkers)):
             raise Exception("Cannot specify multiple instances of the same checker.")
         checkers_versions = {
             test.split(":")[0]: (
@@ -1118,7 +1122,7 @@ def main():
         print(f"Using {num_processes} parallel processes for dataset checks.")
         print()
 
-        datasets = sorted(list(dataset_files_map.keys()))
+        datasets = sorted(dataset_files_map)
         args = [
             (
                 x,

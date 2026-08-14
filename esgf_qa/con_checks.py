@@ -107,7 +107,7 @@ def compare_dicts(dict1, dict2, exclude_keys=None):
 
     # Collect keys with differing values
     differing_keys = [
-        key for key in sorted(list(all_keys)) if dict1.get(key) != dict2.get(key)
+        key for key in sorted(all_keys) if dict1.get(key) != dict2.get(key)
     ]
 
     return differing_keys
@@ -135,7 +135,7 @@ def compare_nested_dicts(dict1, dict2, exclude_keys=None):
 
     all_root_keys = set(dict1) | set(dict2)
 
-    for root_key in sorted(list(all_root_keys)):
+    for root_key in sorted(all_root_keys):
         subdict1 = dict1.get(root_key, {})
         subdict2 = dict2.get(root_key, {})
 
@@ -529,8 +529,8 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
     results = defaultdict(level0_factory)
     test = "Time coverage"
 
-    coverage_start = dict()
-    coverage_end = dict()
+    coverage_start = {}
+    coverage_end = {}
 
     # Extract time coverage for each dataset
     for ds in ds_map.keys():
@@ -670,7 +670,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             consistency_data[ds] = data
 
     # Reference datasets
-    ref_ds = dict()
+    ref_ds = {}
 
     # Compare each file with reference
     for ds, data in consistency_data.items():
@@ -818,7 +818,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     print("The following datasets were used as reference:")
     print(f" - General reference: {ref_ds['Main']}")
     reference_datasets = {"general_reference": ref_ds["Main"]}
-    for key in sorted(list(ref_ds.keys())):
+    for key in sorted(ref_ds):
         if key == "Main":
             continue
         else:
