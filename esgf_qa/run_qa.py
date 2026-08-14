@@ -372,7 +372,9 @@ def process_file(
             if affected_variables:
                 check_results[checker]["errors"][
                     check_method
-                ] += f" Potentially affected variables: {', '.join(affected_variables)}."
+                ] += (
+                    f" Potentially affected variables: {', '.join(affected_variables)}."
+                )
 
     # Write result to disk
     with open(result_file, "w") as f:
