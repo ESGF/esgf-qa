@@ -71,7 +71,9 @@ async def test_toggle_mouse_support(monkeypatch):
         assert "not Ctrl+C" in guidance
         assert "right-click the selection" in guidance
         assert "F2: disable text selection" in guidance
-        assert "Text selection enabled" in str(app.query_one("#status", Static).render())
+        assert "Text selection enabled" in str(
+            app.query_one("#status", Static).render()
+        )
 
         await pilot.press("f2")
         await pilot.pause()
