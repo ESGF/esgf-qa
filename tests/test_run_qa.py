@@ -8,10 +8,12 @@ from esgf_qa import run_qa
 from esgf_qa._constants import (
     checker_dict,
     checker_dict_ext,
+    checker_package_versions,
     checker_release_versions,
 )
 from esgf_qa.run_qa import (
     _verify_options_dict,
+    format_checker_version,
     get_checker_release_versions,
     get_default_result_dir,
     get_dsid,
@@ -118,6 +120,7 @@ def test_get_checker_release_versions():
     dictionary with the correct version values.
     """
     # reset globals
+    checker_package_versions.clear()
     checker_release_versions.clear()
     checker_dict.clear()
     checker_dict_ext.clear()
@@ -140,6 +143,36 @@ def test_get_checker_release_versions():
         assert isinstance(version, str)
         assert len(version) > 0
     assert checker_release_versions["cf"] == "1.6"
+    assert checker_package_versions["cf"][0] == "compliance-checker"
+    assert checker_package_versions["cc6"][0] == "cc-plugin-cc6"
+
+
+def test_format_checker_version_includes_providing_package(monkeypatch):
+    monkeypatch.setitem(checker_dict, "wcrp_cmip7", "CMIP7")
+    monkeypatch.setitem(checker_release_versions, "wcrp_cmip7", "1.0")
+    monkeypatch.setitem(
+        checker_package_versions,
+        "wcrp_cmip7",
+        ("cc-plugin-wcrp", "2.3.4.dev3+gc324abc"),
+    )
+
+    assert format_checker_version("wcrp_cmip7") == (
+        "CMIP7 wcrp_cmip7:1.0 (cc-plugin-wcrp 2.3.4.dev3+gc324abc)"
+    )
+
+
+def test_format_checker_version_includes_cf_package(monkeypatch):
+    monkeypatch.setitem(checker_dict, "cf", "CF-Conventions")
+    monkeypatch.setitem(checker_release_versions, "cf", "1.11")
+    monkeypatch.setitem(
+        checker_package_versions,
+        "cf",
+        ("compliance-checker", "6.1.1.dev69+gc4067cca7"),
+    )
+
+    assert format_checker_version("cf") == (
+        "CF-Conventions cf:1.11 (compliance-checker 6.1.1.dev69+gc4067cca7)"
+    )
 
 
 def test_track_checked_datasets(tmpdir):

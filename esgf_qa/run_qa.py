@@ -8,6 +8,7 @@ import os
 import re
 import warnings
 from collections import defaultdict
+from importlib.metadata import entry_points
 from pathlib import Path
 
 from compliance_checker import __version__ as cc_version
@@ -17,6 +18,7 @@ from packaging import version as pversion
 from esgf_qa._constants import (
     checker_dict,
     checker_dict_ext,
+    checker_package_versions,
     checker_release_versions,
     checker_supporting_consistency_checks,
     supported_project_ids,
@@ -134,40 +136,75 @@ def get_checker_release_versions(checkers, checker_options=None):
     None
         Updates the global dictionary ``checker_release_versions``.
     """
-    global checker_release_versions
-    global checker_dict
-    global checker_dict_ext
     if checker_options is None:
         checker_options = {}
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
+
+    checker_packages = {}
+    for checker_entry_point in entry_points(group="compliance_checker.suites"):
+        try:
+            checker_obj = checker_entry_point.load()
+        except Exception:
+            continue
+        checker_name = getattr(checker_obj, "_cc_spec", None) or getattr(
+            checker_obj, "name", None
+        )
+        checker_version = getattr(checker_obj, "_cc_spec_version", "unknown")
+        distribution = getattr(checker_entry_point, "dist", None)
+        if checker_name and distribution is not None:
+            checker_packages[(checker_name, str(checker_version))] = (
+                distribution.name,
+                distribution.version,
+            )
+
     for checker in checkers:
         checker_name = checker.split(":")[0]
-        if checker_name not in checker_release_versions:
-            if checker_name in checker_dict_ext and checker_name not in checker_dict:
-                # Internal esgf-qa checker (cons, cont, comp) - use esgf-qa version
-                checker_release_versions[checker_name] = version
-            else:
-                # compliance-checker plugin: look up _cc_spec_version.
-                # CC >= 6.0.0 removed :latest, so fall back to the highest
-                # explicitly versioned key when the requested key is missing.
-                checker_obj = check_suite.checkers.get(checker)
-                if checker_obj is None:
-                    prefix = checker_name + ":"
-                    candidates = [
-                        k for k in check_suite.checkers if k.startswith(prefix)
-                    ]
-                    if candidates:
-                        resolved_key = max(
-                            candidates,
-                            key=lambda k: pversion.parse(k.split(":")[1]),
-                        )
-                        checker_obj = check_suite.checkers.get(resolved_key)
-                checker_release_versions[checker_name] = (
-                    checker_obj._cc_spec_version
-                    if checker_obj is not None
-                    else "unknown"
+        checker_package_versions.pop(checker_name, None)
+        if checker_name in checker_dict_ext and checker_name not in checker_dict:
+            # Internal esgf-qa checker (cons, cont, comp) - use esgf-qa version
+            checker_release_versions[checker_name] = version
+            checker_package_versions[checker_name] = ("esgf-qa", version)
+            continue
+
+        # compliance-checker plugin: look up _cc_spec_version.
+        # CC >= 6.0.0 removed :latest, so fall back to the highest
+        # explicitly versioned key when the requested key is missing.
+        checker_obj = check_suite.checkers.get(checker)
+        if checker_obj is None:
+            prefix = checker_name + ":"
+            candidates = [k for k in check_suite.checkers if k.startswith(prefix)]
+            if candidates:
+                resolved_key = max(
+                    candidates,
+                    key=lambda k: pversion.parse(k.split(":")[1]),
                 )
+                checker_obj = check_suite.checkers.get(resolved_key)
+        checker_release_version = (
+            str(checker_obj._cc_spec_version)
+            if checker_obj is not None
+            else "unknown"
+        )
+        checker_release_versions[checker_name] = checker_release_version
+        package_version = checker_packages.get(
+            (checker_name, checker_release_version)
+        )
+        if package_version is not None:
+            checker_package_versions[checker_name] = package_version
+
+
+def format_checker_version(checker):
+    """Format a checker specification with its providing package version."""
+    checker_name = checker.split(":", 1)[0]
+    checker_label = (
+        f"{checker_dict.get(checker_name, '')} "
+        f"{checker_name}:{checker_release_versions[checker_name]}"
+    ).strip()
+    package_version = checker_package_versions.get(checker_name)
+    if package_version is not None:
+        package_name, installed_version = package_version
+        checker_label += f" ({package_name} {installed_version})"
+    return checker_label
 
 
 def normalize_checker_specs(checkers_versions):
@@ -1212,12 +1249,7 @@ def main():
         "files": str(len(files_to_check)),
         "datasets": str(len(dataset_files_map)),
         "cc_version": cc_version,
-        "checkers": ", ".join(
-            [
-                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}".strip()
-                for checker in checkers
-            ]
-        ),
+        "checkers": ", ".join(format_checker_version(checker) for checker in checkers),
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks
