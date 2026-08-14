@@ -7,6 +7,7 @@ checker_dict = {
     "mip": "MIP",
     # "wcrp-cmip5": "CMIP5",
     "wcrp_cmip6": "CMIP6",
+    "wcrp_cmip6plus": "CMIP6Plus",
     # "wcrp_cmip7aft: "CMIP7-AFT",
     "wcrp_cmip7": "CMIP7",
     # "wcrp_cordex": "CORDEX",
@@ -28,6 +29,7 @@ checker_package_versions = {}
 checker_supporting_consistency_checks = [
     "wcrp_cmip7",
     "wcrp_cmip6",
+    "wcrp_cmip6plus",
     "wcrp_cordex_cmip6",
     "cc6",
     "mip",

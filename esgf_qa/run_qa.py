@@ -311,6 +311,55 @@ def track_checked_datasets(checked_datasets_file, checked_datasets):
             writer.writerow([dataset_id])
 
 
+def _get_reusable_file_result(
+    file_path, checkers, files_to_check_dict, processed_files
+):
+    """Return a valid cached result, or ``None`` when the file must be checked."""
+    result_file = files_to_check_dict[file_path]["result_file"]
+    consistency_file = files_to_check_dict[file_path]["consistency_file"]
+    consistency_output_required = any(
+        checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        for checker in checkers
+    )
+    if (
+        file_path not in processed_files
+        or not os.path.isfile(result_file)
+        or (consistency_output_required and not os.path.isfile(consistency_file))
+    ):
+        return None
+
+    try:
+        with open(result_file) as file:
+            result = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    for checker in checkers:
+        checker_result = result.get(checker.split(":", 1)[0])
+        if not isinstance(checker_result, dict) or checker_result.get("errors") != {}:
+            return None
+    return result
+
+
+def _invalidate_nonreusable_dataset_results(
+    dataset_files_map,
+    checkers,
+    files_to_check_dict,
+    processed_files,
+    processed_datasets,
+):
+    """Invalidate dataset caches affected by new or incomplete file results."""
+    for dataset_id, dataset_files in dataset_files_map.items():
+        if any(
+            _get_reusable_file_result(
+                file_path, checkers, files_to_check_dict, processed_files
+            )
+            is None
+            for file_path in dataset_files
+        ):
+            processed_datasets.discard(dataset_id)
+
+
 def process_file(
     file_path,
     checkers,
@@ -343,33 +392,16 @@ def process_file(
         A tuple containing the file path and the results of the compliance checker.
     """
     # Read result from disk if check was run previously
-    result_file = files_to_check_dict[file_path]["result_file"]
     consistency_file = files_to_check_dict[file_path]["consistency_file"]
-    if (
-        file_path in processed_files
-        and os.path.isfile(result_file)
-        and (
-            os.path.isfile(consistency_file)
-            or not any(
-                cn.split(":", 1)[0] in checker_supporting_consistency_checks
-                for cn in checkers
-            )
-        )
-    ):
-        with open(result_file) as file:
-            print(f"Read result from disk for '{file_path}'.")
-            result = json.load(file)
-        # If no runtime errors were registered last time, return results, otherwise rerun checks
-        # Potentially add more conditions to rerun checks:
-        #  eg. rerun checks if runtime errors occured
-        #      rerun checks if lvl 1 checks failed
-        #      rerun checks if lvl 1 and 2 checks failed
-        #      rerun checks if any checks failed
-        #      rerun checks if forced by user
-        if all(result[checker.split(":")[0]]["errors"] == {} for checker in checkers):
-            return file_path, result
-        else:
-            print(f"Rerunning previously erroneous checks for '{file_path}'.")
+    result_file = files_to_check_dict[file_path]["result_file"]
+    result = _get_reusable_file_result(
+        file_path, checkers, files_to_check_dict, processed_files
+    )
+    if result is not None:
+        print(f"Read result from disk for '{file_path}'.")
+        return file_path, result
+    if file_path in processed_files:
+        print(f"Rerunning incomplete or previously erroneous checks for '{file_path}'.")
     else:
         print(f"Running checks for '{file_path}'.")
 
@@ -799,16 +831,16 @@ def main():
                     isinstance(resume_info["parent_dir"], str)
                     and isinstance(resume_info["info"], str)
                     and isinstance(resume_info["tests"], list)
-                    and isinstance(resume_info.get("cl_checker_options", {}), dict)
+                    and isinstance(resume_info.get("checker_options", {}), dict)
                     and isinstance(
                         resume_info.get("include_consistency_checks", False), bool
                     )
-                    and _verify_options_dict(resume_info.get("cl_checker_options", {}))
+                    and _verify_options_dict(resume_info.get("checker_options", {}))
                     and all(isinstance(test, str) for test in resume_info["tests"])
                 ):
                     raise Exception(
                         f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and 'info' should be strings, and 'tests' should be a list of strings. "
-                        "'cl_checker_options' (optional) should be a nested dictionary of format 'checker:option_name:option_value', and "
+                        "'checker_options' (optional) should be a nested dictionary of format 'checker:option_name:option_value', and "
                         "'include_consistency_checks' (optional) should be a boolean."
                     )
             except json.JSONDecodeError:
@@ -821,6 +853,8 @@ def main():
                 warnings.warn(
                     f"<info> argument differs from the originally specified <info> argument ('{resume_info['info']}'). Using the new specification."
                 )
+            elif not info:
+                info = resume_info["info"]
             cl_checker_options = resume_info.get("checker_options", {})
             include_consistency_checks = resume_info.get(
                 "include_consistency_checks", False
@@ -881,13 +915,21 @@ def main():
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
             checkers_versions["cc6"] = "latest"
             warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
+        mip_explicitly_requested = "mip" in checkers_versions
+        if mip_explicitly_requested and "eerie" in checkers_versions:
+            raise Exception(
+                "ERROR: Cannot run both 'mip' and its 'eerie' alias at the same time."
+            )
         if "mip" in checkers_versions and checkers_versions["mip"] != "latest":
             checkers_versions["mip"] = "latest"
             warnings.warn("Version of checker 'mip' must be 'latest'. Using 'latest'.")
-            if "tables" not in cl_checker_options["mip"]:
-                raise Exception(
-                    "Option 'tables' with path to CMOR tables as value must be specified for checker 'mip'."
-                )
+        mip_tables = cl_checker_options.get("mip", {}).get("tables")
+        if mip_explicitly_requested and (
+            not isinstance(mip_tables, str) or not mip_tables
+        ):
+            raise Exception(
+                "Option 'tables' with a path to CMOR tables must be specified when checker 'mip' is selected."
+            )
         # EERIE support - hard code
         if "eerie" in checkers_versions:
             checkers_versions["mip"] = "latest"
@@ -1090,6 +1132,12 @@ def main():
                     "consistency_file"
                 ],
             },
+            "wcrp_cmip6plus": {
+                **cl_checker_options.get("wcrp_cmip6plus", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
             "wcrp_cmip7": {
                 **cl_checker_options.get("wcrp_cmip7", {}),
                 "consistency_output": files_to_check_dict[file_path][
@@ -1118,11 +1166,22 @@ def main():
                     "cf",
                     "mip",
                     "wcrp_cmip6",
+                    "wcrp_cmip6plus",
                     "wcrp_cmip7",
                     "wcrp_cordex_cmip6",
                 ]
             }
         )
+
+    # Dataset-level results depend on every file in the dataset. Invalidate a
+    # cached dataset result if any of its file results cannot be reused.
+    _invalidate_nonreusable_dataset_results(
+        dataset_files_map,
+        checkers,
+        files_to_check_dict,
+        processed_files,
+        processed_datasets,
+    )
 
     if len(files_to_check) == 0:
         raise Exception("No files found to check.")

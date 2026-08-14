@@ -225,6 +225,33 @@ class TestDummyQA:
         # Should reuse cached result, not rewrite
         assert result == {"cf": {"errors": {}}}
 
+    def test_process_file_reruns_cached_runtime_error(
+        self, fake_check_suite, tmp_env, dummy_nc_file
+    ):
+        """A processed file with a runtime error must be checked again."""
+        result_file = tmp_env["results"] / "res.json"
+        result_file.write_text(
+            json.dumps({"cf": {"errors": {"check_old": "previous failure"}}})
+        )
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "cons.json"),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cf:latest"],
+            {},
+            files_to_check_dict,
+            [dummy_nc_file],
+            str(tmp_env["progress"]),
+        )
+
+        assert result["cf"]["errors"] == {}
+        assert "time_bounds" in result["cf"]
+
     def test_process_dataset(self, fake_check_suite, tmp_env, dummy_nc_file):
         """process_dataset should run checks for not yet checked dataset."""
         ds = "dataset1"

@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -92,7 +93,7 @@ class TestQACommandLine:
 
     def _run_cli(self, args, expect_error=False, expected_err_msg=None):
         """Run the esgqa CLI and optionally check for errors."""
-        cmd = ["python", "-m", "esgf_qa.run_qa"] + args
+        cmd = [sys.executable, "-m", "esgf_qa.run_qa"] + args
         result = subprocess.run(cmd, capture_output=True, text=True)
         if expect_error:
             assert (
@@ -232,6 +233,10 @@ class TestQACommandLine:
             ),
             (
                 ["-r", "-t", "cf:latest", "-o", "some_dir"],
+                "When using -r/--resume, the following arguments are not allowed",
+            ),
+            (
+                ["-r", "-o", "some_dir", "cmip6"],
                 "When using -r/--resume, the following arguments are not allowed",
             ),
         ],
