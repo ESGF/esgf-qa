@@ -292,7 +292,7 @@ class QAResultAggregator:
             return dictionary
 
         def update_placeholder_names(list_of_strings, dictionary):
-            old_placeholders = sorted(list(dictionary.keys()))
+            old_placeholders = sorted(dictionary)
             new_placeholders = [
                 chr(ord("A") + i) for i in range(0, len(old_placeholders))
             ]

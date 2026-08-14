@@ -204,7 +204,7 @@ def files_to_check_dict(temp_files):
 @pytest.fixture
 def ds_map(temp_files):
     """Map dataset names to file paths."""
-    return {ds: flist for ds, flist in temp_files.items()}
+    return dict(temp_files)
 
 
 class TestConChecks:
