@@ -426,6 +426,18 @@ def process_file(
                     f" Potentially affected variables: {', '.join(affected_variables)}."
                 )
 
+    if not os.path.isfile(consistency_file):
+        consistency_checkers = [
+            checker.split(":", 1)[0]
+            for checker in checkers
+            if checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        ]
+        for checker in consistency_checkers:
+            check_results[checker]["errors"]["consistency_output"] = (
+                f"Expected consistency output file was not created: "
+                f"'{consistency_file}'."
+            )
+
     # Write result to disk
     with open(result_file, "w") as f:
         json.dump(check_results, f, ensure_ascii=False, indent=4)

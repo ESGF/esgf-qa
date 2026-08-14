@@ -289,3 +289,45 @@ class TestConChecks:
         assert isinstance(results, dict)
         assert isinstance(ref_ds, dict)
         assert "general_reference" in ref_ds
+
+    def test_missing_consistency_outputs_are_skipped(
+        self, tmp_path, ds_map, files_to_check_dict
+    ):
+        """Consistency checks continue when their expected artifacts are absent."""
+        for file in files_to_check_dict:
+            files_to_check_dict[file]["consistency_file"] = str(
+                tmp_path / f"missing-{os.path.basename(file)}"
+            )
+
+        assert cc.consistency_checks("ds1", ds_map, files_to_check_dict, {}) == {}
+        continuity_results = cc.continuity_checks(
+            "ds1", ds_map, files_to_check_dict, {}
+        )
+        assert continuity_results["Time continuity"]["msgs"] == {}
+        inter_results, reference_datasets = cc.inter_dataset_consistency_checks(
+            ds_map, files_to_check_dict, {}
+        )
+        assert inter_results == {}
+        assert reference_datasets == {}
+
+    def test_replacement_reference_file_is_reported(
+        self, tmp_path, ds_map, files_to_check_dict
+    ):
+        """Only deviations from the default reference selection are reported."""
+        default_reference = sorted(ds_map["ds1"])[0]
+        replacement_reference = sorted(ds_map["ds1"])[1]
+        files_to_check_dict[default_reference]["consistency_file"] = str(
+            tmp_path / "missing-reference.json"
+        )
+
+        _, reference_datasets = cc.inter_dataset_consistency_checks(
+            ds_map, files_to_check_dict, {}
+        )
+
+        assert reference_datasets["general_reference"] == "ds1"
+        assert reference_datasets["reference_file_exceptions"] == {
+            "ds1": {
+                "default_reference_file": default_reference,
+                "used_reference_file": replacement_reference,
+            }
+        }

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.run_qa import (
     process_dataset,
     process_file,
@@ -158,6 +159,40 @@ class TestDummyQA:
             ["Required failure"],
             ["Suggested failure"],
         ]
+
+    def test_process_file_records_missing_consistency_output(
+        self, fake_check_suite, tmp_env, dummy_nc_file
+    ):
+        """A missing expected consistency output is a file-level runtime error."""
+        consistency_file = tmp_env["results"] / "missing-consistency.json"
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(tmp_env["results"] / "res.json"),
+                "consistency_file": str(consistency_file),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cc6"],
+            {},
+            files_to_check_dict,
+            [],
+            str(tmp_env["progress"]),
+        )
+
+        error_msg = result["cc6"]["errors"]["consistency_output"]
+        assert str(consistency_file) in error_msg
+
+        aggregator = QAResultAggregator()
+        aggregator.update(
+            {"cc6": {"errors": result["cc6"]["errors"]}},
+            "dataset1",
+            dummy_nc_file,
+        )
+        assert aggregator.summary["error"][
+            "[CORDEX-CMIP6] consistency_output"
+        ][error_msg]["dataset1"] == [dummy_nc_file]
 
     def test_process_file_cached_result(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read from disk if result already exists and no errors."""

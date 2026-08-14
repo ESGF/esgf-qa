@@ -363,7 +363,33 @@
                 const detailsList = document.createElement('ul');
                 for (const [key, value] of Object.entries(referenceOptional)) {
                     const listItem = document.createElement('li');
-                    if (key.includes('/')) {
+                    if (key === 'reference_file_exceptions' && value && typeof value === 'object') {
+                        const exceptionsLabel = document.createElement('strong');
+                        exceptionsLabel.textContent = 'Reference file substitutions';
+                        listItem.appendChild(exceptionsLabel);
+
+                        const exceptionsList = document.createElement('ul');
+                        for (const [dataset, files] of Object.entries(value)) {
+                            const datasetItem = document.createElement('li');
+                            const datasetLabel = document.createElement('strong');
+                            datasetLabel.textContent = dataset;
+                            datasetItem.appendChild(datasetLabel);
+
+                            const filesList = document.createElement('ul');
+                            const defaultFile = document.createElement('li');
+                            defaultFile.textContent = `Default reference unavailable: ${files.default_reference_file}`;
+                            filesList.appendChild(defaultFile);
+
+                            const usedFile = document.createElement('li');
+                            usedFile.textContent = `Reference used instead: ${files.used_reference_file}`;
+                            filesList.appendChild(usedFile);
+
+                            datasetItem.appendChild(filesList);
+                            exceptionsList.appendChild(datasetItem);
+                        }
+
+                        listItem.appendChild(exceptionsList);
+                    } else if (key.includes('/')) {
                         const [strPart1, strPart2] = key.split('/');
                         const shortenedStrPart2 = strPart2.length > 25 ? `${strPart2.substring(0, 10)}...${strPart2.substring(strPart2.length - 10)}` : strPart2;
                         listItem.innerHTML = `<strong>${strPart1}/${shortenedStrPart2}</strong>: ${value}`;

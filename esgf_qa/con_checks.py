@@ -1,4 +1,5 @@
 import json
+import os
 from collections import ChainMap, OrderedDict, defaultdict
 
 import cftime
@@ -183,7 +184,11 @@ def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
         (files_to_check_dict[i]["consistency_file"], i) for i in filelist
+        if os.path.isfile(files_to_check_dict[i]["consistency_file"])
     )
+
+    if not consistency_files:
+        return results
 
     # Exclude the following global attributes from comparison
     excl_global_attrs = ["creation_date", "history", "tracking_id"]
@@ -360,6 +365,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
         (files_to_check_dict[i]["consistency_file"], i) for i in filelist
+        if os.path.isfile(files_to_check_dict[i]["consistency_file"])
     )
 
     # Check time and time_bnds continuity
@@ -642,7 +648,10 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     filedict = {}
     consistency_data = {}
     for ds in ds_map.keys():
-        filedict[ds] = sorted(ds_map[ds])[0]
+        for file in sorted(ds_map[ds]):
+            if os.path.isfile(files_to_check_dict[file]["consistency_file"]):
+                filedict[ds] = file
+                break
 
     # Exclude the following global attributes from comparison
     excl_global_attrs = [
@@ -668,6 +677,9 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
         with open(consistency_file) as f:
             data = json.load(f)
             consistency_data[ds] = data
+
+    if not consistency_data:
+        return results, {}
 
     # Reference datasets
     ref_ds = {}
@@ -826,6 +838,17 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             print(
                 f" - '{truncate_str(key.split('/')[0])}' / '{truncate_str(key.split('/')[1])}' (realm / grid): {ref_ds[key]}"
             )
+
+    reference_file_exceptions = {
+        ds: {
+            "default_reference_file": sorted(ds_map[ds])[0],
+            "used_reference_file": reference_file,
+        }
+        for ds, reference_file in filedict.items()
+        if reference_file != sorted(ds_map[ds])[0]
+    }
+    if reference_file_exceptions:
+        reference_datasets["reference_file_exceptions"] = reference_file_exceptions
 
     print()
 
