@@ -13,7 +13,14 @@ from esgf_qa.checker_registry import (
     normalize_checker_specs,
 )
 from esgf_qa.cli import RunConfig, parse_options, prepare_run
-from esgf_qa.discovery import FileInventory, discover_files, get_dsid, write_inventory
+from esgf_qa.discovery import (
+    FileInventory,
+    discover_files,
+    format_exclusion_counts,
+    get_dsid,
+    write_excluded_files,
+    write_inventory,
+)
 from esgf_qa.resume import (
     _get_reusable_file_result,
     _invalidate_nonreusable_dataset_results,
@@ -52,8 +59,18 @@ def main(argv=None):
     """Run the complete QA command-line workflow."""
     config = prepare_run(get_default_result_dir(), argv)
     inventory = discover_files(config)
+    excluded_report = write_excluded_files(inventory, config)
     if not inventory.files:
-        raise Exception("No files found to check.")
+        if inventory.discovered_file_count == 0:
+            raise FileNotFoundError(
+                f"No NetCDF files found under '{config.parent_dir}'."
+            )
+        raise RuntimeError(
+            "No files remain to check: "
+            f"{inventory.discovered_file_count} NetCDF files were discovered, "
+            f"{format_exclusion_counts(inventory, config)}. "
+            f"See '{excluded_report}'."
+        )
     write_inventory(inventory, config.result_dir)
     summary, reference_datasets = run_workflow(config, inventory)
     write_results(

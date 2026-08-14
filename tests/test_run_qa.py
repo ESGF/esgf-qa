@@ -19,8 +19,13 @@ from esgf_qa.checker_registry import (
     get_checker_metadata,
     normalize_checker_specs,
 )
-from esgf_qa.cli import parse_options
-from esgf_qa.discovery import _checker_options_for_file, get_dsid
+from esgf_qa.cli import parse_options, prepare_run
+from esgf_qa.discovery import (
+    _checker_options_for_file,
+    discover_files,
+    get_dsid,
+    write_excluded_files,
+)
 from esgf_qa.resume import (
     invalidate_nonreusable_dataset_results,
     track_checked_datasets,
@@ -173,10 +178,125 @@ def test_main_rejects_empty_input_before_writing_inventory(tmp_path):
     input_dir.mkdir()
     output_dir = tmp_path / "output"
 
-    with pytest.raises(Exception, match="No files found to check"):
+    with pytest.raises(FileNotFoundError, match="No NetCDF files found"):
         run_qa.main(["-o", str(output_dir), str(input_dir)])
 
     assert not (output_dir / "files_to_check.json").exists()
+    assert not (output_dir / "excluded_files.json").exists()
+
+
+def test_empty_input_with_filters_writes_exclusion_report(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+
+    with pytest.raises(FileNotFoundError, match="No NetCDF files found"):
+        run_qa.main(["-w", "1950", "-o", str(output_dir), str(input_dir)])
+
+    report = json.loads((output_dir / "excluded_files.json").read_text())
+    assert report["summary"] == {
+        "discovered": 0,
+        "selected": 0,
+        "blacklisted": 0,
+        "not_whitelisted": 0,
+    }
+
+
+def test_main_reports_when_filters_exclude_every_file(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    (input_dir / "tas_195001-195012.nc").touch()
+    (input_dir / "tas_196001-196012.nc").touch()
+    output_dir = tmp_path / "output"
+
+    with pytest.raises(RuntimeError, match="No files remain to check") as error:
+        run_qa.main(
+            [
+                "-w",
+                "not-present",
+                "-o",
+                str(output_dir),
+                str(input_dir),
+            ]
+        )
+
+    report_path = output_dir / "excluded_files.json"
+    assert str(report_path) in str(error.value)
+    report = json.loads(report_path.read_text())
+    assert report["summary"] == {
+        "discovered": 2,
+        "selected": 0,
+        "blacklisted": 0,
+        "not_whitelisted": 2,
+    }
+    assert report["not_whitelisted"] == sorted(
+        str(path) for path in input_dir.glob("*.nc")
+    )
+
+
+def test_path_filters_are_restored_when_resuming(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    default_output = str(tmp_path / "unused-default")
+
+    config = prepare_run(
+        default_output,
+        [
+            "-w",
+            "1950",
+            "-w",
+            "historical",
+            "-b",
+            "ICON-ESM",
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+
+    assert config.whitelist == ["1950", "historical"]
+    assert config.blacklist == ["ICON-ESM"]
+    assert resume_info["whitelist"] == config.whitelist
+    assert resume_info["blacklist"] == config.blacklist
+
+    resumed = prepare_run(
+        default_output,
+        ["-r", "-o", str(output_dir)],
+    )
+
+    assert resumed.whitelist == config.whitelist
+    assert resumed.blacklist == config.blacklist
+
+
+@pytest.mark.parametrize("filter_option", ["-w", "-b"])
+def test_resume_rejects_new_path_filters(tmp_path, filter_option):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    prepare_run(
+        str(tmp_path / "unused-default"),
+        ["-o", str(output_dir), str(input_dir)],
+    )
+
+    with pytest.raises(SystemExit):
+        prepare_run(
+            str(tmp_path / "unused-default"),
+            ["-r", filter_option, "fragment", "-o", str(output_dir)],
+        )
+
+
+@pytest.mark.parametrize("filter_option", ["-w", "-b"])
+def test_empty_path_filter_is_rejected(tmp_path, filter_option):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+
+    with pytest.raises(SystemExit):
+        prepare_run(
+            str(tmp_path / "unused-default"),
+            [filter_option, "", str(input_dir)],
+        )
 
 
 @pytest.mark.parametrize(
@@ -374,6 +494,96 @@ def test_checker_options_for_file_uses_consistency_checker_registry(tmp_path):
     assert cli_options["wcrp_cmip7"]["consistency_output"] == "/wrong/output.json"
 
 
+def test_discovery_filters_literal_path_fragments_with_blacklist_precedence(
+    tmp_path,
+):
+    input_dir = tmp_path / "input"
+    selected_filename = input_dir / "other-model" / "tas_195001-195012.nc"
+    selected_path = input_dir / "historical" / "tas_196001-196012.nc"
+    blacklisted_file = input_dir / "ICON-ESM" / "tas_195001-195012.nc"
+    blacklisted_filename = input_dir / "other-model" / "tas_blocked_1950.nc"
+    not_whitelisted_file = input_dir / "other-model" / "tas_196001-196012.nc"
+    for file_path in (
+        selected_filename,
+        selected_path,
+        blacklisted_file,
+        blacklisted_filename,
+        not_whitelisted_file,
+    ):
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.touch()
+
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    (result_dir / "tables").mkdir()
+    config = SimpleNamespace(
+        parent_dir=str(input_dir),
+        result_dir=str(result_dir),
+        whitelist=["1950", "historical"],
+        blacklist=["ICON-ESM", "blocked"],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=False,
+        processed_files=set(),
+        processed_datasets=set(),
+    )
+
+    inventory = discover_files(config)
+    report_path = write_excluded_files(inventory, config)
+
+    assert inventory.discovered_file_count == 5
+    assert inventory.files == sorted([str(selected_filename), str(selected_path)])
+    assert inventory.blacklisted_files == {
+        str(blacklisted_file): ["ICON-ESM"],
+        str(blacklisted_filename): ["blocked"],
+    }
+    assert inventory.not_whitelisted_files == [str(not_whitelisted_file)]
+    with open(report_path) as report_file:
+        report = json.load(report_file)
+    assert report["filters"] == {
+        "whitelist": ["1950", "historical"],
+        "blacklist": ["ICON-ESM", "blocked"],
+    }
+    assert report["summary"] == {
+        "discovered": 5,
+        "selected": 2,
+        "blacklisted": 2,
+        "not_whitelisted": 1,
+    }
+
+
+def test_excluded_file_report_is_written_when_filters_exclude_nothing(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    selected_file = input_dir / "tas_195001-195012.nc"
+    selected_file.touch()
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    (result_dir / "tables").mkdir()
+    config = SimpleNamespace(
+        parent_dir=str(input_dir),
+        result_dir=str(result_dir),
+        whitelist=["1950"],
+        blacklist=[],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=False,
+        processed_files=set(),
+        processed_datasets=set(),
+    )
+
+    inventory = discover_files(config)
+    report_path = write_excluded_files(inventory, config)
+
+    assert report_path == str(result_dir / "excluded_files.json")
+    report = json.loads((result_dir / "excluded_files.json").read_text())
+    assert report["summary"]["selected"] == 1
+    assert report["blacklisted"] == {}
+    assert report["not_whitelisted"] == []
+
+
 def test_get_checker_metadata():
     """
     Test function get_checker_metadata.
@@ -453,9 +663,7 @@ def test_checker_metadata_skips_broken_entry_point(monkeypatch):
 def test_format_checker_version_includes_providing_package(monkeypatch):
     monkeypatch.setitem(checker_dict, "wcrp_cmip7", "CMIP7")
     metadata = {
-        "wcrp_cmip7": CheckerMetadata(
-            "1.0", "cc-plugin-wcrp", "2.3.4.dev3+gc324abc"
-        )
+        "wcrp_cmip7": CheckerMetadata("1.0", "cc-plugin-wcrp", "2.3.4.dev3+gc324abc")
     }
 
     assert format_checker_version("wcrp_cmip7", metadata) == (
@@ -466,9 +674,7 @@ def test_format_checker_version_includes_providing_package(monkeypatch):
 def test_format_checker_version_includes_cf_package(monkeypatch):
     monkeypatch.setitem(checker_dict, "cf", "CF-Conventions")
     metadata = {
-        "cf": CheckerMetadata(
-            "1.11", "compliance-checker", "6.1.1.dev69+gc4067cca7"
-        )
+        "cf": CheckerMetadata("1.11", "compliance-checker", "6.1.1.dev69+gc4067cca7")
     }
 
     assert format_checker_version("cf", metadata) == (

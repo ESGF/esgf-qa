@@ -35,6 +35,8 @@ class ResumeInfo:
     tests: list[str]
     checker_options: dict = field(default_factory=dict)
     include_consistency_checks: bool = False
+    whitelist: list[str] = field(default_factory=list)
+    blacklist: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data, result_dir):
@@ -51,12 +53,23 @@ class ResumeInfo:
             and all(isinstance(test, str) for test in data["tests"])
             and verify_options_dict(data.get("checker_options", {}))
             and isinstance(data.get("include_consistency_checks", False), bool)
+            and isinstance(data.get("whitelist", []), list)
+            and all(
+                isinstance(fragment, str) and fragment
+                for fragment in data.get("whitelist", [])
+            )
+            and isinstance(data.get("blacklist", []), list)
+            and all(
+                isinstance(fragment, str) and fragment
+                for fragment in data.get("blacklist", [])
+            )
         ):
             raise Exception(
                 f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and "
                 "'info' should be strings, 'tests' should be a list of strings, "
                 "'checker_options' should be a nested dictionary, and "
-                "'include_consistency_checks' should be a boolean."
+                "'include_consistency_checks' should be a boolean. 'whitelist' "
+                "and 'blacklist' should be lists of non-empty strings."
             )
         return cls(
             parent_dir=data["parent_dir"],
@@ -64,6 +77,8 @@ class ResumeInfo:
             tests=data["tests"],
             checker_options=data.get("checker_options", {}),
             include_consistency_checks=data.get("include_consistency_checks", False),
+            whitelist=data.get("whitelist", []),
+            blacklist=data.get("blacklist", []),
         )
 
     def to_dict(self):
@@ -76,6 +91,10 @@ class ResumeInfo:
             data["include_consistency_checks"] = True
         if self.checker_options:
             data["checker_options"] = self.checker_options
+        if self.whitelist:
+            data["whitelist"] = self.whitelist
+        if self.blacklist:
+            data["blacklist"] = self.blacklist
         return data
 
 

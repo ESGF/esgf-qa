@@ -92,7 +92,7 @@ Please see the [esgvoc user guide](https://esgf.github.io/esgf-vocab/user/introd
 ## Usage
 
 ```shell
-$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] <parent_dir>
+$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] <parent_dir>
 ```
 
 - positional arguments:
@@ -106,12 +106,24 @@ $ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION]
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
   - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using the `wcrp-*`, `cc6`, `mip` or `eerie` checkers, they are included by default.
+  - `-w, --whitelist PATH_FRAGMENT`: Only check files whose complete path, including the filename, contains at least one of the specified case-sensitive literal fragments. May be repeated.
+  - `-b, --blacklist PATH_FRAGMENT`: Exclude files whose complete path contains any specified case-sensitive literal fragment. May be repeated and takes precedence over the whitelist.
 
 ### Example Usage
 
 ```shell
 $ esgqa -P 8 -t wcrp_cordex_cmip6:latest -t cf:1.11 -o QA_results/IAEVALL02_2025-10-20 -i "IAEVALL02" ESGF_Buff/IAEVALL02/CORDEX-CMIP6
 ```
+
+To restrict a run to files containing `historical` or `1950`, except for paths
+containing `ICON-ESM`:
+
+```shell
+$ esgqa -w historical -w 1950 -b ICON-ESM -o QA_results/filtered /path/to/datasets
+```
+
+Configured filters are retained when the run is resumed. To use different filters,
+start a new run with a different output directory.
 
 To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the `<parent_dir>`
 (note, that the last modification date of files is NOT taken into account - once a certain file path has been checked

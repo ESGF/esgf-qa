@@ -5,7 +5,7 @@ import os
 import re
 import warnings
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from esgf_qa._constants import checker_supporting_consistency_checks
@@ -43,6 +43,15 @@ class RunConfig:
     dataset_file: Path
     processed_files: set[str]
     processed_datasets: set[str]
+    whitelist: list[str] = field(default_factory=list)
+    blacklist: list[str] = field(default_factory=list)
+
+
+def _nonempty_path_fragment(value):
+    """Validate a literal path fragment supplied through the CLI."""
+    if not value:
+        raise argparse.ArgumentTypeError("path fragments must not be empty")
+    return value
 
 
 def parse_options(opts):
@@ -125,6 +134,30 @@ def build_parser(default_result_dir):
         default=0,
         help="Maximum parallel processes. Default: 0 (= number of cores).",
     )
+    parser.add_argument(
+        "-w",
+        "--whitelist",
+        action="append",
+        default=[],
+        type=_nonempty_path_fragment,
+        metavar="PATH_FRAGMENT",
+        help=(
+            "Only check files whose full path contains at least one case-sensitive "
+            "literal path fragment. May be repeated."
+        ),
+    )
+    parser.add_argument(
+        "-b",
+        "--blacklist",
+        action="append",
+        default=[],
+        type=_nonempty_path_fragment,
+        metavar="PATH_FRAGMENT",
+        help=(
+            "Exclude files whose full path contains a case-sensitive literal path "
+            "fragment. May be repeated; blacklist matches take precedence."
+        ),
+    )
     return parser
 
 
@@ -202,9 +235,7 @@ def resolve_checker_specs(tests, checker_options):
             "ERROR: Cannot run both 'mip' and its 'eerie' alias at the same time."
         )
     mip_tables = checker_options.get("mip", {}).get("tables")
-    if mip_explicitly_requested and (
-        not isinstance(mip_tables, str) or not mip_tables
-    ):
+    if mip_explicitly_requested and (not isinstance(mip_tables, str) or not mip_tables):
         raise Exception(
             "Option 'tables' with a path to CMOR tables must be specified when "
             "checker 'mip' is explicitly selected."
@@ -232,14 +263,14 @@ def prepare_run(default_result_dir, argv=None):
     parent_dir = os.path.abspath(args.parent_dir) if args.parent_dir else None
     tests = sorted(args.test) if args.test else []
     info = args.info or ""
+    whitelist = list(args.whitelist)
+    blacklist = list(args.blacklist)
     checker_options = parse_options(args.option)
     progress_file = Path(result_dir, "progress.txt")
     dataset_file = Path(result_dir, "progress_datasets.txt")
     resume_info_file = Path(result_dir, ".resume_info")
 
-    prepare_result_directory(
-        result_dir, args.resume, progress_file, resume_info_file
-    )
+    prepare_result_directory(result_dir, args.resume, progress_file, resume_info_file)
     include_consistency_checks = args.include_consistency_checks
     if args.resume:
         print(f"Resuming previous QA run in '{result_dir}'")
@@ -255,6 +286,8 @@ def prepare_run(default_result_dir, argv=None):
             info = stored.info
         checker_options = defaultdict(dict, stored.checker_options)
         include_consistency_checks = stored.include_consistency_checks
+        whitelist = stored.whitelist
+        blacklist = stored.blacklist
     else:
         print(f"Storing check results in '{result_dir}'")
 
@@ -272,6 +305,8 @@ def prepare_run(default_result_dir, argv=None):
             tests=checkers,
             checker_options=dict(checker_options),
             include_consistency_checks=include_consistency_checks,
+            whitelist=whitelist,
+            blacklist=blacklist,
         ),
     )
 
@@ -301,6 +336,8 @@ def prepare_run(default_result_dir, argv=None):
         dataset_file=dataset_file,
         processed_files=read_progress(progress_file),
         processed_datasets=read_progress(dataset_file),
+        whitelist=whitelist,
+        blacklist=blacklist,
     )
 
 

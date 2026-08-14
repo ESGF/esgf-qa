@@ -5,7 +5,7 @@ import json
 import os
 import re
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from esgf_qa._constants import (
     checker_supporting_consistency_checks,
@@ -23,6 +23,9 @@ class FileInventory:
     dataset_files: dict
     directory_datasets: dict
     checker_options: dict
+    discovered_file_count: int = 0
+    blacklisted_files: dict[str, list[str]] = field(default_factory=dict)
+    not_whitelisted_files: list[str] = field(default_factory=list)
 
 
 def get_dsid(files_to_check_dict, dataset_files_map_ext, file_path, project_ids):
@@ -95,21 +98,37 @@ def discover_files(config):
     files = []
     file_details = {}
     directory_datasets = {}
+    discovered_file_count = 0
+    blacklisted_files = {}
+    not_whitelisted_files = []
     for root, _, filenames in os.walk(config.parent_dir):
         for filename in filenames:
             if not filename.endswith(".nc"):
                 continue
+            discovered_file_count += 1
             file_path = os.path.normpath(os.path.join(root, filename))
+            blacklist_matches = [
+                fragment for fragment in config.blacklist if fragment in file_path
+            ]
+            if blacklist_matches:
+                blacklisted_files[file_path] = blacklist_matches
+                continue
+            if config.whitelist and not any(
+                fragment in file_path for fragment in config.whitelist
+            ):
+                not_whitelisted_files.append(file_path)
+                continue
+
             dataset_dir = os.path.dirname(file_path)
             stem_parts = os.path.splitext(os.path.basename(file_path))[0].split("_")
             dataset_name = "_".join(
                 filter(re.compile(r"^(?!\d{1,}-{0,1}\d{0,}$)").match, stem_parts)
             )
-            timestamp = "_".join(
-                filter(re.compile(r"^\d{1,}-?\d*$").match, stem_parts)
-            )
+            timestamp = "_".join(filter(re.compile(r"^\d{1,}-?\d*$").match, stem_parts))
             if "_" in timestamp:
-                raise Exception(f"Filename contains multiple time stamps: '{file_path}'")
+                raise Exception(
+                    f"Filename contains multiple time stamps: '{file_path}'"
+                )
             result_file, consistency_file = _result_paths(
                 config.result_dir, dataset_dir, dataset_name, timestamp
             )
@@ -165,7 +184,55 @@ def discover_files(config):
         dataset_files=dataset_files,
         directory_datasets=directory_datasets,
         checker_options=checker_options,
+        discovered_file_count=discovered_file_count,
+        blacklisted_files=blacklisted_files,
+        not_whitelisted_files=not_whitelisted_files,
     )
+
+
+def format_exclusion_counts(inventory, config):
+    """Format exclusion counts for configured filter types."""
+    counts = []
+    if config.blacklist:
+        counts.append(f"{len(inventory.blacklisted_files)} were blacklisted")
+    if config.whitelist:
+        counts.append(
+            f"{len(inventory.not_whitelisted_files)} matched no whitelist fragment"
+        )
+    return " and ".join(counts)
+
+
+def write_excluded_files(inventory, config):
+    """Write configured filters and every excluded file to JSON."""
+    if not config.whitelist and not config.blacklist:
+        return None
+    output_path = os.path.join(config.result_dir, "excluded_files.json")
+    data = {
+        "filters": {
+            "whitelist": config.whitelist,
+            "blacklist": config.blacklist,
+        },
+        "summary": {
+            "discovered": inventory.discovered_file_count,
+            "selected": len(inventory.files),
+            "blacklisted": len(inventory.blacklisted_files),
+            "not_whitelisted": len(inventory.not_whitelisted_files),
+        },
+        "blacklisted": {
+            path: inventory.blacklisted_files[path]
+            for path in sorted(inventory.blacklisted_files)
+        },
+        "not_whitelisted": sorted(inventory.not_whitelisted_files),
+    }
+    with open(output_path, "w") as file:
+        json.dump(data, file, indent=4)
+    print(
+        f"Path filters selected {len(inventory.files)} of "
+        f"{inventory.discovered_file_count} discovered NetCDF files: "
+        f"{format_exclusion_counts(inventory, config)}."
+    )
+    print(f"Excluded file information was saved to '{output_path}'.")
+    return output_path
 
 
 def write_inventory(inventory, result_dir):
