@@ -143,7 +143,7 @@ The `esgqaviewer` app can be used to view the result files inside a terminal:
 esgqaviewer path/to/result.json
 ```
 At the bottom of the viewer, all possible tools are listed. The results can be searched using a full text search for instance.
-A double click with the right mouse button on a node will expand / collapse it and below nodes fully, while a left click will collapse the current node only.
+Mouse controls are enabled by default. Left-click toggles the current node; right-click expands or collapses its subtree. `F2` toggles text-selection mode. After enabling it, drag over the terminal lines and copy them with `Ctrl+Shift+C` (not plain `Ctrl+C`), `Cmd+C` on macOS, or by right-clicking the selected text and using the terminal's context menu. Press `F2` again to disable text selection and restore mouse controls.
 
 ### Add results to QA results repository
 

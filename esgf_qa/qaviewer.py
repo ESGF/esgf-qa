@@ -2,6 +2,7 @@ import argparse
 import json
 
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.events import MouseUp
 from textual.widgets import Footer, Header, Input, Static, Tree
 
@@ -56,25 +57,19 @@ def iter_nodes(node):
         yield from iter_nodes(child)
 
 
-class QCFooter(Footer):
-    def render(self):
-        # Get the default legend
-        base = super().render()
-        # Append custom legend
-        return f"{base}  (x| ) Left-click to toggle node  ( |x) Right-click to toggle auto-expansion/collapse"
-
-
 class QCViewer(App):
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("/", "focus_search", "Search"),
         ("n", "next_match", "Next Match"),
         ("p", "prev_match", "Prev Match"),
+        Binding("f2", "toggle_mouse", "Toggle Text Selection", priority=True),
     ]
 
     def __init__(self, data):
         super().__init__()
         self.data = data
+        self.mouse_enabled = True
         self.matches = []
         self.match_index = -1
         self.qc_tree = None  # will be created in compose()
@@ -86,7 +81,21 @@ class QCViewer(App):
         yield self.qc_tree
         yield Input(placeholder="Search...", id="search")
         yield Static("", id="status")
-        yield QCFooter()
+        yield Static(self.mouse_guidance, id="mouse-guidance")
+        yield Footer()
+
+    @property
+    def mouse_guidance(self):
+        """Return instructions for the active mouse mode."""
+        if self.mouse_enabled:
+            return (
+                "Mouse mode | Left-click: toggle node | Right-click: expand/collapse "
+                "subtree | F2: enable text selection"
+            )
+        return (
+            "Text-selection mode | Drag: select text | Copy: Ctrl+Shift+C (not Ctrl+C), "
+            "Cmd+C on macOS, or right-click the selection | F2: disable text selection"
+        )
 
     def on_tree_node_selected(self, event: Tree.NodeSelected):
         # Right-click simulation: expand all children
@@ -175,6 +184,30 @@ class QCViewer(App):
     def action_focus_search(self):
         self.query_one("#search").focus()
 
+    def action_toggle_mouse(self):
+        """Toggle between TUI mouse controls and terminal text selection."""
+        driver = self._driver
+        self.mouse_enabled = not self.mouse_enabled
+
+        if self.mouse_enabled:
+            # Textual has no public runtime API for toggling mouse reporting.
+            # Set the driver's startup flag first so its enable method takes effect.
+            driver._mouse = True
+            enable_mouse = getattr(driver, "_enable_mouse_support", None)
+            if enable_mouse is not None:
+                enable_mouse()
+        else:
+            disable_mouse = getattr(driver, "_disable_mouse_support", None)
+            if disable_mouse is not None:
+                disable_mouse()
+            # Keep Textual from re-enabling reporting after a terminal resume.
+            driver._mouse = False
+
+        self.query_one("#mouse-guidance", Static).update(self.mouse_guidance)
+
+        mode = "Mouse controls" if self.mouse_enabled else "Text selection"
+        self.query_one("#status", Static).update(f"{mode} enabled (F2 to toggle)")
+
     def on_input_submitted(self, event: Input.Submitted):
         """Called when the user submits a search in the input."""
         query = event.value.strip()
@@ -257,7 +290,6 @@ def main():
     parser.add_argument(
         "qc_result", metavar="qc_result.json", help="Path to the QC result JSON file."
     )
-
     args = parser.parse_args()
 
     data = load_json(args.qc_result)

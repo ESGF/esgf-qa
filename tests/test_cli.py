@@ -261,7 +261,7 @@ class TestQACommandLine:
             # "info" is the only required field
             assert "info" in data
             # "error" and "fail" are optional, others are not allowed
-            assert all([key in ["fail", "info", "error"] for key in data])
+            assert all(key in ["fail", "info", "error"] for key in data)
             info = data["info"]
             for field in ["id", "date", "files", "datasets", "cc_version", "checkers"]:
                 assert field in info
