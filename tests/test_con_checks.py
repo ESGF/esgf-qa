@@ -6,13 +6,13 @@ from datetime import timedelta
 import pytest
 
 from esgf_qa import con_checks as cc
+from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import (
     compare_dicts,
     compare_nested_dicts,
     printtimedelta,
     truncate_str,
 )
-from esgf_qa.cluster_results import QAResultAggregator
 
 
 def test_printtimedelta():
@@ -222,9 +222,9 @@ class TestConChecks:
         with open(changed_file) as file:
             changed_data = json.load(file)
         changed_data["global_attributes"]["title"] = "different required value"
-        changed_data["global_attributes_non_required"]["notes"] = (
-            "different suggested value"
-        )
+        changed_data["global_attributes_non_required"][
+            "notes"
+        ] = "different suggested value"
         with open(changed_file, "w") as file:
             json.dump(changed_data, file)
 
