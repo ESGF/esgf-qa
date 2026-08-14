@@ -1335,7 +1335,7 @@ def main():
         "files": str(len(files_to_check)),
         "datasets": str(len(dataset_files_map)),
         "cc_version": cc_version,
-        "checkers": ", ".join(format_checker_version(checker) for checker in checkers),
+        "checkers": [format_checker_version(checker) for checker in checkers],
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks

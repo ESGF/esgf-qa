@@ -184,6 +184,8 @@ class TestQACommandLine:
                     "checkers",
                 ]:
                     assert field in info
+                assert isinstance(info["checkers"], list)
+                assert all(isinstance(checker, str) for checker in info["checkers"])
                 for sev_dict in [data["fail"], data["error"]]:
                     for _, issues in sev_dict.items():
                         for issue_name, messages in issues.items():
@@ -265,6 +267,8 @@ class TestQACommandLine:
             info = data["info"]
             for field in ["id", "date", "files", "datasets", "cc_version", "checkers"]:
                 assert field in info
+            assert isinstance(info["checkers"], list)
+            assert all(isinstance(checker, str) for checker in info["checkers"])
             assert isinstance(data.get("error", {}), dict)
             assert isinstance(data.get("fail", {}), dict)
         finally:

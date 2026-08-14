@@ -176,8 +176,11 @@ class QCViewer(App):
                 self.populate_tree(child, v)
         elif isinstance(data, list):
             for i, v in enumerate(data):
-                child = node.add(f"[{i}]", expand=False)
-                self.populate_tree(child, v)
+                if isinstance(v, (dict, list)):
+                    child = node.add(f"[{i}]", expand=False)
+                    self.populate_tree(child, v)
+                else:
+                    node.add(repr(v))
         else:
             node.add(repr(data))
 
