@@ -4,10 +4,13 @@ from types import SimpleNamespace
 
 import pytest
 
+from esgf_qa import run_qa
+from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.run_qa import (
     process_dataset,
     process_file,
     run_compliance_checker,
+    run_dataset_collection_check,
 )
 
 
@@ -159,6 +162,40 @@ class TestDummyQA:
             ["Suggested failure"],
         ]
 
+    def test_process_file_records_missing_consistency_output(
+        self, fake_check_suite, tmp_env, dummy_nc_file
+    ):
+        """A missing expected consistency output is a file-level runtime error."""
+        consistency_file = tmp_env["results"] / "missing-consistency.json"
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(tmp_env["results"] / "res.json"),
+                "consistency_file": str(consistency_file),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cc6"],
+            {},
+            files_to_check_dict,
+            [],
+            str(tmp_env["progress"]),
+        )
+
+        error_msg = result["cc6"]["errors"]["consistency_output"]
+        assert str(consistency_file) in error_msg
+
+        aggregator = QAResultAggregator()
+        aggregator.update(
+            {"cc6": {"errors": result["cc6"]["errors"]}},
+            "dataset1",
+            dummy_nc_file,
+        )
+        assert aggregator.summary["error"]["[CORDEX-CMIP6] consistency_output"][
+            error_msg
+        ]["dataset1"] == [dummy_nc_file]
+
     def test_process_file_cached_result(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read from disk if result already exists and no errors."""
         result_file = tmp_env["results"] / "res.json"
@@ -187,6 +224,33 @@ class TestDummyQA:
 
         # Should reuse cached result, not rewrite
         assert result == {"cf": {"errors": {}}}
+
+    def test_process_file_reruns_cached_runtime_error(
+        self, fake_check_suite, tmp_env, dummy_nc_file
+    ):
+        """A processed file with a runtime error must be checked again."""
+        result_file = tmp_env["results"] / "res.json"
+        result_file.write_text(
+            json.dumps({"cf": {"errors": {"check_old": "previous failure"}}})
+        )
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "cons.json"),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cf:latest"],
+            {},
+            files_to_check_dict,
+            [dummy_nc_file],
+            str(tmp_env["progress"]),
+        )
+
+        assert result["cf"]["errors"] == {}
+        assert "time_bounds" in result["cf"]
 
     def test_process_dataset(self, fake_check_suite, tmp_env, dummy_nc_file):
         """process_dataset should run checks for not yet checked dataset."""
@@ -255,6 +319,130 @@ class TestDummyQA:
         assert [check["weight"] for check in saved_results] == [3, 1]
         saved_to_disk = json.loads(result_file.read_text())
         assert saved_to_disk == result
+
+    def test_process_dataset_records_runtime_error(self, tmp_env, dummy_nc_file):
+        """An exception in con_checks is reported with its dataset and files."""
+        second_nc_file = tmp_env["tmp"] / "dummy-2.nc"
+        second_nc_file.write_text("fake dataset content")
+        dataset_files = [dummy_nc_file, str(second_nc_file)]
+        result_file = tmp_env["results"] / "dataset-result.json"
+        invalid_consistency_file = tmp_env["results"] / "invalid.json"
+        invalid_consistency_file.write_text("not valid JSON")
+        files_to_check_dict = {
+            file: {
+                "result_file_ds": str(result_file),
+                "consistency_file": str(invalid_consistency_file),
+            }
+            for file in dataset_files
+        }
+
+        _, result = process_dataset(
+            "dataset1",
+            {"dataset1": dataset_files},
+            ["cons"],
+            {"cons": {}},
+            files_to_check_dict,
+            set(),
+            str(tmp_env["progress"]),
+        )
+
+        error = result["cons"]["errors"]["consistency_checks"]
+        assert "con_checks.py" in error["msg"]
+        assert "function/method 'consistency_checks'" in error["msg"]
+        assert error["files"] == sorted(dataset_files)
+
+        aggregator = QAResultAggregator()
+        aggregator.update_ds(result, "dataset1")
+        error_summary = aggregator.summary["error"]["[Consistency] consistency_checks"][
+            error["msg"]
+        ]
+        assert error_summary["dataset1"] == sorted(dataset_files)
+
+    def test_process_dataset_continues_after_runtime_error(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """One failed dataset check does not prevent the remaining checks."""
+
+        def failing_check(*args, **kwargs):
+            raise RuntimeError("consistency failure")
+
+        monkeypatch.setattr(run_qa, "cons", failing_check)
+        monkeypatch.setattr(run_qa, "cont", lambda *args, **kwargs: {"continued": {}})
+        result_file = tmp_env["results"] / "dataset-result.json"
+        files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
+
+        _, result = process_dataset(
+            "dataset1",
+            {"dataset1": [dummy_nc_file]},
+            ["cons", "cont"],
+            {"cons": {}, "cont": {}},
+            files_to_check_dict,
+            set(),
+            str(tmp_env["progress"]),
+        )
+
+        assert "errors" in result["cons"]
+        assert result["cont"] == {"continued": {}}
+
+    def test_collection_check_runtime_error_covers_all_datasets(self):
+        """An all-dataset failure is associated with every dataset in scope."""
+
+        def failing_collection_check(*args, **kwargs):
+            raise RuntimeError("all-dataset failure")
+
+        ds_map = {
+            "dataset1": ["file-1.nc", "file-2.nc"],
+            "dataset2": ["file-3.nc"],
+        }
+        aggregator = QAResultAggregator()
+
+        result = run_dataset_collection_check(
+            aggregator,
+            "cons",
+            failing_collection_check,
+            ds_map,
+            {},
+            {},
+        )
+
+        assert result is None
+        error_group = aggregator.summary["error"][
+            "[Consistency] failing_collection_check"
+        ]
+        error_msg = next(iter(error_group))
+        assert "all-dataset failure" in error_msg
+        assert error_group[error_msg]["dataset1"] == ["file-1.nc", "file-2.nc"]
+        assert error_group[error_msg]["dataset2"] == ["file-3.nc"]
+
+    def test_inter_dataset_runtime_error_discards_reference_result(
+        self, tmp_env, dummy_nc_file
+    ):
+        """A failed inter-dataset check returns no partial reference metadata."""
+        invalid_consistency_file = tmp_env["results"] / "invalid.json"
+        invalid_consistency_file.write_text("not valid JSON")
+        ds_map = {"dataset1": [dummy_nc_file]}
+        files_to_check_dict = {
+            dummy_nc_file: {"consistency_file": str(invalid_consistency_file)}
+        }
+        aggregator = QAResultAggregator()
+
+        result = run_dataset_collection_check(
+            aggregator,
+            "cons",
+            run_qa.inter_dataset_consistency_checks,
+            ds_map,
+            files_to_check_dict,
+            {},
+        )
+
+        assert result is None
+        error_group = aggregator.summary["error"][
+            "[Consistency] inter_dataset_consistency_checks"
+        ]
+        error_msg = next(iter(error_group))
+        assert "con_checks.py" in error_msg
+        assert "function/method 'inter_dataset_consistency_checks'" in error_msg
+        assert error_group[error_msg]["dataset1"] == [dummy_nc_file]
 
     def test_process_dataset_cached(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read dataset result if already processed and valid."""

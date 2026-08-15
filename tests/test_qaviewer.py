@@ -11,7 +11,14 @@ from esgf_qa.qaviewer import QCViewer, iter_nodes, transform_keys
 # ------------------------
 def test_transform_keys_basic():
     data = {
-        "info": {"id": "DS1", "date": "2025-10-30"},
+        "info": {
+            "id": "DS1",
+            "date": "2025-10-30",
+            "checkers": [
+                "CF-Conventions cf:1.11 (compliance-checker 5.4.2)",
+                "CMIP7 wcrp_cmip7:1.0 (cc-plugin-wcrp 2.3.4)",
+            ],
+        },
         "fail": {3: {"test1": ["file1.nc"]}},
         "pass": {3: {"test2": ["file2.nc"]}},
         "error": {"checker1": {"func": "some error"}},
@@ -22,6 +29,7 @@ def test_transform_keys_basic():
     assert "Passed Checks" in result
     assert "Runtime Errors" in result
     assert result["Info"]["Dataset-ID"] == "DS1"
+    assert result["Info"]["Applied Checkers"] == data["info"]["checkers"]
     assert result["Failed Checks"]["Required"]["test1"] == ["file1.nc"]
 
 
@@ -98,7 +106,15 @@ async def test_qcviewer_tree_population():
     - Asserts that the "info" node exists
     - Asserts that Dataset-ID node exists
     """
-    data = {"Info": {"Dataset-ID": "DS1"}, "Failed Checks": {}, "Passed Checks": {}}
+    checkers = [
+        "CF-Conventions cf:1.11 (compliance-checker 5.4.2)",
+        "CMIP7 wcrp_cmip7:1.0 (cc-plugin-wcrp 2.3.4)",
+    ]
+    data = {
+        "Info": {"Dataset-ID": "DS1", "Applied Checkers": checkers},
+        "Failed Checks": {},
+        "Passed Checks": {},
+    }
     app = QCViewer(data)
 
     async with app.run_test() as _pilot:
@@ -121,6 +137,15 @@ async def test_qcviewer_tree_population():
             (c for c in info_node.children if str(c.label) == "Dataset-ID"), None
         )
         assert ds_id_node is not None
+
+        checkers_node = next(
+            (c for c in info_node.children if str(c.label) == "Applied Checkers"),
+            None,
+        )
+        assert checkers_node is not None
+        assert [str(child.label) for child in checkers_node.children] == [
+            repr(checker) for checker in checkers
+        ]
 
 
 @pytest.mark.asyncio

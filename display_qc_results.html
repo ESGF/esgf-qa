@@ -77,6 +77,9 @@
             font-size: 1.1em;
             color: #777;
         }
+        #subtitle {
+            white-space: pre-line;
+        }
         header {
             margin-bottom: 1em;
             padding-bottom: 0.5em;
@@ -348,7 +351,13 @@
 
             const info = data.info;
             document.getElementById("title").textContent = `QC Results for '${info.id}' (from: ${info.date})`;
-            document.getElementById("subtitle").textContent = `    IOOS Compliance Checker (${info.cc_version}) - ${info.checkers}`;
+            const appliedCheckers = Array.isArray(info.checkers)
+                ? info.checkers
+                : (info.checkers ? [info.checkers] : []);
+            const checkerLines = appliedCheckers.length
+                ? `\nApplied Checkers:\n${appliedCheckers.map(checker => `  • ${checker}`).join('\n')}`
+                : '';
+            document.getElementById("subtitle").textContent = `IOOS Compliance Checker (${info.cc_version})${checkerLines}`;
             document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
 
             // Check if "inter_ds_con_checks_ref" key exists in the info dictionary
@@ -363,7 +372,33 @@
                 const detailsList = document.createElement('ul');
                 for (const [key, value] of Object.entries(referenceOptional)) {
                     const listItem = document.createElement('li');
-                    if (key.includes('/')) {
+                    if (key === 'reference_file_exceptions' && value && typeof value === 'object') {
+                        const exceptionsLabel = document.createElement('strong');
+                        exceptionsLabel.textContent = 'Reference file substitutions';
+                        listItem.appendChild(exceptionsLabel);
+
+                        const exceptionsList = document.createElement('ul');
+                        for (const [dataset, files] of Object.entries(value)) {
+                            const datasetItem = document.createElement('li');
+                            const datasetLabel = document.createElement('strong');
+                            datasetLabel.textContent = dataset;
+                            datasetItem.appendChild(datasetLabel);
+
+                            const filesList = document.createElement('ul');
+                            const defaultFile = document.createElement('li');
+                            defaultFile.textContent = `Default reference unavailable: ${files.default_reference_file}`;
+                            filesList.appendChild(defaultFile);
+
+                            const usedFile = document.createElement('li');
+                            usedFile.textContent = `Reference used instead: ${files.used_reference_file}`;
+                            filesList.appendChild(usedFile);
+
+                            datasetItem.appendChild(filesList);
+                            exceptionsList.appendChild(datasetItem);
+                        }
+
+                        listItem.appendChild(exceptionsList);
+                    } else if (key.includes('/')) {
                         const [strPart1, strPart2] = key.split('/');
                         const shortenedStrPart2 = strPart2.length > 25 ? `${strPart2.substring(0, 10)}...${strPart2.substring(strPart2.length - 10)}` : strPart2;
                         listItem.innerHTML = `<strong>${strPart1}/${shortenedStrPart2}</strong>: ${value}`;

@@ -1,17 +1,23 @@
 import csv
+import json
 import os
 import re
 import sys
 from collections import defaultdict
 
+import pytest
+
 from esgf_qa import run_qa
 from esgf_qa._constants import (
     checker_dict,
-    checker_dict_ext,
+    checker_package_versions,
     checker_release_versions,
+    checker_supporting_consistency_checks,
 )
 from esgf_qa.run_qa import (
+    _invalidate_nonreusable_dataset_results,
     _verify_options_dict,
+    format_checker_version,
     get_checker_release_versions,
     get_default_result_dir,
     get_dsid,
@@ -61,6 +67,215 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
 
     assert captured_options["cf"]["enable_appendix_a_checks"] is True
     assert "cf:" not in captured_options
+
+
+def test_new_file_invalidates_cached_dataset_result(tmp_path):
+    cached_file = tmp_path / "cached.nc"
+    new_file = tmp_path / "new.nc"
+    cached_result = tmp_path / "cached-result.json"
+    cached_result.write_text(json.dumps({"cf": {"errors": {}}}))
+    files_to_check_dict = {
+        str(cached_file): {
+            "result_file": str(cached_result),
+            "consistency_file": str(tmp_path / "cached-consistency.json"),
+        },
+        str(new_file): {
+            "result_file": str(tmp_path / "new-result.json"),
+            "consistency_file": str(tmp_path / "new-consistency.json"),
+        },
+    }
+    processed_datasets = {"dataset1"}
+
+    _invalidate_nonreusable_dataset_results(
+        {"dataset1": [str(cached_file), str(new_file)]},
+        ["cf"],
+        files_to_check_dict,
+        {str(cached_file)},
+        processed_datasets,
+    )
+
+    assert processed_datasets == set()
+
+
+def test_main_retains_info_when_resuming(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    (input_dir / "sample.nc").touch()
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "tables").mkdir()
+    (output_dir / "progress.txt").touch()
+    (output_dir / "progress_datasets.txt").touch()
+    (output_dir / ".resume_info").write_text(
+        json.dumps(
+            {
+                "parent_dir": str(input_dir),
+                "info": "original-info",
+                "tests": ["cf"],
+            }
+        )
+    )
+
+    monkeypatch.setattr(
+        run_qa, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+    monkeypatch.setattr(
+        run_qa,
+        "process_file",
+        lambda file_path, *args: (file_path, {"cf": {"errors": {}}}),
+    )
+
+    def set_checker_release_versions(checkers):
+        monkeypatch.setitem(run_qa.checker_release_versions, "cf", "test")
+
+    monkeypatch.setattr(
+        run_qa, "get_checker_release_versions", set_checker_release_versions
+    )
+    monkeypatch.setattr(sys, "argv", ["esgqa", "-r", "-o", str(output_dir)])
+
+    run_qa.main()
+
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+    assert resume_info["info"] == "original-info"
+    result_file = next(
+        path
+        for path in output_dir.glob("qa_result_*.json")
+        if not path.name.endswith(".cluster.json")
+    )
+    result = json.loads(result_file.read_text())
+    assert result["info"]["id"].startswith("original-info ")
+
+
+def test_main_rejects_invalid_stored_checker_options(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "tables").mkdir()
+    (output_dir / "progress.txt").touch()
+    (output_dir / ".resume_info").write_text(
+        json.dumps(
+            {
+                "parent_dir": str(input_dir),
+                "info": "original-info",
+                "tests": ["cf"],
+                "checker_options": [],
+            }
+        )
+    )
+    monkeypatch.setattr(sys, "argv", ["esgqa", "-r", "-o", str(output_dir)])
+
+    with pytest.raises(Exception, match="checker_options"):
+        run_qa.main()
+
+
+@pytest.mark.parametrize(
+    "option_args", [[], ["-O", "mip:tables"], ["-O", "mip:tables:"]]
+)
+def test_main_rejects_mip_without_table_path(monkeypatch, tmp_path, option_args):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        run_qa, "get_installed_checker_versions", lambda: {"mip": ["latest"]}
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "esgqa",
+            "-t",
+            "mip",
+            *option_args,
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+
+    with pytest.raises(Exception, match="tables.*path.*explicitly selected"):
+        run_qa.main()
+
+
+def test_main_rejects_mip_and_eerie_together(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        run_qa, "get_installed_checker_versions", lambda: {"mip": ["latest"]}
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "esgqa",
+            "-t",
+            "mip",
+            "-t",
+            "eerie",
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+
+    with pytest.raises(Exception, match="Cannot run both 'mip'.*'eerie'"):
+        run_qa.main()
+
+
+@pytest.mark.parametrize(
+    "checker, checker_args, expected_tables",
+    [
+        (
+            "mip",
+            ["-t", "eerie", "-O", "eerie:tables:/custom/eerie/Tables"],
+            "/custom/eerie/Tables",
+        ),
+        ("wcrp_cmip6plus", ["-t", "wcrp_cmip6plus"], None),
+    ],
+)
+def test_main_configures_checker_consistency_output(
+    monkeypatch, tmp_path, checker, checker_args, expected_tables
+):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    (input_dir / "sample.nc").touch()
+    output_dir = tmp_path / "output"
+    captured = {}
+
+    monkeypatch.setattr(
+        run_qa,
+        "get_installed_checker_versions",
+        lambda: {"mip": ["latest"], "wcrp_cmip6plus": ["1.0", "latest"]},
+    )
+
+    def capture_process_file(file_path, checkers, checker_options, *args):
+        captured["checkers"] = checkers
+        captured["options"] = checker_options
+        return file_path, {checker: {"errors": {}}}
+
+    def set_checker_release_versions(checkers):
+        monkeypatch.setitem(run_qa.checker_release_versions, checker, "test")
+
+    monkeypatch.setattr(run_qa, "process_file", capture_process_file)
+    monkeypatch.setattr(
+        run_qa, "get_checker_release_versions", set_checker_release_versions
+    )
+    monkeypatch.setattr(run_qa, "run_dataset_collection_check", lambda *args: None)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["esgqa", *checker_args, "-o", str(output_dir), str(input_dir)],
+    )
+
+    run_qa.main()
+
+    assert captured["checkers"] == [checker]
+    assert captured["options"][checker]["consistency_output"].endswith(".json")
+    if expected_tables is not None:
+        assert captured["options"][checker]["tables"] == expected_tables
+    assert checker in checker_supporting_consistency_checks
+    assert checker in checker_dict
 
 
 # Test get_default_result_dir
@@ -118,13 +333,8 @@ def test_get_checker_release_versions():
     dictionary with the correct version values.
     """
     # reset globals
+    checker_package_versions.clear()
     checker_release_versions.clear()
-    checker_dict.clear()
-    checker_dict_ext.clear()
-
-    # prepare minimal fake environment
-    checker_dict.update({"cf": "", "cc6": "", "wcrp_cmip6": ""})
-    checker_dict_ext.update({**checker_dict, "cons": ""})
 
     # instantiate a real CheckSuite with empty options
     checkers = ["cf:1.6", "cc6:latest", "wcrp_cmip6:latest"]
@@ -140,6 +350,36 @@ def test_get_checker_release_versions():
         assert isinstance(version, str)
         assert len(version) > 0
     assert checker_release_versions["cf"] == "1.6"
+    assert checker_package_versions["cf"][0] == "compliance-checker"
+    assert checker_package_versions["cc6"][0] == "cc-plugin-cc6"
+
+
+def test_format_checker_version_includes_providing_package(monkeypatch):
+    monkeypatch.setitem(checker_dict, "wcrp_cmip7", "CMIP7")
+    monkeypatch.setitem(checker_release_versions, "wcrp_cmip7", "1.0")
+    monkeypatch.setitem(
+        checker_package_versions,
+        "wcrp_cmip7",
+        ("cc-plugin-wcrp", "2.3.4.dev3+gc324abc"),
+    )
+
+    assert format_checker_version("wcrp_cmip7") == (
+        "CMIP7 wcrp_cmip7:1.0 (cc-plugin-wcrp 2.3.4.dev3+gc324abc)"
+    )
+
+
+def test_format_checker_version_includes_cf_package(monkeypatch):
+    monkeypatch.setitem(checker_dict, "cf", "CF-Conventions")
+    monkeypatch.setitem(checker_release_versions, "cf", "1.11")
+    monkeypatch.setitem(
+        checker_package_versions,
+        "cf",
+        ("compliance-checker", "6.1.1.dev69+gc4067cca7"),
+    )
+
+    assert format_checker_version("cf") == (
+        "CF-Conventions cf:1.11 (compliance-checker 6.1.1.dev69+gc4067cca7)"
+    )
 
 
 def test_track_checked_datasets(tmpdir):

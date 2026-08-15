@@ -6,8 +6,10 @@ import json
 import multiprocessing
 import os
 import re
+import traceback
 import warnings
 from collections import defaultdict
+from importlib.metadata import entry_points
 from pathlib import Path
 
 from compliance_checker import __version__ as cc_version
@@ -17,6 +19,7 @@ from packaging import version as pversion
 from esgf_qa._constants import (
     checker_dict,
     checker_dict_ext,
+    checker_package_versions,
     checker_release_versions,
     checker_supporting_consistency_checks,
     supported_project_ids,
@@ -134,40 +137,71 @@ def get_checker_release_versions(checkers, checker_options=None):
     None
         Updates the global dictionary ``checker_release_versions``.
     """
-    global checker_release_versions
-    global checker_dict
-    global checker_dict_ext
     if checker_options is None:
         checker_options = {}
     check_suite = CheckSuite(options=checker_options)
     check_suite.load_all_available_checkers()
+
+    checker_packages = {}
+    for checker_entry_point in entry_points(group="compliance_checker.suites"):
+        try:
+            checker_obj = checker_entry_point.load()
+        except Exception:
+            continue
+        checker_name = getattr(checker_obj, "_cc_spec", None) or getattr(
+            checker_obj, "name", None
+        )
+        checker_version = getattr(checker_obj, "_cc_spec_version", "unknown")
+        distribution = getattr(checker_entry_point, "dist", None)
+        if checker_name and distribution is not None:
+            checker_packages[(checker_name, str(checker_version))] = (
+                distribution.name,
+                distribution.version,
+            )
+
     for checker in checkers:
         checker_name = checker.split(":")[0]
-        if checker_name not in checker_release_versions:
-            if checker_name in checker_dict_ext and checker_name not in checker_dict:
-                # Internal esgf-qa checker (cons, cont, comp) - use esgf-qa version
-                checker_release_versions[checker_name] = version
-            else:
-                # compliance-checker plugin: look up _cc_spec_version.
-                # CC >= 6.0.0 removed :latest, so fall back to the highest
-                # explicitly versioned key when the requested key is missing.
-                checker_obj = check_suite.checkers.get(checker)
-                if checker_obj is None:
-                    prefix = checker_name + ":"
-                    candidates = [
-                        k for k in check_suite.checkers if k.startswith(prefix)
-                    ]
-                    if candidates:
-                        resolved_key = max(
-                            candidates,
-                            key=lambda k: pversion.parse(k.split(":")[1]),
-                        )
-                        checker_obj = check_suite.checkers.get(resolved_key)
-                checker_release_versions[checker_name] = (
-                    checker_obj._cc_spec_version
-                    if checker_obj is not None
-                    else "unknown"
+        checker_package_versions.pop(checker_name, None)
+        if checker_name in checker_dict_ext and checker_name not in checker_dict:
+            # Internal esgf-qa checker (cons, cont, comp) - use esgf-qa version
+            checker_release_versions[checker_name] = version
+            checker_package_versions[checker_name] = ("esgf-qa", version)
+            continue
+
+        # compliance-checker plugin: look up _cc_spec_version.
+        # CC >= 6.0.0 removed :latest, so fall back to the highest
+        # explicitly versioned key when the requested key is missing.
+        checker_obj = check_suite.checkers.get(checker)
+        if checker_obj is None:
+            prefix = checker_name + ":"
+            candidates = [k for k in check_suite.checkers if k.startswith(prefix)]
+            if candidates:
+                resolved_key = max(
+                    candidates,
+                    key=lambda k: pversion.parse(k.split(":")[1]),
                 )
+                checker_obj = check_suite.checkers.get(resolved_key)
+        checker_release_version = (
+            str(checker_obj._cc_spec_version) if checker_obj is not None else "unknown"
+        )
+        checker_release_versions[checker_name] = checker_release_version
+        package_version = checker_packages.get((checker_name, checker_release_version))
+        if package_version is not None:
+            checker_package_versions[checker_name] = package_version
+
+
+def format_checker_version(checker):
+    """Format a checker specification with its providing package version."""
+    checker_name = checker.split(":", 1)[0]
+    checker_label = (
+        f"{checker_dict.get(checker_name, '')} "
+        f"{checker_name}:{checker_release_versions[checker_name]}"
+    ).strip()
+    package_version = checker_package_versions.get(checker_name)
+    if package_version is not None:
+        package_name, installed_version = package_version
+        checker_label += f" ({package_name} {installed_version})"
+    return checker_label
 
 
 def normalize_checker_specs(checkers_versions):
@@ -273,6 +307,55 @@ def track_checked_datasets(checked_datasets_file, checked_datasets):
             writer.writerow([dataset_id])
 
 
+def _get_reusable_file_result(
+    file_path, checkers, files_to_check_dict, processed_files
+):
+    """Return a valid cached result, or ``None`` when the file must be checked."""
+    result_file = files_to_check_dict[file_path]["result_file"]
+    consistency_file = files_to_check_dict[file_path]["consistency_file"]
+    consistency_output_required = any(
+        checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        for checker in checkers
+    )
+    if (
+        file_path not in processed_files
+        or not os.path.isfile(result_file)
+        or (consistency_output_required and not os.path.isfile(consistency_file))
+    ):
+        return None
+
+    try:
+        with open(result_file) as file:
+            result = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    for checker in checkers:
+        checker_result = result.get(checker.split(":", 1)[0])
+        if not isinstance(checker_result, dict) or checker_result.get("errors") != {}:
+            return None
+    return result
+
+
+def _invalidate_nonreusable_dataset_results(
+    dataset_files_map,
+    checkers,
+    files_to_check_dict,
+    processed_files,
+    processed_datasets,
+):
+    """Invalidate dataset caches affected by new or incomplete file results."""
+    for dataset_id, dataset_files in dataset_files_map.items():
+        if any(
+            _get_reusable_file_result(
+                file_path, checkers, files_to_check_dict, processed_files
+            )
+            is None
+            for file_path in dataset_files
+        ):
+            processed_datasets.discard(dataset_id)
+
+
 def process_file(
     file_path,
     checkers,
@@ -305,33 +388,16 @@ def process_file(
         A tuple containing the file path and the results of the compliance checker.
     """
     # Read result from disk if check was run previously
-    result_file = files_to_check_dict[file_path]["result_file"]
     consistency_file = files_to_check_dict[file_path]["consistency_file"]
-    if (
-        file_path in processed_files
-        and os.path.isfile(result_file)
-        and (
-            os.path.isfile(consistency_file)
-            or not any(
-                cn.split(":", 1)[0] in checker_supporting_consistency_checks
-                for cn in checkers
-            )
-        )
-    ):
-        with open(result_file) as file:
-            print(f"Read result from disk for '{file_path}'.")
-            result = json.load(file)
-        # If no runtime errors were registered last time, return results, otherwise rerun checks
-        # Potentially add more conditions to rerun checks:
-        #  eg. rerun checks if runtime errors occured
-        #      rerun checks if lvl 1 checks failed
-        #      rerun checks if lvl 1 and 2 checks failed
-        #      rerun checks if any checks failed
-        #      rerun checks if forced by user
-        if all(result[checker.split(":")[0]]["errors"] == {} for checker in checkers):
-            return file_path, result
-        else:
-            print(f"Rerunning previously erroneous checks for '{file_path}'.")
+    result_file = files_to_check_dict[file_path]["result_file"]
+    result = _get_reusable_file_result(
+        file_path, checkers, files_to_check_dict, processed_files
+    )
+    if result is not None:
+        print(f"Read result from disk for '{file_path}'.")
+        return file_path, result
+    if file_path in processed_files:
+        print(f"Rerunning incomplete or previously erroneous checks for '{file_path}'.")
     else:
         print(f"Running checks for '{file_path}'.")
 
@@ -389,6 +455,18 @@ def process_file(
                     f" Potentially affected variables: {', '.join(affected_variables)}."
                 )
 
+    if not os.path.isfile(consistency_file):
+        consistency_checkers = [
+            checker.split(":", 1)[0]
+            for checker in checkers
+            if checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        ]
+        for checker in consistency_checkers:
+            check_results[checker]["errors"]["consistency_output"] = (
+                f"Expected consistency output file was not created: "
+                f"'{consistency_file}'."
+            )
+
     # Write result to disk
     with open(result_file, "w") as f:
         json.dump(check_results, f, ensure_ascii=False, indent=4)
@@ -398,6 +476,61 @@ def process_file(
         file.write(file_path + "\n")
 
     return file_path, check_results
+
+
+def _format_dataset_check_runtime_error(error):
+    """Format an exception with its most relevant consistency-check frame."""
+    frames = traceback.extract_tb(error.__traceback__)
+    frame = next(
+        (
+            frame
+            for frame in reversed(frames)
+            if os.path.basename(frame.filename) == "con_checks.py"
+        ),
+        frames[-1] if frames else None,
+    )
+    if frame is None:
+        return f"Exception: {error}"
+    return (
+        f"Exception: {error} at {frame.filename}:{frame.lineno} "
+        f"in function/method '{frame.name}'."
+    )
+
+
+def _dataset_check_runtime_error(function_name, error, files):
+    """Build the dataset-level error structure consumed by the aggregator."""
+    return {
+        "errors": {
+            function_name: {
+                "msg": _format_dataset_check_runtime_error(error),
+                "files": sorted(files),
+            }
+        }
+    }
+
+
+def run_dataset_collection_check(
+    summary,
+    checker,
+    checker_fct,
+    ds_map,
+    files_to_check_dict,
+    checker_options,
+):
+    """Run an all-dataset check and aggregate a runtime error if it fails."""
+    try:
+        return checker_fct(ds_map, files_to_check_dict, checker_options)
+    except Exception as error:
+        for ds, files in ds_map.items():
+            summary.update_ds(
+                {
+                    checker: _dataset_check_runtime_error(
+                        checker_fct.__name__, error, files
+                    )
+                },
+                ds,
+            )
+        return None
 
 
 def process_dataset(
@@ -465,9 +598,14 @@ def process_dataset(
         checker = checkerv.split(":")[0]
         if checker in globals():
             checker_fct = globals()[checker]
-            result[checker] = checker_fct(
-                ds, ds_map, files_to_check_dict, checker_options[checker]
-            )
+            try:
+                result[checker] = checker_fct(
+                    ds, ds_map, files_to_check_dict, checker_options[checker]
+                )
+            except Exception as error:
+                result[checker] = _dataset_check_runtime_error(
+                    checker_fct.__name__, error, ds_map[ds]
+                )
         else:
             result[checker] = {
                 "errors": {
@@ -689,16 +827,16 @@ def main():
                     isinstance(resume_info["parent_dir"], str)
                     and isinstance(resume_info["info"], str)
                     and isinstance(resume_info["tests"], list)
-                    and isinstance(resume_info.get("cl_checker_options", {}), dict)
+                    and isinstance(resume_info.get("checker_options", {}), dict)
                     and isinstance(
                         resume_info.get("include_consistency_checks", False), bool
                     )
-                    and _verify_options_dict(resume_info.get("cl_checker_options", {}))
+                    and _verify_options_dict(resume_info.get("checker_options", {}))
                     and all(isinstance(test, str) for test in resume_info["tests"])
                 ):
                     raise Exception(
                         f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and 'info' should be strings, and 'tests' should be a list of strings. "
-                        "'cl_checker_options' (optional) should be a nested dictionary of format 'checker:option_name:option_value', and "
+                        "'checker_options' (optional) should be a nested dictionary of format 'checker:option_name:option_value', and "
                         "'include_consistency_checks' (optional) should be a boolean."
                     )
             except json.JSONDecodeError:
@@ -711,6 +849,8 @@ def main():
                 warnings.warn(
                     f"<info> argument differs from the originally specified <info> argument ('{resume_info['info']}'). Using the new specification."
                 )
+            elif not info:
+                info = resume_info["info"]
             cl_checker_options = resume_info.get("checker_options", {})
             include_consistency_checks = resume_info.get(
                 "include_consistency_checks", False
@@ -771,13 +911,22 @@ def main():
         if "cc6" in checkers_versions and checkers_versions["cc6"] != "latest":
             checkers_versions["cc6"] = "latest"
             warnings.warn("Version of checker 'cc6' must be 'latest'. Using 'latest'.")
+        mip_explicitly_requested = "mip" in checkers_versions
+        if mip_explicitly_requested and "eerie" in checkers_versions:
+            raise Exception(
+                "ERROR: Cannot run both 'mip' and its 'eerie' alias at the same time."
+            )
         if "mip" in checkers_versions and checkers_versions["mip"] != "latest":
             checkers_versions["mip"] = "latest"
             warnings.warn("Version of checker 'mip' must be 'latest'. Using 'latest'.")
-            if "tables" not in cl_checker_options["mip"]:
-                raise Exception(
-                    "Option 'tables' with path to CMOR tables as value must be specified for checker 'mip'."
-                )
+        mip_tables = cl_checker_options.get("mip", {}).get("tables")
+        if mip_explicitly_requested and (
+            not isinstance(mip_tables, str) or not mip_tables
+        ):
+            raise Exception(
+                "Option 'tables' with a path to CMOR tables must be specified when "
+                "checker 'mip' is explicitly selected."
+            )
         # EERIE support - hard code
         if "eerie" in checkers_versions:
             checkers_versions["mip"] = "latest"
@@ -980,6 +1129,12 @@ def main():
                     "consistency_file"
                 ],
             },
+            "wcrp_cmip6plus": {
+                **cl_checker_options.get("wcrp_cmip6plus", {}),
+                "consistency_output": files_to_check_dict[file_path][
+                    "consistency_file"
+                ],
+            },
             "wcrp_cmip7": {
                 **cl_checker_options.get("wcrp_cmip7", {}),
                 "consistency_output": files_to_check_dict[file_path][
@@ -1008,11 +1163,22 @@ def main():
                     "cf",
                     "mip",
                     "wcrp_cmip6",
+                    "wcrp_cmip6plus",
                     "wcrp_cmip7",
                     "wcrp_cordex_cmip6",
                 ]
             }
         )
+
+    # Dataset-level results depend on every file in the dataset. Invalidate a
+    # cached dataset result if any of its file results cannot be reused.
+    _invalidate_nonreusable_dataset_results(
+        dataset_files_map,
+        checkers,
+        files_to_check_dict,
+        processed_files,
+        processed_datasets,
+    )
 
     if len(files_to_check) == 0:
         raise Exception("No files found to check.")
@@ -1169,18 +1335,31 @@ def main():
         print()
 
         # Attributes and Coordinates
-        results_extra, reference_ds_dict = inter_dataset_consistency_checks(
-            dataset_files_map, files_to_check_dict, checker_options={}
+        inter_dataset_results = run_dataset_collection_check(
+            summary,
+            "cons",
+            inter_dataset_consistency_checks,
+            dataset_files_map,
+            files_to_check_dict,
+            {},
         )
-        for ds in results_extra.keys():
-            summary.update_ds({"cons": results_extra[ds]}, ds)
+        if inter_dataset_results is not None:
+            results_extra, reference_ds_dict = inter_dataset_results
+            for ds in results_extra.keys():
+                summary.update_ds({"cons": results_extra[ds]}, ds)
 
         # Time coverage
-        results_extra = dataset_coverage_checks(
-            dataset_files_map, files_to_check_dict, checker_options={}
+        results_extra = run_dataset_collection_check(
+            summary,
+            "cons",
+            dataset_coverage_checks,
+            dataset_files_map,
+            files_to_check_dict,
+            {},
         )
-        for ds in results_extra.keys():
-            summary.update_ds({"cons": results_extra[ds]}, ds)
+        if results_extra is not None:
+            for ds in results_extra.keys():
+                summary.update_ds({"cons": results_extra[ds]}, ds)
     else:
         print()
         warnings.warn(
@@ -1212,12 +1391,7 @@ def main():
         "files": str(len(files_to_check)),
         "datasets": str(len(dataset_files_map)),
         "cc_version": cc_version,
-        "checkers": ", ".join(
-            [
-                f"{checker_dict.get(checker.split(':')[0], '')} {checker.split(':')[0]}:{checker_release_versions[checker.split(':')[0]]}".strip()
-                for checker in checkers
-            ]
-        ),
+        "checkers": [format_checker_version(checker) for checker in checkers],
         "parent_dir": str(parent_dir),
     }
     # Add reference datasets for inter-dataset consistency checks

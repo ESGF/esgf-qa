@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -92,7 +93,7 @@ class TestQACommandLine:
 
     def _run_cli(self, args, expect_error=False, expected_err_msg=None):
         """Run the esgqa CLI and optionally check for errors."""
-        cmd = ["python", "-m", "esgf_qa.run_qa"] + args
+        cmd = [sys.executable, "-m", "esgf_qa.run_qa"] + args
         result = subprocess.run(cmd, capture_output=True, text=True)
         if expect_error:
             assert (
@@ -184,6 +185,8 @@ class TestQACommandLine:
                     "checkers",
                 ]:
                     assert field in info
+                assert isinstance(info["checkers"], list)
+                assert all(isinstance(checker, str) for checker in info["checkers"])
                 for sev_dict in [data["fail"], data["error"]]:
                     for _, issues in sev_dict.items():
                         for issue_name, messages in issues.items():
@@ -232,6 +235,10 @@ class TestQACommandLine:
                 ["-r", "-t", "cf:latest", "-o", "some_dir"],
                 "When using -r/--resume, the following arguments are not allowed",
             ),
+            (
+                ["-r", "-o", "some_dir", "cmip6"],
+                "When using -r/--resume, the following arguments are not allowed",
+            ),
         ],
     )
     def test_cli_fails_on_invalid_arguments(self, test_args, expected_err_msg):
@@ -265,6 +272,8 @@ class TestQACommandLine:
             info = data["info"]
             for field in ["id", "date", "files", "datasets", "cc_version", "checkers"]:
                 assert field in info
+            assert isinstance(info["checkers"], list)
+            assert all(isinstance(checker, str) for checker in info["checkers"])
             assert isinstance(data.get("error", {}), dict)
             assert isinstance(data.get("fail", {}), dict)
         finally:
