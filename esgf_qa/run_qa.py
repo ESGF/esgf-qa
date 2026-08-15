@@ -924,7 +924,8 @@ def main():
             not isinstance(mip_tables, str) or not mip_tables
         ):
             raise Exception(
-                "Option 'tables' with a path to CMOR tables must be specified when checker 'mip' is selected."
+                "Option 'tables' with a path to CMOR tables must be specified when "
+                "checker 'mip' is explicitly selected."
             )
         # EERIE support - hard code
         if "eerie" in checkers_versions:
