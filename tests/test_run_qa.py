@@ -145,6 +145,9 @@ def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_
             )
 
     monkeypatch.setattr(workflow, "_process_initial_file", fake_first_file)
+    # Keep the pool-size assertion independent of the CPU count exposed by the
+    # local machine or CI runner.
+    monkeypatch.setattr(workflow.multiprocessing, "cpu_count", lambda: 8)
     monkeypatch.setattr(workflow.multiprocessing, "Pool", SynchronousPool)
     monkeypatch.setattr(workflow, "run_dataset_collection_check", lambda *args: None)
 
