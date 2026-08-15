@@ -900,6 +900,11 @@ esgvoc update
 <p>The following command should now list the necessary projects with metadata sources for <code>esgvoc</code>:</p>
 <pre><code>esgvoc status
 </code></pre>
+<p>The complete test suite is included in the source distribution. After unpacking
+it, users can verify the installed code with:</p>
+<pre><code class="language-shell">pip install &quot;.[test]&quot;
+pytest
+</code></pre>
 <p>Please see the <a href="https://esgf.github.io/esgf-vocab/user/introduction.html">esgvoc user guide</a> for more information.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] &lt;parent_dir&gt;
@@ -961,8 +966,11 @@ it later reappears.</p>
 </ul>
 <p>This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
 You can select one of the recent QA runs conducted at the respective site or select a local QA run result file to be displayed.</p>
-<p>Alternatively, you can open the included <code>display_qc_results.html</code> file directly in your browser.
-While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.</p>
+<p>Alternatively, you can open the packaged <code>display_qc_results.html</code> file directly
+in your browser. Its location in an installed environment can be printed with:</p>
+<pre><code class="language-shell">python -c &quot;from importlib.resources import files; print(files('esgf_qa').joinpath('resources/display_qc_results.html'))&quot;
+</code></pre>
+<p>While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.</p>
 <h3 id="esgqaviewer"><code>esgqaviewer</code></h3>
 <p>The <code>esgqaviewer</code> app can be used to view the result files inside a terminal:</p>
 <pre><code>esgqaviewer path/to/result.json
