@@ -1,4 +1,4 @@
-name: github CI
+name: CI
 
 on:
   push:
@@ -11,22 +11,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality:
+    name: Code quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install pre-commit
+        run: python -m pip install --upgrade pip pre-commit
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files
+
   test:
-    name: ${{ matrix.os }}-py${{ matrix.python-version }}
-    runs-on: ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest"]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # Fetch full history (tags + branches)
+          fetch-depth: 0
 
-      - name: Set up micromamba
+      - name: Set up released dependency environment
         uses: mamba-org/setup-micromamba@v3
         with:
           environment-file: ci/requirements/environment.yml
@@ -36,35 +53,68 @@ jobs:
           cache-downloads: true
           cache-downloads-key: "${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}"
 
-      - name: Install esgf-qa (editable, no deps)
-        run: |
-          micromamba run -n esgf-qa-tests python -m pip install --no-deps -e .
+      - name: Install esgf-qa
+        run: micromamba run -n esgf-qa-tests python -m pip install --no-deps -e .
 
-      - name: Version info
+      - name: Check installed dependencies
+        run: micromamba run -n esgf-qa-tests python -m pip check
+
+      - name: Version information
         run: |
           micromamba info
-          micromamba list
-
-      - name: Run pre-commit hooks
-        run: |
-          micromamba run -n esgf-qa-tests pre-commit run --all-files
-
-      - name: Import plugin
-        run: |
-          micromamba run -n esgf-qa-tests python -c "import esgf_qa"
+          micromamba list -n esgf-qa-tests
 
       - name: Run tests with coverage
         run: |
           micromamba run -n esgf-qa-tests pytest -rA \
             --cov=esgf_qa \
+            --cov-fail-under=85 \
+            --cov-report=term-missing \
             --cov-report=xml \
-            --junitxml=test-results/${{ runner.os }}-${{ matrix.python-version }}.xml
+            --junitxml=test-results/Linux-${{ matrix.python-version }}.xml
 
-      - name: Upload code coverage to Codecov
+      - name: Upload code coverage
+        if: ${{ matrix.python-version == '3.13' }}
         uses: codecov/codecov-action@v7
         with:
           file: ./coverage.xml
           flags: unittests
-          env_vars: RUNNER_OS,PYTHON_VERSION
-          name: codecov-umbrella
+          name: esgf-qa-py3.13
           fail_ci_if_error: false
+
+  package:
+    name: Build and test distributions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Build wheel and source distribution
+        run: python -m build
+
+      - name: Validate distribution metadata and contents
+        run: |
+          python -m twine check --strict dist/*
+          python ci/check_artifacts.py dist
+
+      - name: Test the installed wheel
+        run: |
+          python -m venv "${RUNNER_TEMP}/esgf-qa-wheel-test"
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/python" -m pip install --upgrade pip
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/python" -m pip install dist/*.whl
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/python" -m pip install "pytest>=9,<10" pytest-asyncio
+          cp -R tests "${RUNNER_TEMP}/esgf-qa-tests"
+          cd "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/python" -m pytest -q esgf-qa-tests
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/esgqa" --help
+          "${RUNNER_TEMP}/esgf-qa-wheel-test/bin/esgqaviewer" --help

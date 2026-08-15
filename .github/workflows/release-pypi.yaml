@@ -1,0 +1,111 @@
+name: Build and Upload to PyPI
+on:
+  release:
+    types:
+      - published
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - release
+  workflow_dispatch:
+
+jobs:
+  build-artifacts:
+    runs-on: ubuntu-latest
+    if: github.repository == 'ESGF/esgf-qa'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        name: Install Python
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build source distribution and wheel
+        run: python -m build
+
+      - name: Check built artifacts
+        run: |
+          python -m twine check --strict dist/*
+          python ci/check_artifacts.py dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: releases
+          path: dist
+
+  test-built-dist:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v7
+        name: Install Python
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v4
+        with:
+          name: releases
+          path: dist
+      - name: List contents of built dist
+        run: |
+          ls -ltrh
+          ls -ltrh dist
+
+      - name: Verify the installed wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install dist/esgf_qa*.whl
+          python -c "from importlib.resources import files; import esgf_qa; resources = files('esgf_qa').joinpath('resources'); assert resources.joinpath('display_qc_results.html').is_file(); assert resources.joinpath('fonts/Inter-Regular.woff2').is_file(); assert resources.joinpath('fonts/Inter-SemiBold.woff2').is_file(); print(esgf_qa.__version__)"
+          esgqa --help
+          esgqaviewer --help
+
+  upload-to-test-pypi:
+    needs: test-built-dist
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://test.pypi.org/p/esgf-qa
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: releases
+          path: dist
+      - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+
+
+  upload-to-pypi:
+    needs: test-built-dist
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/esgf-qa
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: releases
+          path: dist
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          verbose: true
