@@ -858,8 +858,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 82</span>
-<span class="normal"> 83</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 83</span>
 <span class="normal"> 84</span>
 <span class="normal"> 85</span>
 <span class="normal"> 86</span>
@@ -889,7 +888,8 @@
 <span class="normal">110</span>
 <span class="normal">111</span>
 <span class="normal">112</span>
-<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compare_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">113</span>
+<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compare_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare two dictionaries and return keys with differing values.</span>
 
@@ -1029,8 +1029,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
-<span class="normal">117</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
@@ -1065,7 +1064,8 @@
 <span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
-<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compare_nested_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">152</span>
+<span class="normal">153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compare_nested_dicts</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">exclude_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare two nested dictionaries and return keys with differing values.</span>
 
@@ -1230,15 +1230,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">460</span>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
@@ -1284,7 +1276,15 @@
 <span class="normal">503</span>
 <span class="normal">504</span>
 <span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compatibility checks for a dataset.</span>
 
@@ -1469,8 +1469,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
-<span class="normal">156</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
 <span class="normal">159</span>
@@ -1648,7 +1647,13 @@
 <span class="normal">331</span>
 <span class="normal">332</span>
 <span class="normal">333</span>
-<span class="normal">334</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">consistency_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">consistency_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Consistency checks.</span>
 
@@ -1678,8 +1683,13 @@
     <span class="n">results</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">level1_factory</span><span class="p">)</span>
     <span class="n">filelist</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">])</span>
     <span class="n">consistency_files</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
-        <span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">filelist</span>
+        <span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">filelist</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">])</span>
     <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consistency_files</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">results</span>
 
     <span class="c1"># Exclude the following global attributes from comparison</span>
     <span class="n">excl_global_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;creation_date&quot;</span><span class="p">,</span> <span class="s2">&quot;history&quot;</span><span class="p">,</span> <span class="s2">&quot;tracking_id&quot;</span><span class="p">]</span>
@@ -1953,13 +1963,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">343</span>
 <span class="normal">344</span>
 <span class="normal">345</span>
 <span class="normal">346</span>
@@ -2065,7 +2069,15 @@
 <span class="normal">446</span>
 <span class="normal">447</span>
 <span class="normal">448</span>
-<span class="normal">449</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks inter-file time and time_bnds continuity for a dataset.</span>
 
@@ -2090,7 +2102,9 @@
     <span class="n">results</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">level1_factory</span><span class="p">)</span>
     <span class="n">filelist</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">])</span>
     <span class="n">consistency_files</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
-        <span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">filelist</span>
+        <span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">filelist</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">])</span>
     <span class="p">)</span>
 
     <span class="c1"># Check time and time_bnds continuity</span>
@@ -2287,15 +2301,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">517</span>
 <span class="normal">518</span>
 <span class="normal">519</span>
 <span class="normal">520</span>
@@ -2391,7 +2397,15 @@
 <span class="normal">610</span>
 <span class="normal">611</span>
 <span class="normal">612</span>
-<span class="normal">613</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks consistency of dataset time coverage.</span>
 
@@ -2610,15 +2624,7 @@ Runs inter-dataset consistency checks:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span>
-<span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">624</span>
 <span class="normal">625</span>
 <span class="normal">626</span>
 <span class="normal">627</span>
@@ -2826,7 +2832,32 @@ Runs inter-dataset consistency checks:</p>
 <span class="normal">829</span>
 <span class="normal">830</span>
 <span class="normal">831</span>
-<span class="normal">832</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">832</span>
+<span class="normal">833</span>
+<span class="normal">834</span>
+<span class="normal">835</span>
+<span class="normal">836</span>
+<span class="normal">837</span>
+<span class="normal">838</span>
+<span class="normal">839</span>
+<span class="normal">840</span>
+<span class="normal">841</span>
+<span class="normal">842</span>
+<span class="normal">843</span>
+<span class="normal">844</span>
+<span class="normal">845</span>
+<span class="normal">846</span>
+<span class="normal">847</span>
+<span class="normal">848</span>
+<span class="normal">849</span>
+<span class="normal">850</span>
+<span class="normal">851</span>
+<span class="normal">852</span>
+<span class="normal">853</span>
+<span class="normal">854</span>
+<span class="normal">855</span>
+<span class="normal">856</span>
+<span class="normal">857</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inter-dataset consistency checks.</span>
 
@@ -2855,7 +2886,10 @@ Runs inter-dataset consistency checks:</p>
     <span class="n">filedict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">consistency_data</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">ds_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">filedict</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file</span><span class="p">][</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">]):</span>
+                <span class="n">filedict</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span>
+                <span class="k">break</span>
 
     <span class="c1"># Exclude the following global attributes from comparison</span>
     <span class="n">excl_global_attrs</span> <span class="o">=</span> <span class="p">[</span>
@@ -2881,6 +2915,9 @@ Runs inter-dataset consistency checks:</p>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">consistency_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">consistency_data</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consistency_data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="p">{}</span>
 
     <span class="c1"># Reference datasets</span>
     <span class="n">ref_ds</span> <span class="o">=</span> <span class="p">{}</span>
@@ -3040,6 +3077,17 @@ Runs inter-dataset consistency checks:</p>
                 <span class="sa">f</span><span class="s2">&quot; - &#39;</span><span class="si">{</span><span class="n">truncate_str</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&#39; / &#39;</span><span class="si">{</span><span class="n">truncate_str</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">&#39; (realm / grid): </span><span class="si">{</span><span class="n">ref_ds</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
+    <span class="n">reference_file_exceptions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">ds</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;default_reference_file&quot;</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;used_reference_file&quot;</span><span class="p">:</span> <span class="n">reference_file</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">reference_file</span> <span class="ow">in</span> <span class="n">filedict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">reference_file</span> <span class="o">!=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ds_map</span><span class="p">[</span><span class="n">ds</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">reference_file_exceptions</span><span class="p">:</span>
+        <span class="n">reference_datasets</span><span class="p">[</span><span class="s2">&quot;reference_file_exceptions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference_file_exceptions</span>
+
     <span class="nb">print</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">reference_datasets</span>
@@ -3065,8 +3113,7 @@ Runs inter-dataset consistency checks:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
-<span class="normal">23</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
@@ -3074,7 +3121,8 @@ Runs inter-dataset consistency checks:</p>
 <span class="normal">28</span>
 <span class="normal">29</span>
 <span class="normal">30</span>
-<span class="normal">31</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printtimedelta</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+<span class="normal">31</span>
+<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">printtimedelta</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return timedelta (s) as either min, hours, days, whatever fits best.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">86000</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d</span><span class="o">/</span><span class="mf">86400.</span><span class="si">}</span><span class="s2"> days&quot;</span>
@@ -3184,8 +3232,7 @@ Runs inter-dataset consistency checks:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">34</span>
-<span class="normal">35</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">35</span>
 <span class="normal">36</span>
 <span class="normal">37</span>
 <span class="normal">38</span>
@@ -3229,7 +3276,8 @@ Runs inter-dataset consistency checks:</p>
 <span class="normal">76</span>
 <span class="normal">77</span>
 <span class="normal">78</span>
-<span class="normal">79</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">truncate_str</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+<span class="normal">79</span>
+<span class="normal">80</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">truncate_str</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Truncate string if too long.</span>
 
