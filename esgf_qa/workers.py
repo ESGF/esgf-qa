@@ -2,7 +2,9 @@
 
 import json
 import os
+import tempfile
 import traceback
+from pathlib import Path
 
 from compliance_checker.runner import CheckSuite
 
@@ -19,6 +21,31 @@ DATASET_CHECKERS = {
     "cont": continuity_checks,
     "comp": compatibility_checks,
 }
+
+
+def _remove_stale_output(path):
+    """Remove one known generated output before rebuilding it."""
+    Path(path).unlink(missing_ok=True)
+
+
+def _replace_json(path, data):
+    """Atomically replace a JSON result after it has been serialized fully."""
+    result_path = Path(path)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            dir=result_path.parent,
+            prefix=f".{result_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary_file:
+            temporary_path = Path(temporary_file.name)
+            json.dump(data, temporary_file, ensure_ascii=False, indent=4)
+        os.replace(temporary_path, result_path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
 
 def run_compliance_checker(file_path, checkers, checker_options=None):
@@ -81,6 +108,10 @@ def process_file(
     else:
         print(f"Running checks for '{file_path}'.")
 
+    # A rerun must not mistake output from an earlier attempt for freshly
+    # generated output when the checker fails before writing its new files.
+    _remove_stale_output(result_file)
+    _remove_stale_output(consistency_file)
     result = run_compliance_checker(file_path, checkers, checker_options)
     check_results = {}
     for checker_spec in checkers:
@@ -124,8 +155,7 @@ def process_file(
             ]
             if affected_variables:
                 message += (
-                    " Potentially affected variables: "
-                    f"{', '.join(affected_variables)}."
+                    f" Potentially affected variables: {', '.join(affected_variables)}."
                 )
             checker_result["errors"][check_method] = message
 
@@ -135,13 +165,11 @@ def process_file(
             for checker in checkers
             if checker.split(":", 1)[0] in checker_supporting_consistency_checks
         ):
-            check_results[checker]["errors"]["consistency_output"] = (
-                "Expected consistency output file was not created: "
-                f"'{consistency_file}'."
-            )
+            check_results[checker]["errors"][
+                "consistency_output"
+            ] = f"Expected consistency output file was not created: '{consistency_file}'."
 
-    with open(result_file, "w") as file:
-        json.dump(check_results, file, ensure_ascii=False, indent=4)
+    _replace_json(result_file, check_results)
     with open(progress_file, "a") as file:
         file.write(file_path + "\n")
     return file_path, check_results
@@ -160,10 +188,7 @@ def _format_dataset_check_runtime_error(error):
     )
     if frame is None:
         return f"Exception: {error}"
-    return (
-        f"Exception: {error} at {frame.filename}:{frame.lineno} "
-        f"in function/method '{frame.name}'."
-    )
+    return f"Exception: {error} at {frame.filename}:{frame.lineno} in function/method '{frame.name}'."
 
 
 def _dataset_check_runtime_error(function_name, error, files):
@@ -229,6 +254,7 @@ def process_dataset(
     else:
         print(f"Running checks for '{dataset_id}'.")
 
+    _remove_stale_output(result_file)
     result = {}
     for checker_spec in checkers:
         checker = checker_spec.split(":", 1)[0]
@@ -255,8 +281,7 @@ def process_dataset(
                 checker_fct.__name__, error, dataset_files
             )
 
-    with open(result_file, "w") as file:
-        json.dump(result, file, ensure_ascii=False, indent=4)
+    _replace_json(result_file, result)
     with open(progress_file, "a") as file:
         file.write(dataset_id + "\n")
     return dataset_id, result

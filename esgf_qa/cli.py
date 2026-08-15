@@ -45,6 +45,7 @@ class RunConfig:
     processed_datasets: set[str]
     whitelist: list[str] = field(default_factory=list)
     blacklist: list[str] = field(default_factory=list)
+    rerun_all: bool = False
 
 
 def _nonempty_path_fragment(value):
@@ -122,6 +123,14 @@ def build_parser(default_result_dir):
         help="Continue a previous QA run. Requires --output_dir.",
     )
     parser.add_argument(
+        "--rerun-all",
+        action="store_true",
+        help=(
+            "Rerun all checks from a previous QA run instead of reusing successful "
+            "results. Requires --resume."
+        ),
+    )
+    parser.add_argument(
         "-C",
         "--include_consistency_checks",
         action="store_true",
@@ -162,9 +171,17 @@ def build_parser(default_result_dir):
 
 
 def _validate_resume_arguments(parser, args):
+    if args.rerun_all and not args.resume:
+        parser.error("--rerun-all requires -r/--resume.")
     if not args.resume:
         return
-    allowed = {"output_dir", "info", "resume", "parallel_processes"}
+    allowed = {
+        "output_dir",
+        "info",
+        "resume",
+        "rerun_all",
+        "parallel_processes",
+    }
     supplied = {
         key for key, value in vars(args).items() if value not in (None, False, [], "")
     }
@@ -184,8 +201,7 @@ def resolve_checker_specs(tests, checker_options):
     test_regex = re.compile(r"^[a-zA-Z0-9_-]+(?::(latest|[0-9]+(?:\.[0-9]+)*))?$")
     if not all(test_regex.match(test) for test in tests):
         raise Exception(
-            "Invalid test(s) specified. Please use 'checker_name' or "
-            "'checker_name:version'."
+            "Invalid test(s) specified. Please use 'checker_name' or 'checker_name:version'."
         )
     checker_names = [test.split(":", 1)[0] for test in tests]
     if len(checker_names) != len(set(checker_names)):
@@ -211,8 +227,7 @@ def resolve_checker_specs(tests, checker_options):
     messages = []
     if invalid_checkers:
         messages.append(
-            "The following checkers are not supported or installed: "
-            f"{', '.join(invalid_checkers)}."
+            f"The following checkers are not supported or installed: {', '.join(invalid_checkers)}."
         )
     for name in invalid_versions:
         messages.append(
@@ -320,8 +335,14 @@ def prepare_run(default_result_dir, argv=None):
         checkers.sort()
 
     Path(result_dir, "tables").mkdir(exist_ok=True)
-    progress_file.touch()
-    dataset_file.touch()
+    if args.rerun_all:
+        # Rebuild progress from this invocation. If the forced run is interrupted,
+        # a later normal resume will only reuse results completed by this run.
+        progress_file.write_text("")
+        dataset_file.write_text("")
+    else:
+        progress_file.touch()
+        dataset_file.touch()
     return RunConfig(
         parent_dir=parent_dir,
         result_dir=result_dir,
@@ -338,6 +359,7 @@ def prepare_run(default_result_dir, argv=None):
         processed_datasets=read_progress(dataset_file),
         whitelist=whitelist,
         blacklist=blacklist,
+        rerun_all=args.rerun_all,
     )
 
 

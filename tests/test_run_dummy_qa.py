@@ -253,6 +253,45 @@ class TestDummyQA:
         assert result["cf"]["errors"] == {}
         assert "time_bounds" in result["cf"]
 
+    def test_process_file_removes_stale_outputs_before_rerun(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """A rerun must not accept an old consistency output as newly generated."""
+        result_file = tmp_env["results"] / "res.json"
+        consistency_file = tmp_env["results"] / "cons.json"
+        result_file.write_text(
+            json.dumps({"cc6": {"errors": {"check_old": "previous failure"}}})
+        )
+        consistency_file.write_text("stale consistency output")
+
+        def run_without_consistency_output(*args, **kwargs):
+            assert not result_file.exists()
+            assert not consistency_file.exists()
+            return {"cc6": ([], {})}
+
+        monkeypatch.setattr(
+            workers, "run_compliance_checker", run_without_consistency_output
+        )
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(result_file),
+                "consistency_file": str(consistency_file),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cc6"],
+            {},
+            files_to_check_dict,
+            [dummy_nc_file],
+            str(tmp_env["progress"]),
+        )
+
+        assert not consistency_file.exists()
+        assert "consistency_output" in result["cc6"]["errors"]
+        assert json.loads(result_file.read_text()) == result
+
     def test_process_dataset(self, fake_check_suite, tmp_env, dummy_nc_file):
         """process_dataset should run checks for not yet checked dataset."""
         ds = "dataset1"
@@ -322,6 +361,35 @@ class TestDummyQA:
         assert [check["weight"] for check in saved_results] == [3, 1]
         saved_to_disk = json.loads(result_file.read_text())
         assert saved_to_disk == result
+
+    def test_process_dataset_removes_stale_result_before_rerun(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """An erroneous dataset result is removed before its checks run again."""
+        result_file = tmp_env["results"] / "dataset-result.json"
+        result_file.write_text(
+            json.dumps({"cons": {"errors": {"old": "previous failure"}}})
+        )
+
+        def replacement_check(*args, **kwargs):
+            assert not result_file.exists()
+            return {"replacement": {}}
+
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cons", replacement_check)
+        files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
+
+        _, result = process_dataset(
+            "dataset1",
+            {"dataset1": [dummy_nc_file]},
+            ["cons"],
+            {"cons": {}},
+            files_to_check_dict,
+            {"dataset1"},
+            str(tmp_env["progress"]),
+        )
+
+        assert result == {"cons": {"replacement": {}}}
+        assert json.loads(result_file.read_text()) == result
 
     def test_process_dataset_records_runtime_error(self, tmp_env, dummy_nc_file):
         """An exception in con_checks is reported with its dataset and files."""

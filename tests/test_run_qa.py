@@ -270,6 +270,42 @@ def test_path_filters_are_restored_when_resuming(tmp_path):
     assert resumed.blacklist == config.blacklist
 
 
+def test_rerun_all_resets_resume_progress(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    default_output = str(tmp_path / "unused-default")
+    monkeypatch.setattr(
+        cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+
+    prepare_run(default_output, ["-o", str(output_dir), str(input_dir)])
+    (output_dir / "progress.txt").write_text("checked.nc\n")
+    (output_dir / "progress_datasets.txt").write_text("dataset1\n")
+
+    resumed = prepare_run(
+        default_output,
+        ["-r", "--rerun-all", "-o", str(output_dir)],
+    )
+
+    assert resumed.rerun_all is True
+    assert resumed.processed_files == set()
+    assert resumed.processed_datasets == set()
+    assert (output_dir / "progress.txt").read_text() == ""
+    assert (output_dir / "progress_datasets.txt").read_text() == ""
+    assert "rerun_all" not in json.loads((output_dir / ".resume_info").read_text())
+
+
+def test_rerun_all_requires_resume(capsys, tmp_path):
+    with pytest.raises(SystemExit):
+        prepare_run(
+            str(tmp_path / "unused-default"),
+            ["--rerun-all", str(tmp_path)],
+        )
+
+    assert "--rerun-all requires -r/--resume" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("filter_option", ["-w", "-b"])
 def test_resume_rejects_new_path_filters(tmp_path, filter_option):
     input_dir = tmp_path / "input"
