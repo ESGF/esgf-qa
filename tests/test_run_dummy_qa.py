@@ -192,9 +192,9 @@ class TestDummyQA:
             "dataset1",
             dummy_nc_file,
         )
-        assert aggregator.summary["error"][
-            "[CORDEX-CMIP6] consistency_output"
-        ][error_msg]["dataset1"] == [dummy_nc_file]
+        assert aggregator.summary["error"]["[CORDEX-CMIP6] consistency_output"][
+            error_msg
+        ]["dataset1"] == [dummy_nc_file]
 
     def test_process_file_cached_result(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read from disk if result already exists and no errors."""
@@ -320,9 +320,7 @@ class TestDummyQA:
         saved_to_disk = json.loads(result_file.read_text())
         assert saved_to_disk == result
 
-    def test_process_dataset_records_runtime_error(
-        self, tmp_env, dummy_nc_file
-    ):
+    def test_process_dataset_records_runtime_error(self, tmp_env, dummy_nc_file):
         """An exception in con_checks is reported with its dataset and files."""
         second_nc_file = tmp_env["tmp"] / "dummy-2.nc"
         second_nc_file.write_text("fake dataset content")
@@ -355,9 +353,9 @@ class TestDummyQA:
 
         aggregator = QAResultAggregator()
         aggregator.update_ds(result, "dataset1")
-        error_summary = aggregator.summary["error"][
-            "[Consistency] consistency_checks"
-        ][error["msg"]]
+        error_summary = aggregator.summary["error"]["[Consistency] consistency_checks"][
+            error["msg"]
+        ]
         assert error_summary["dataset1"] == sorted(dataset_files)
 
     def test_process_dataset_continues_after_runtime_error(
@@ -371,9 +369,7 @@ class TestDummyQA:
         monkeypatch.setattr(run_qa, "cons", failing_check)
         monkeypatch.setattr(run_qa, "cont", lambda *args, **kwargs: {"continued": {}})
         result_file = tmp_env["results"] / "dataset-result.json"
-        files_to_check_dict = {
-            dummy_nc_file: {"result_file_ds": str(result_file)}
-        }
+        files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
 
         _, result = process_dataset(
             "dataset1",

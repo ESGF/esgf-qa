@@ -183,7 +183,8 @@ def consistency_checks(ds, ds_map, files_to_check_dict, checker_options):
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
-        (files_to_check_dict[i]["consistency_file"], i) for i in filelist
+        (files_to_check_dict[i]["consistency_file"], i)
+        for i in filelist
         if os.path.isfile(files_to_check_dict[i]["consistency_file"])
     )
 
@@ -364,7 +365,8 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
     results = defaultdict(level1_factory)
     filelist = sorted(ds_map[ds])
     consistency_files = OrderedDict(
-        (files_to_check_dict[i]["consistency_file"], i) for i in filelist
+        (files_to_check_dict[i]["consistency_file"], i)
+        for i in filelist
         if os.path.isfile(files_to_check_dict[i]["consistency_file"])
     )
 

@@ -182,14 +182,10 @@ def get_checker_release_versions(checkers, checker_options=None):
                 )
                 checker_obj = check_suite.checkers.get(resolved_key)
         checker_release_version = (
-            str(checker_obj._cc_spec_version)
-            if checker_obj is not None
-            else "unknown"
+            str(checker_obj._cc_spec_version) if checker_obj is not None else "unknown"
         )
         checker_release_versions[checker_name] = checker_release_version
-        package_version = checker_packages.get(
-            (checker_name, checker_release_version)
-        )
+        package_version = checker_packages.get((checker_name, checker_release_version))
         if package_version is not None:
             checker_package_versions[checker_name] = package_version
 
