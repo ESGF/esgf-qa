@@ -902,7 +902,7 @@ esgvoc update
 </code></pre>
 <p>Please see the <a href="https://esgf.github.io/esgf-vocab/user/introduction.html">esgvoc user guide</a> for more information.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] &lt;parent_dir&gt;
+<pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] &lt;parent_dir&gt;
 </code></pre>
 <ul>
 <li>positional arguments:</li>
@@ -915,6 +915,7 @@ esgvoc update
 <li><code>-O, --option OPTION</code>: Additional options to be passed to the checkers. Format: <code>'&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]'</code>. Multiple invocations possible.</li>
 <li><code>-i, --info INFO</code>:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.</li>
 <li><code>-r, --resume</code>: Specify to continue a previous QC run. Requires the <code>&lt;output_dir&gt;</code> argument to be set.</li>
+<li><code>--rerun-all</code>: With <code>--resume</code>, repeat all checks instead of reusing successful results.</li>
 <li><code>-C, --include_consistency_checks</code>: Include basic consistency and continuity checks. When using the <code>wcrp-*</code>, <code>cc6</code>, <code>mip</code> or <code>eerie</code> checkers, they are included by default.</li>
 <li><code>-w, --whitelist PATH_FRAGMENT</code>: Only check files whose complete path, including the filename, contains at least one of the specified case-sensitive literal fragments. May be repeated.</li>
 <li><code>-b, --blacklist PATH_FRAGMENT</code>: Exclude files whose complete path contains any specified case-sensitive literal fragment. May be repeated and takes precedence over the whitelist.</li>
@@ -928,11 +929,20 @@ containing <code>ICON-ESM</code>:</p>
 </code></pre>
 <p>Configured filters are retained when the run is resumed. To use different filters,
 start a new run with a different output directory.</p>
-<p>To resume at a later date, eg. if the QA run did not finish in time or more files have been added to the <code>&lt;parent_dir&gt;</code>
-(note, that the last modification date of files is NOT taken into account - once a certain file path has been checked
-it will be marked as checked and checks will only be repeated if runtime errors occured):</p>
+<p>To resume at a later date, eg. if the QA run did not finish in time or more files
+have been added to the <code>&lt;parent_dir&gt;</code>:</p>
 <pre><code class="language-shell">$ esgqa -o QA_results/IAEVALL02_2025-10-20 -r
 </code></pre>
+<p>Normal resume does not consider file modification times. Once a file path has
+been checked successfully, its checks are only repeated after runtime errors.
+Use <code>--rerun-all</code> with <code>--resume</code> to repeat every check with the stored
+configuration regardless of previously successful results:</p>
+<pre><code class="language-shell">$ esgqa -o QA_results/IAEVALL02_2025-10-20 -r --rerun-all
+</code></pre>
+<p>On resume, newly selected files and previously selected files that are no longer
+found are reported in the terminal and in <code>resume_inventory_changes.json</code>.
+Results for affected datasets are rerun, and a missing file is checked again if
+it later reappears.</p>
 <p>For a custom MIP with defined CMOR tables (<code>"mip"</code> is not a placeholder but an actual basic checker of the <code>cc_plugin_cc6</code>):</p>
 <pre><code class="language-shell">$ esgqa -o /path/to/test/results -t &quot;mip:latest&quot; -O &quot;mip:tables:/path/to/mip_cmor_tables/Tables&quot; /path/to/MIP/datasets/
 </code></pre>

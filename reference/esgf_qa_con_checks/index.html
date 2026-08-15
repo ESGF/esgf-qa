@@ -1230,8 +1230,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">460</span>
-<span class="normal">461</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
 <span class="normal">464</span>
@@ -1284,7 +1283,8 @@
 <span class="normal">511</span>
 <span class="normal">512</span>
 <span class="normal">513</span>
-<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">514</span>
+<span class="normal">515</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">compatibility_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compatibility checks for a dataset.</span>
 
@@ -2077,7 +2077,8 @@
 <span class="normal">454</span>
 <span class="normal">455</span>
 <span class="normal">456</span>
-<span class="normal">457</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">457</span>
+<span class="normal">458</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">continuity_checks</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks inter-file time and time_bnds continuity for a dataset.</span>
 
@@ -2125,7 +2126,7 @@
                     <span class="n">units</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">],</span>
                     <span class="n">calendar</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;timen&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;timen&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">]</span>
                 <span class="k">else</span> <span class="kc">None</span>
@@ -2136,7 +2137,7 @@
                     <span class="n">units</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">],</span>
                     <span class="n">calendar</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;boundn&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;boundn&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">]</span>
                 <span class="k">else</span> <span class="kc">None</span>
@@ -2149,7 +2150,7 @@
                     <span class="n">units</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">],</span>
                     <span class="n">calendar</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;time0&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;time0&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">]</span>
                 <span class="k">else</span> <span class="kc">None</span>
@@ -2160,7 +2161,7 @@
                     <span class="n">units</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">],</span>
                     <span class="n">calendar</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;bound0&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;bound0&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span>
                 <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;time_info&quot;</span><span class="p">][</span><span class="s2">&quot;calendar&quot;</span><span class="p">]</span>
                 <span class="k">else</span> <span class="kc">None</span>
@@ -2172,6 +2173,7 @@
                 <span class="k">continue</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">time0</span> <span class="ow">or</span> <span class="n">timen</span> <span class="ow">or</span> <span class="n">bound0</span> <span class="ow">or</span> <span class="n">boundn</span><span class="p">)</span> <span class="ow">and</span> <span class="n">freq</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">deltdic</span><span class="p">:</span>
                 <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported frequency &#39;</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">test</span><span class="p">][</span><span class="s2">&quot;msgs&quot;</span><span class="p">][</span><span class="n">err_msg</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">consistency_files</span><span class="p">[</span><span class="n">file</span><span class="p">])</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">time0</span> <span class="ow">and</span> <span class="n">prev_timen</span><span class="p">:</span>
@@ -2301,8 +2303,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">517</span>
-<span class="normal">518</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">518</span>
 <span class="normal">519</span>
 <span class="normal">520</span>
 <span class="normal">521</span>
@@ -2405,7 +2406,10 @@
 <span class="normal">618</span>
 <span class="normal">619</span>
 <span class="normal">620</span>
-<span class="normal">621</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dataset_coverage_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks consistency of dataset time coverage.</span>
 
@@ -2438,14 +2442,16 @@
         <span class="n">tsn</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
-                <span class="n">ts0</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+                <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ts0</span> <span class="o">=</span> <span class="n">start_timestamp</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
                 <span class="c1"># If time interval of timestamp does not start in January, use following year</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">6</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;01&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">start_timestamp</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">6</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">start_timestamp</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;01&quot;</span><span class="p">:</span>
                         <span class="n">coverage_start</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">coverage_start</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts0</span><span class="p">)</span>
-                <span class="n">coverage_start</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">coverage_start</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
                 <span class="n">tsn</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
                 <span class="c1"># If time interval of timestamp ends in January, use previous year</span>
@@ -2470,7 +2476,7 @@
                     <span class="s2">&quot;End of time coverage cannot be inferred.&quot;</span>
                 <span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">fl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
                 <span class="k">continue</span>
-        <span class="k">except</span> <span class="ne">IndexError</span> <span class="ow">or</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
             <span class="n">results</span><span class="p">[</span><span class="n">ds</span><span class="p">][</span><span class="n">test</span><span class="p">][</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fl</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">results</span><span class="p">[</span><span class="n">ds</span><span class="p">][</span><span class="n">test</span><span class="p">][</span><span class="s2">&quot;msgs&quot;</span><span class="p">][</span><span class="s2">&quot;Time coverage cannot be inferred.&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -2624,10 +2630,7 @@ Runs inter-dataset consistency checks:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/con_checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">627</span>
 <span class="normal">628</span>
 <span class="normal">629</span>
 <span class="normal">630</span>
@@ -2857,7 +2860,10 @@ Runs inter-dataset consistency checks:</p>
 <span class="normal">854</span>
 <span class="normal">855</span>
 <span class="normal">856</span>
-<span class="normal">857</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
+<span class="normal">857</span>
+<span class="normal">858</span>
+<span class="normal">859</span>
+<span class="normal">860</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">inter_dataset_consistency_checks</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Inter-dataset consistency checks.</span>
 
