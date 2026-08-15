@@ -81,6 +81,68 @@ class TestDummyQA:
         assert isinstance(results["cf:latest"], tuple)
         assert isinstance(results["cf:latest"][0], list)
 
+    def test_checker_discovery_is_cached_but_suite_instances_are_distinct(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """Registry reuse must not reuse suites or their per-file options."""
+        instances = []
+        discovery_calls = []
+
+        class CachedRegistrySuite:
+            def __init__(self, options=None):
+                self.options = options
+                instances.append(self)
+
+            def load_all_available_checkers(self):
+                discovery_calls.append(self)
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", CachedRegistrySuite)
+        first_options = {"cf": {"consistency_output": "first.json"}}
+        second_options = {"cf": {"consistency_output": "second.json"}}
+
+        run_compliance_checker(dummy_nc_file, ["cf"], first_options)
+        run_compliance_checker(dummy_nc_file, ["cf"], second_options)
+
+        assert len(instances) == 2
+        assert instances[0] is not instances[1]
+        assert instances[0].options is first_options
+        assert instances[1].options is second_options
+        assert discovery_calls == [instances[0]]
+
+    def test_failed_checker_discovery_is_retried(self, monkeypatch, dummy_nc_file):
+        """A discovery exception must not mark the process registry as loaded."""
+        discovery_attempts = []
+
+        class RetryDiscoverySuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                discovery_attempts.append(True)
+                if len(discovery_attempts) == 1:
+                    raise RuntimeError("temporary discovery failure")
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", RetryDiscoverySuite)
+
+        first_result = run_compliance_checker(dummy_nc_file, ["cf"])
+        second_result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        assert "run_compliance_checker" in first_result["cf"][1]
+        assert second_result["cf"] == ([], {})
+        assert len(discovery_attempts) == 2
+
     def test_process_file_records_dataset_load_failure(
         self, monkeypatch, tmp_env, dummy_nc_file
     ):

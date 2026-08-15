@@ -22,6 +22,20 @@ DATASET_CHECKERS = {
     "comp": compatibility_checks,
 }
 
+# Compliance Checker stores registered checker classes on the CheckSuite class.
+# Track successful discovery per suite type while still constructing a fresh
+# CheckSuite instance, with file-specific options, for every checked file.
+_LOADED_CHECK_SUITE_TYPES = set()
+
+
+def _ensure_checkers_loaded(check_suite):
+    """Discover checker plugins once for each CheckSuite type in this process."""
+    suite_type = type(check_suite)
+    if suite_type in _LOADED_CHECK_SUITE_TYPES:
+        return
+    check_suite.load_all_available_checkers()
+    _LOADED_CHECK_SUITE_TYPES.add(suite_type)
+
 
 def _failed_checker_result(error, stage):
     """Represent a failure outside an individual checker method."""
@@ -58,7 +72,7 @@ def run_compliance_checker(file_path, checkers, checker_options=None):
     checker_options = checker_options or {}
     try:
         check_suite = CheckSuite(options=checker_options)
-        check_suite.load_all_available_checkers()
+        _ensure_checkers_loaded(check_suite)
     except Exception as error:
         return {
             checker: _failed_checker_result(error, "run_compliance_checker")
