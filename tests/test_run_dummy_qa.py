@@ -4,9 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from esgf_qa import run_qa
+from esgf_qa import workers
 from esgf_qa.cluster_results import QAResultAggregator
-from esgf_qa.run_qa import (
+from esgf_qa.con_checks import inter_dataset_consistency_checks
+from esgf_qa.workers import (
     process_dataset,
     process_file,
     run_compliance_checker,
@@ -65,7 +66,7 @@ def fake_check_suite(monkeypatch):
                 for checker in checkers
             }
 
-    monkeypatch.setattr("esgf_qa.run_qa.CheckSuite", DummyCheckSuite)
+    monkeypatch.setattr("esgf_qa.workers.CheckSuite", DummyCheckSuite)
     return DummyCheckSuite
 
 
@@ -132,7 +133,7 @@ class TestDummyQA:
             ),
         ]
         monkeypatch.setattr(
-            "esgf_qa.run_qa.run_compliance_checker",
+            "esgf_qa.workers.run_compliance_checker",
             lambda *args, **kwargs: {"cf": (checks, {})},
         )
         result_file = tmp_env["results"] / "multiple-severities.json"
@@ -299,8 +300,10 @@ class TestDummyQA:
                 },
             ]
         }
-        monkeypatch.setattr(
-            "esgf_qa.run_qa.cons", lambda *args, **kwargs: check_results
+        monkeypatch.setitem(
+            workers.DATASET_CHECKERS,
+            "cons",
+            lambda *args, **kwargs: check_results,
         )
         result_file = tmp_env["results"] / "multiple-dataset-severities.json"
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
@@ -366,8 +369,12 @@ class TestDummyQA:
         def failing_check(*args, **kwargs):
             raise RuntimeError("consistency failure")
 
-        monkeypatch.setattr(run_qa, "cons", failing_check)
-        monkeypatch.setattr(run_qa, "cont", lambda *args, **kwargs: {"continued": {}})
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cons", failing_check)
+        monkeypatch.setitem(
+            workers.DATASET_CHECKERS,
+            "cont",
+            lambda *args, **kwargs: {"continued": {}},
+        )
         result_file = tmp_env["results"] / "dataset-result.json"
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
 
@@ -429,7 +436,7 @@ class TestDummyQA:
         result = run_dataset_collection_check(
             aggregator,
             "cons",
-            run_qa.inter_dataset_consistency_checks,
+            inter_dataset_consistency_checks,
             ds_map,
             files_to_check_dict,
             {},

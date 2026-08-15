@@ -220,6 +220,42 @@ class TestQACommandLine:
         assert "Resuming previous QA run" in stdout
         shutil.rmtree(temp_dir)
 
+    def test_cli_path_filters(self, tmp_path):
+        output_dir = tmp_path / "filtered-results"
+
+        stdout, stderr = self._run_cli(
+            [
+                "-t",
+                "cf:1.7",
+                "-w",
+                "tas_",
+                "-b",
+                "185501",
+                "-o",
+                str(output_dir),
+                str(self.cmip6_dir),
+            ]
+        )
+
+        assert "Path filters selected 1 of 4 discovered NetCDF files" in stdout
+        exclusion_report = json.loads((output_dir / "excluded_files.json").read_text())
+        assert exclusion_report["filters"] == {
+            "whitelist": ["tas_"],
+            "blacklist": ["185501"],
+        }
+        assert exclusion_report["summary"] == {
+            "discovered": 4,
+            "selected": 1,
+            "blacklisted": 2,
+            "not_whitelisted": 1,
+        }
+        files_to_check = json.loads((output_dir / "files_to_check.json").read_text())
+        assert len(files_to_check) == 1
+        assert "tas_" in files_to_check[0]
+        resume_info = json.loads((output_dir / ".resume_info").read_text())
+        assert resume_info["whitelist"] == ["tas_"]
+        assert resume_info["blacklist"] == ["185501"]
+
     @pytest.mark.parametrize(
         "test_args, expected_err_msg",
         [
