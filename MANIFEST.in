@@ -1,8 +1,9 @@
 include LICENSE
 include README.md
+include HISTORY.rst
 
 recursive-include tests *.py
-recursive-include fonts *
+recursive-include esgf_qa/resources *.html *.woff2
 
 global-exclude __pycache__ *.py[co]
 

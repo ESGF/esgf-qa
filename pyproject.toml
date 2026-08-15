@@ -56,6 +56,11 @@ dev = [
   "twine",
   "wheel"
 ]
+test = [
+  "pytest>=9,<10",
+  "pytest-asyncio",
+  "pytest-cov"
+]
 
 [project.scripts]
 esgqa = "esgf_qa.run_qa:main"
@@ -117,8 +122,21 @@ ignore = ["E501"]
 known-first-party = ["esgf_qa"]
 lines-after-imports = 1
 
+[tool.setuptools.package-data]
+esgf_qa = [
+  "resources/*.html",
+  "resources/fonts/*.woff2"
+]
+
 [tool.setuptools.packages.find]
-exclude = ["fonts"]
+exclude = [
+  "tests",
+  "tests.*"
+]
+include = [
+  "esgf_qa",
+  "esgf_qa.*"
+]
 
 [tool.setuptools_scm]
 fallback_version = "999"

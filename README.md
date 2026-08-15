@@ -87,6 +87,14 @@ The following command should now list the necessary projects with metadata sourc
 esgvoc status
 ```
 
+The complete test suite is included in the source distribution. After unpacking
+it, users can verify the installed code with:
+
+```shell
+pip install ".[test]"
+pytest
+```
+
 Please see the [esgvoc user guide](https://esgf.github.io/esgf-vocab/user/introduction.html) for more information.
 
 ## Usage
@@ -173,7 +181,13 @@ The clustered results can be viewed using the following website:
 This website runs entirely in the user's browser using JavaScript, without requiring interaction with a web server.
 You can select one of the recent QA runs conducted at the respective site or select a local QA run result file to be displayed.
 
-Alternatively, you can open the included `display_qc_results.html` file directly in your browser.
+Alternatively, you can open the packaged `display_qc_results.html` file directly
+in your browser. Its location in an installed environment can be printed with:
+
+```shell
+python -c "from importlib.resources import files; print(files('esgf_qa').joinpath('resources/display_qc_results.html'))"
+```
+
 While the web view also supports the full (unclustered) results, it is recommended to not use the web view for files greater than a few MegaBytes.
 
 ### `esgqaviewer`
