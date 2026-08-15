@@ -6,6 +6,7 @@ from datetime import timedelta
 import pytest
 
 from esgf_qa import con_checks as cc
+from esgf_qa._constants import deltdic
 from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import (
     compare_dicts,
@@ -246,6 +247,45 @@ class TestConChecks:
         assert isinstance(results, dict)
         assert "Time continuity" in results
 
+    def test_continuity_checks_accept_zero_as_a_time_value(
+        self, temp_files, ds_map, files_to_check_dict
+    ):
+        first_file, second_file = temp_files["ds1"]
+        for file, values in (
+            (first_file, {"timen": 0, "boundn": 0}),
+            (second_file, {"time0": 2, "bound0": 2}),
+        ):
+            with open(file) as stream:
+                data = json.load(stream)
+            data["time_info"].update(values)
+            with open(file, "w") as stream:
+                json.dump(data, stream)
+
+        messages = cc.continuity_checks("ds1", ds_map, files_to_check_dict, {})[
+            "Time continuity"
+        ]["msgs"]
+
+        assert any(message.startswith("Gap in time axis") for message in messages)
+        assert any(message.startswith("Gap in time bounds") for message in messages)
+
+    def test_continuity_checks_report_unsupported_frequency(
+        self, temp_files, ds_map, files_to_check_dict
+    ):
+        second_file = temp_files["ds1"][1]
+        with open(second_file) as stream:
+            data = json.load(stream)
+        data["time_info"].update(
+            {"time0": 1, "timen": 2, "bound0": 1, "boundn": 2, "frequency": "fortnight"}
+        )
+        with open(second_file, "w") as stream:
+            json.dump(data, stream)
+
+        messages = cc.continuity_checks("ds1", ds_map, files_to_check_dict, {})[
+            "Time continuity"
+        ]["msgs"]
+
+        assert messages["Unsupported frequency 'fortnight'"] == [second_file]
+
     def test_compatibility_checks(self, ds_map, files_to_check_dict):
         results = cc.compatibility_checks("ds1", ds_map, files_to_check_dict, {})
         assert isinstance(results, dict)
@@ -282,6 +322,32 @@ class TestConChecks:
             for msg in results["ds2"]["Time coverage"]["msgs"]
         )
 
+    def test_dataset_coverage_uses_first_file_start_month(self):
+        ds_map = {"ds1": ["first.nc", "last.nc"], "ds2": ["other.nc"]}
+        files_to_check_dict = {
+            "first.nc": {"ts": "20000201-20000630"},
+            "last.nc": {"ts": "20000701-20011231"},
+            "other.nc": {"ts": "20010101-20011231"},
+        }
+
+        results = cc.dataset_coverage_checks(ds_map, files_to_check_dict, {})
+
+        assert not any(
+            "Time series starts" in message
+            for dataset_results in results.values()
+            for message in dataset_results["Time coverage"]["msgs"]
+        )
+
+    def test_dataset_coverage_reports_malformed_timestamp(self):
+        ds_map = {"ds1": ["broken.nc"]}
+        files_to_check_dict = {"broken.nc": {"ts": "abcd0101-20001231"}}
+
+        results = cc.dataset_coverage_checks(ds_map, files_to_check_dict, {})
+
+        assert results["ds1"]["Time coverage"]["msgs"] == {
+            "Time coverage cannot be inferred.": ["broken.nc"]
+        }
+
     def test_inter_dataset_consistency_checks(self, ds_map, files_to_check_dict):
         results, ref_ds = cc.inter_dataset_consistency_checks(
             ds_map, files_to_check_dict, {}
@@ -289,6 +355,11 @@ class TestConChecks:
         assert isinstance(results, dict)
         assert isinstance(ref_ds, dict)
         assert "general_reference" in ref_ds
+
+    @pytest.mark.parametrize("frequency", ["dec", "cen"])
+    def test_long_frequency_tolerances_enclose_nominal_delta(self, frequency):
+        assert deltdic[f"{frequency}min"] <= deltdic[frequency]
+        assert deltdic[frequency] <= deltdic[f"{frequency}max"]
 
     def test_missing_consistency_outputs_are_skipped(
         self, tmp_path, ds_map, files_to_check_dict

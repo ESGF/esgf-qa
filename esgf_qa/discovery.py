@@ -101,7 +101,8 @@ def discover_files(config):
     discovered_file_count = 0
     blacklisted_files = {}
     not_whitelisted_files = []
-    for root, _, filenames in os.walk(config.parent_dir):
+    scan_errors = []
+    for root, _, filenames in os.walk(config.parent_dir, onerror=scan_errors.append):
         for filename in filenames:
             if not filename.endswith(".nc"):
                 continue
@@ -143,6 +144,16 @@ def discover_files(config):
             directory_datasets.setdefault(dataset_dir, {}).setdefault(
                 dataset_name, []
             ).append(file_path)
+
+    if scan_errors:
+        details = "; ".join(str(error) for error in scan_errors)
+        resume_note = (
+            " Resume inventory state was not reconciled." if config.resume else ""
+        )
+        raise OSError(
+            "The input directory could not be scanned completely."
+            f"{resume_note} Filesystem errors: {details}"
+        )
 
     files.sort()
     dataset_files = {}

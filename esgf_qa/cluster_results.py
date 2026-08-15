@@ -155,19 +155,72 @@ class QAResultAggregator:
 
     def sort(self):
         """
-        Sort the summary by test weight and test name for consistent output ordering.
+        Sort every result level using its domain-specific display order.
 
         Modifies the `summary` attribute.
         """
-        self.summary["fail"] = dict(sorted(self.summary["fail"].items(), reverse=True))
-        for key in self.summary["fail"]:
-            self.summary["fail"][key] = dict(sorted(self.summary["fail"][key].items()))
 
-        # Sort errors by function name
-        for checker in self.summary["error"]:
-            self.summary["error"][checker] = dict(
-                sorted(self.summary["error"][checker].items())
+        def sort_messages(messages):
+            return {
+                message: {
+                    dataset_id: sorted(files)
+                    for dataset_id, files in sorted(datasets.items())
+                }
+                for message, datasets in sorted(messages.items())
+            }
+
+        self.summary["error"] = {
+            test_id: sort_messages(messages)
+            for test_id, messages in sorted(self.summary["error"].items())
+        }
+        self.summary["fail"] = {
+            weight: {
+                test_id: sort_messages(messages)
+                for test_id, messages in sorted(tests.items())
+            }
+            for weight, tests in sorted(self.summary["fail"].items(), reverse=True)
+        }
+
+    @staticmethod
+    def _format_cluster_files(combined):
+        """Format sorted datasets with a deterministic example file."""
+        formatted = {}
+        for dataset_id, affected_files in sorted(combined.items()):
+            files = sorted(affected_files)
+            dataset_label = (
+                dataset_id
+                + " ("
+                + str(len(files))
+                + f" file{'s' if len(files) > 1 else ''} affected)"
             )
+            example_prefix = "e.g. " if len(files) > 1 else ""
+            formatted[dataset_label] = [f"{example_prefix}'{files[0]}'"]
+        return formatted
+
+    def _sort_clustered_summary(self):
+        """Apply deterministic ordering to the completed clustered summary."""
+
+        def sort_messages(messages):
+            return {
+                message: dict(sorted(datasets.items()))
+                for message, datasets in sorted(messages.items())
+            }
+
+        if "error" in self.clustered_summary:
+            self.clustered_summary["error"] = {
+                test_id: sort_messages(messages)
+                for test_id, messages in sorted(self.clustered_summary["error"].items())
+            }
+        if "fail" in self.clustered_summary:
+            self.clustered_summary["fail"] = {
+                weight: {
+                    test_id: sort_messages(messages)
+                    for test_id, messages in sorted(tests.items())
+                }
+                for weight, tests in sorted(
+                    self.clustered_summary["fail"].items(), reverse=True
+                )
+            }
 
     @staticmethod
     def cluster_messages(messages, threshold):
@@ -375,8 +428,7 @@ class QAResultAggregator:
         for status in self.summary:
             if status == "error":
                 for test_id in self.summary[status]:
-                    messages = list(self.summary[status][test_id].keys())
-                    # Pass a copy of messages to cluster_messages to generate clusters
+                    messages = sorted(self.summary[status][test_id])
                     clusters = QAResultAggregator.cluster_messages(
                         messages[:], threshold
                     )
@@ -408,25 +460,14 @@ class QAResultAggregator:
                             ].items():
                                 combined[ds_id].update(files)
 
-                        # Shorten file lists to one example
-                        formatted = {
-                            ds_id
-                            + " ("
-                            + str(len(files))
-                            + f" file{'s' if len(files) > 1 else ''} affected)": (
-                                [f"e.g. '{next(iter(files))}'"]
-                                if len(files) > 1
-                                else [f"'{next(iter(files))}'"]
-                            )
-                            for ds_id, files in combined.items()
-                        }
+                        # Shorten file lists to one deterministic example.
+                        formatted = self._format_cluster_files(combined)
 
                         self.clustered_summary[status][test_id][msg_summary] = formatted
             elif status == "fail":
                 for weight in self.summary[status]:
                     for test_id in self.summary[status][weight]:
-                        messages = list(self.summary[status][weight][test_id].keys())
-                        # Pass a copy of messages to cluster_messages to generate clusters
+                        messages = sorted(self.summary[status][weight][test_id])
                         clusters = QAResultAggregator.cluster_messages(
                             messages[:], threshold
                         )
@@ -458,19 +499,11 @@ class QAResultAggregator:
                                 ][message].items():
                                     combined[ds_id].update(files)
 
-                            # Shorten file lists to one example
-                            formatted = {
-                                ds_id
-                                + " ("
-                                + str(len(files))
-                                + f" file{'s' if len(files) > 1 else ''} affected)": (
-                                    [f"e.g. '{next(iter(files))}'"]
-                                    if len(files) > 1
-                                    else [f"'{next(iter(files))}'"]
-                                )
-                                for ds_id, files in combined.items()
-                            }
+                            # Shorten file lists to one deterministic example.
+                            formatted = self._format_cluster_files(combined)
 
                             self.clustered_summary[status][weight][test_id][
                                 msg_summary
                             ] = formatted
+
+        self._sort_clustered_summary()

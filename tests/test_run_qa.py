@@ -27,7 +27,9 @@ from esgf_qa.discovery import (
     write_excluded_files,
 )
 from esgf_qa.resume import (
+    get_reusable_file_result,
     invalidate_nonreusable_dataset_results,
+    reconcile_resume_inventory,
     track_checked_datasets,
     verify_options_dict,
 )
@@ -46,18 +48,12 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
         cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
     )
 
-    def capture_process_file(
-        file_path,
-        checkers,
-        checker_options,
-        files_to_check_dict,
-        processed_files,
-        progress_file,
-    ):
+    def capture_initial_file(args):
+        _, _, checker_options, _, _ = args
         captured_options.update(checker_options)
-        return file_path, {"cf": {"errors": {}}}
+        return args[0], {"cf": {"errors": {}}}
 
-    monkeypatch.setattr(workflow, "process_file", capture_process_file)
+    monkeypatch.setattr(workflow, "_process_initial_file", capture_initial_file)
     monkeypatch.setattr(
         workflow,
         "get_checker_metadata",
@@ -73,6 +69,146 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
 
     assert captured_options["cf"]["enable_appendix_a_checks"] is True
     assert "cf:" not in captured_options
+
+
+def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_path):
+    """Pool tasks contain local data and only the parent records completions."""
+    files = [str(tmp_path / f"file-{index}.nc") for index in range(4)]
+    dataset_files = {
+        "dataset1": files[:2],
+        "dataset2": files[2:],
+    }
+    file_details = {
+        file_path: {
+            "id": dataset_id,
+            "result_file": str(tmp_path / f"result-{index}.json"),
+            "consistency_file": str(tmp_path / f"consistency-{index}.json"),
+            "result_file_ds": str(tmp_path / f"dataset-{dataset_id}.json"),
+        }
+        for dataset_id, dataset_paths in dataset_files.items()
+        for index, file_path in enumerate(dataset_paths)
+    }
+    inventory = SimpleNamespace(
+        files=files,
+        dataset_files=dataset_files,
+        file_details=file_details,
+        checker_options={file_path: {} for file_path in files},
+    )
+    progress_file = tmp_path / "progress.txt"
+    dataset_progress_file = tmp_path / "progress-datasets.txt"
+    progress_file.write_text(files[1] + "\n")
+    dataset_progress_file.write_text("dataset2\n")
+    config = SimpleNamespace(
+        checkers=["cc6"],
+        parallel_processes=2,
+        progress_file=progress_file,
+        dataset_file=dataset_progress_file,
+        processed_files={files[1]},
+        processed_datasets={"dataset2"},
+    )
+    file_tasks = []
+    dataset_tasks = []
+    pool_options = []
+
+    def fake_first_file(args):
+        file_path, _, _, details, was_processed = args
+        assert file_path == files[0]
+        assert details is file_details[file_path]
+        assert was_processed is False
+        return file_path, {"cc6": {"errors": {}}}
+
+    class SynchronousPool:
+        def __init__(self, **kwargs):
+            pool_options.append(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def imap_unordered(self, function, args):
+            if function is workflow.call_process_file:
+                file_tasks.extend(args)
+                return iter((task[0], {"cc6": {"errors": {}}}) for task in file_tasks)
+            dataset_tasks.extend(args)
+            return iter(
+                (
+                    task[0],
+                    {
+                        "cons": {"errors": {}},
+                        "cont": {"errors": {}},
+                        "comp": {"errors": {}},
+                    },
+                )
+                for task in dataset_tasks
+            )
+
+    monkeypatch.setattr(workflow, "_process_initial_file", fake_first_file)
+    # Keep the pool-size assertion independent of the CPU count exposed by the
+    # local machine or CI runner.
+    monkeypatch.setattr(workflow.multiprocessing, "cpu_count", lambda: 8)
+    monkeypatch.setattr(workflow.multiprocessing, "Pool", SynchronousPool)
+    monkeypatch.setattr(workflow, "run_dataset_collection_check", lambda *args: None)
+
+    workflow.run_workflow(config, inventory)
+
+    assert len(file_tasks) == 3
+    for task in file_tasks:
+        file_path, _, _, task_details, was_processed = task
+        assert task_details is file_details[file_path]
+        assert was_processed is (file_path == files[1])
+
+    assert len(dataset_tasks) == 2
+    for task in dataset_tasks:
+        dataset_id, task_files, _, _, task_details, was_processed = task
+        assert task_files is dataset_files[dataset_id]
+        assert set(task_details) == set(task_files)
+        assert was_processed is (dataset_id == "dataset2")
+
+    assert pool_options == [
+        {"processes": 2, "maxtasksperchild": 10},
+        {"processes": 2, "maxtasksperchild": 1},
+    ]
+
+    assert progress_file.read_text().splitlines().count(files[1]) == 1
+    assert set(progress_file.read_text().splitlines()) == set(files)
+    assert dataset_progress_file.read_text().splitlines().count("dataset2") == 1
+    assert set(dataset_progress_file.read_text().splitlines()) == set(dataset_files)
+    assert config.processed_files == set(files)
+    assert config.processed_datasets == set(dataset_files)
+
+
+def test_initial_file_runs_in_disposable_process(monkeypatch):
+    task = ("first.nc", ["cf"], {}, {"result_file": "result.json"}, False)
+    captured = {}
+
+    class DisposablePool:
+        def __init__(self, **kwargs):
+            captured["pool_options"] = kwargs
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            captured["closed"] = True
+
+        def apply(self, function, args):
+            captured["function"] = function
+            captured["args"] = args
+            return "first.nc", {"cf": {"errors": {}}}
+
+    monkeypatch.setattr(workflow.multiprocessing, "Pool", DisposablePool)
+
+    result = workflow._process_initial_file(task)
+
+    assert result == ("first.nc", {"cf": {"errors": {}}})
+    assert captured == {
+        "pool_options": {"processes": 1, "maxtasksperchild": 1},
+        "function": workflow.call_process_file,
+        "args": (task,),
+        "closed": True,
+    }
 
 
 def test_new_file_invalidates_cached_dataset_result(tmp_path):
@@ -101,6 +237,41 @@ def test_new_file_invalidates_cached_dataset_result(tmp_path):
     )
 
     assert processed_datasets == set()
+
+
+@pytest.mark.parametrize("consistency_contents", ["not JSON", "[]"])
+def test_invalid_consistency_output_is_not_reused(tmp_path, consistency_contents):
+    source_file = str(tmp_path / "source.nc")
+    result_file = tmp_path / "result.json"
+    consistency_file = tmp_path / "consistency.json"
+    result_file.write_text(json.dumps({"cc6": {"errors": {}}}))
+    consistency_file.write_text(consistency_contents)
+    files_to_check_dict = {
+        source_file: {
+            "result_file": str(result_file),
+            "consistency_file": str(consistency_file),
+        }
+    }
+
+    result = get_reusable_file_result(["cc6"], files_to_check_dict[source_file], True)
+
+    assert result is None
+
+
+def test_non_object_file_result_cache_is_not_reused(tmp_path):
+    source_file = str(tmp_path / "source.nc")
+    result_file = tmp_path / "result.json"
+    result_file.write_text("[]")
+    files_to_check_dict = {
+        source_file: {
+            "result_file": str(result_file),
+            "consistency_file": str(tmp_path / "unused-consistency.json"),
+        }
+    }
+
+    result = get_reusable_file_result(["cf"], files_to_check_dict[source_file], True)
+
+    assert result is None
 
 
 def test_main_retains_info_when_resuming(monkeypatch, tmp_path):
@@ -132,8 +303,8 @@ def test_main_retains_info_when_resuming(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(
         workflow,
-        "process_file",
-        lambda file_path, *args: (file_path, {"cf": {"errors": {}}}),
+        "_process_initial_file",
+        lambda args: (args[0], {"cf": {"errors": {}}}),
     )
     monkeypatch.setattr(sys, "argv", ["esgqa", "-r", "-o", str(output_dir)])
 
@@ -183,6 +354,48 @@ def test_main_rejects_empty_input_before_writing_inventory(tmp_path):
 
     assert not (output_dir / "files_to_check.json").exists()
     assert not (output_dir / "excluded_files.json").exists()
+
+
+def test_main_rejects_file_as_input_directory(tmp_path):
+    input_file = tmp_path / "input.nc"
+    input_file.touch()
+
+    with pytest.raises(NotADirectoryError, match="is not a directory"):
+        run_qa.main(["-o", str(tmp_path / "output"), str(input_file)])
+
+
+@pytest.mark.parametrize("resume", [False, True])
+def test_discovery_aborts_on_incomplete_filesystem_scan(monkeypatch, tmp_path, resume):
+    """Unreadable directories must not look like files removed during resume."""
+    blocked_path = tmp_path / "input" / "blocked"
+
+    def incomplete_walk(path, onerror=None):
+        onerror(PermissionError(13, "Permission denied", str(blocked_path)))
+        return []
+
+    monkeypatch.setattr("esgf_qa.discovery.os.walk", incomplete_walk)
+    processed_files = {str(blocked_path / "old.nc")}
+    processed_datasets = {"dataset1"}
+    config = SimpleNamespace(
+        parent_dir=str(tmp_path / "input"),
+        result_dir=str(tmp_path / "output"),
+        whitelist=[],
+        blacklist=[],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=resume,
+        processed_files=processed_files,
+        processed_datasets=processed_datasets,
+    )
+
+    with pytest.raises(OSError, match="could not be scanned completely") as error:
+        discover_files(config)
+
+    assert str(blocked_path) in str(error.value)
+    assert ("Resume inventory state was not reconciled" in str(error.value)) is resume
+    assert processed_files == {str(blocked_path / "old.nc")}
+    assert processed_datasets == {"dataset1"}
 
 
 def test_empty_input_with_filters_writes_exclusion_report(tmp_path):
@@ -268,6 +481,182 @@ def test_path_filters_are_restored_when_resuming(tmp_path):
 
     assert resumed.whitelist == config.whitelist
     assert resumed.blacklist == config.blacklist
+
+
+def test_rerun_all_resets_resume_progress(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    default_output = str(tmp_path / "unused-default")
+    monkeypatch.setattr(
+        cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+
+    prepare_run(default_output, ["-o", str(output_dir), str(input_dir)])
+    (output_dir / "progress.txt").write_text("checked.nc\n")
+    (output_dir / "progress_datasets.txt").write_text("dataset1\n")
+
+    resumed = prepare_run(
+        default_output,
+        ["-r", "--rerun-all", "-o", str(output_dir)],
+    )
+
+    assert resumed.rerun_all is True
+    assert resumed.processed_files == set()
+    assert resumed.processed_datasets == set()
+    assert (output_dir / "progress.txt").read_text() == ""
+    assert (output_dir / "progress_datasets.txt").read_text() == ""
+    assert "rerun_all" not in json.loads((output_dir / ".resume_info").read_text())
+
+
+def test_rerun_all_requires_resume(capsys, tmp_path):
+    with pytest.raises(SystemExit):
+        prepare_run(
+            str(tmp_path / "unused-default"),
+            ["--rerun-all", str(tmp_path)],
+        )
+
+    assert "--rerun-all requires -r/--resume" in capsys.readouterr().err
+
+
+def test_resume_reports_inventory_changes_and_invalidates_missing_files(
+    capsys, tmp_path
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    progress_file = result_dir / "progress.txt"
+    dataset_file = result_dir / "progress_datasets.txt"
+    retained_file = str(tmp_path / "retained.nc")
+    missing_file = str(tmp_path / "missing.nc")
+    added_file = str(tmp_path / "added.nc")
+    (result_dir / "files_to_check.json").write_text(
+        json.dumps([retained_file, missing_file])
+    )
+    (result_dir / "files_to_check_dict.json").write_text(
+        json.dumps(
+            {
+                retained_file: {"id": "retained-dataset"},
+                missing_file: {"id": "affected-dataset"},
+            }
+        )
+    )
+    processed_files = {retained_file, missing_file}
+    processed_datasets = {"retained-dataset", "affected-dataset"}
+    progress_file.write_text("\n".join(sorted(processed_files)) + "\n")
+    dataset_file.write_text("\n".join(sorted(processed_datasets)) + "\n")
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files=processed_files,
+        processed_datasets=processed_datasets,
+        progress_file=progress_file,
+        dataset_file=dataset_file,
+    )
+    inventory = SimpleNamespace(files=[retained_file, added_file])
+
+    report_path = reconcile_resume_inventory(inventory, config)
+
+    report = json.loads((result_dir / "resume_inventory_changes.json").read_text())
+    assert report_path == str(result_dir / "resume_inventory_changes.json")
+    assert report == {
+        "summary": {
+            "previous_selected": 2,
+            "current_selected": 2,
+            "added": 1,
+            "no_longer_found": 1,
+        },
+        "added": [added_file],
+        "no_longer_found": [missing_file],
+    }
+    assert config.processed_files == {retained_file}
+    assert config.processed_datasets == {"retained-dataset"}
+    assert progress_file.read_text() == retained_file + "\n"
+    assert dataset_file.read_text() == "retained-dataset\n"
+    output = capsys.readouterr().out
+    assert "1 new file will be checked" in output
+    assert "1 previously selected file is no longer found" in output
+
+
+@pytest.mark.parametrize(
+    "inventory_content, warning_match",
+    [
+        (None, "could not be read"),
+        ("not valid JSON", "could not be read"),
+        (json.dumps({"not": "a list"}), "is not a list of file paths"),
+        (json.dumps(["valid.nc", 4]), "is not a list of file paths"),
+    ],
+    ids=["missing", "invalid-json", "not-a-list", "non-string-path"],
+)
+def test_resume_inventory_warns_when_previous_inventory_is_unavailable(
+    tmp_path, inventory_content, warning_match
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    if inventory_content is not None:
+        (result_dir / "files_to_check.json").write_text(inventory_content)
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files={"previous.nc"},
+        processed_datasets={"dataset1"},
+    )
+
+    with pytest.warns(UserWarning, match=warning_match):
+        report_path = reconcile_resume_inventory(SimpleNamespace(files=[]), config)
+
+    assert report_path is None
+    assert config.processed_files == {"previous.nc"}
+    assert config.processed_datasets == {"dataset1"}
+    assert not (result_dir / "resume_inventory_changes.json").exists()
+
+
+@pytest.mark.parametrize(
+    "details_content",
+    [
+        "not valid JSON",
+        json.dumps({"MISSING_FILE": {}}),
+        json.dumps({"MISSING_FILE": {"id": 4}}),
+        json.dumps(["not", "a", "dictionary"]),
+    ],
+    ids=["invalid-json", "missing-dataset-id", "invalid-dataset-id", "not-a-dict"],
+)
+def test_resume_inventory_without_previous_dataset_mapping_invalidates_all_datasets(
+    tmp_path, details_content
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    missing_file = str(tmp_path / "missing.nc")
+    progress_file = result_dir / "progress.txt"
+    dataset_file = result_dir / "progress_datasets.txt"
+    (result_dir / "files_to_check.json").write_text(json.dumps([missing_file]))
+    (result_dir / "files_to_check_dict.json").write_text(
+        details_content.replace("MISSING_FILE", missing_file)
+    )
+    progress_file.write_text(missing_file + "\n")
+    dataset_file.write_text("dataset1\ndataset2\n")
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files={missing_file},
+        processed_datasets={"dataset1", "dataset2"},
+        progress_file=progress_file,
+        dataset_file=dataset_file,
+    )
+
+    with pytest.warns(UserWarning, match="invalidating all dataset results"):
+        reconcile_resume_inventory(SimpleNamespace(files=[]), config)
+
+    assert config.processed_files == set()
+    assert config.processed_datasets == set()
+    assert progress_file.read_text() == ""
+    assert dataset_file.read_text() == ""
+
+
+def test_new_run_does_not_write_resume_inventory_report(tmp_path):
+    config = SimpleNamespace(resume=False, result_dir=str(tmp_path))
+
+    assert reconcile_resume_inventory(SimpleNamespace(files=[]), config) is None
+    assert not (tmp_path / "resume_inventory_changes.json").exists()
 
 
 @pytest.mark.parametrize("filter_option", ["-w", "-b"])
@@ -379,12 +768,13 @@ def test_main_configures_checker_consistency_output(
         lambda: {"mip": ["latest"], "wcrp_cmip6plus": ["1.0", "latest"]},
     )
 
-    def capture_process_file(file_path, checkers, checker_options, *args):
+    def capture_process_file(args):
+        file_path, checkers, checker_options, *_ = args
         captured["checkers"] = checkers
         captured["options"] = checker_options
         return file_path, {checker: {"errors": {}}}
 
-    monkeypatch.setattr(workflow, "process_file", capture_process_file)
+    monkeypatch.setattr(workflow, "_process_initial_file", capture_process_file)
     monkeypatch.setattr(
         workflow,
         "get_checker_metadata",

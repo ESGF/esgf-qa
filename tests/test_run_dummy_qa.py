@@ -81,6 +81,241 @@ class TestDummyQA:
         assert isinstance(results["cf:latest"], tuple)
         assert isinstance(results["cf:latest"][0], list)
 
+    def test_checker_discovery_is_cached_but_suite_instances_are_distinct(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """Registry reuse must not reuse suites or their per-file options."""
+        instances = []
+        discovery_calls = []
+
+        class CachedRegistrySuite:
+            def __init__(self, options=None):
+                self.options = options
+                instances.append(self)
+
+            def load_all_available_checkers(self):
+                discovery_calls.append(self)
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", CachedRegistrySuite)
+        first_options = {"cf": {"consistency_output": "first.json"}}
+        second_options = {"cf": {"consistency_output": "second.json"}}
+
+        run_compliance_checker(dummy_nc_file, ["cf"], first_options)
+        run_compliance_checker(dummy_nc_file, ["cf"], second_options)
+
+        assert len(instances) == 2
+        assert instances[0] is not instances[1]
+        assert instances[0].options is first_options
+        assert instances[1].options is second_options
+        assert discovery_calls == [instances[0]]
+
+    def test_failed_checker_discovery_is_retried(self, monkeypatch, dummy_nc_file):
+        """A discovery exception must not mark the process registry as loaded."""
+        discovery_attempts = []
+
+        class RetryDiscoverySuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                discovery_attempts.append(True)
+                if len(discovery_attempts) == 1:
+                    raise RuntimeError("temporary discovery failure")
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", RetryDiscoverySuite)
+
+        first_result = run_compliance_checker(dummy_nc_file, ["cf"])
+        second_result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        assert "run_compliance_checker" in first_result["cf"][1]
+        assert second_result["cf"] == ([], {})
+        assert len(discovery_attempts) == 2
+
+    def test_process_file_records_dataset_load_failure(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """A file that Compliance Checker cannot open becomes a QA runtime error."""
+
+        class LoadFailureSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                raise RuntimeError("cannot open dataset")
+
+        monkeypatch.setattr(workers, "CheckSuite", LoadFailureSuite)
+        result_file = tmp_env["results"] / "load-failure.json"
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cf"],
+            {},
+            {
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "cons.json"),
+            },
+            False,
+        )
+
+        assert "cannot open dataset" in result["cf"]["errors"]["load_dataset"]
+        assert json.loads(result_file.read_text()) == result
+        assert tmp_env["progress"].read_text() == ""
+
+    @pytest.mark.parametrize("failure_stage", ["initialization", "registration"])
+    def test_run_compliance_checker_records_suite_setup_failure(
+        self, monkeypatch, dummy_nc_file, failure_stage
+    ):
+        """Suite construction and plugin registration failures are checker errors."""
+
+        class SetupFailureSuite:
+            def __init__(self, options=None):
+                if failure_stage == "initialization":
+                    raise RuntimeError("suite initialization failed")
+
+            def load_all_available_checkers(self):
+                raise RuntimeError("checker registration failed")
+
+        monkeypatch.setattr(workers, "CheckSuite", SetupFailureSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf", "demo"])
+
+        expected_message = f"{'suite' if failure_stage == 'initialization' else 'checker'} {failure_stage} failed"
+        for checker in ["cf", "demo"]:
+            error, error_traceback = result[checker][1]["run_compliance_checker"]
+            assert str(error) == expected_message
+            assert error_traceback is not None
+
+    def test_run_compliance_checker_records_missing_checker_result(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """A suite response without the requested checker is an explicit error."""
+
+        class MissingResultSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {}
+
+        monkeypatch.setattr(workers, "CheckSuite", MissingResultSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        error = result["cf"][1]["run_checker"][0]
+        assert str(error) == "Compliance Checker returned no result for 'cf'."
+
+    def test_run_compliance_checker_records_dataset_close_failure(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """Failure to close an opened dataset is retained in the checker result."""
+
+        class DatasetWithBrokenClose:
+            def close(self):
+                raise RuntimeError("could not close dataset")
+
+        class CloseFailureSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return DatasetWithBrokenClose()
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", CloseFailureSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        error, error_traceback = result["cf"][1]["close_dataset"]
+        assert str(error) == "could not close dataset"
+        assert error_traceback is not None
+
+    def test_checker_setup_failures_are_isolated_and_dataset_is_closed(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """One broken checker does not suppress another and the dataset is closed."""
+        opened_dataset = SimpleNamespace(closed=False)
+        opened_dataset.close = lambda: setattr(opened_dataset, "closed", True)
+
+        class PartlyFailingSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return opened_dataset
+
+            def run_all(self, dataset, checkers, **kwargs):
+                checker = checkers[0]
+                if checker == "broken":
+                    raise RuntimeError("broken checker setup")
+                return {checker: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", PartlyFailingSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["broken", "cf"])
+
+        assert "run_checker" in result["broken"][1]
+        assert result["cf"] == ([], {})
+        assert opened_dataset.closed is True
+
+        message = workers._format_compliance_checker_runtime_error(
+            "run_checker", result["broken"][1]["run_checker"]
+        )
+        assert "broken checker setup" in message
+        assert "PartlyFailingSuite.run_all" not in message
+
+    def test_runtime_error_formatter_clears_traceback_frames(self):
+        """Formatted checker errors do not retain locals through tracebacks."""
+
+        def error_details():
+            variable_name = "tas"
+            assert variable_name
+            try:
+                raise RuntimeError("checker failed")
+            except RuntimeError as error:
+                return error, error.__traceback__
+
+        error, error_traceback = error_details()
+
+        message = workers._format_compliance_checker_runtime_error(
+            "error_details", (error, error_traceback)
+        )
+
+        assert "Potentially affected variables: tas" in message
+        assert error.__traceback__ is None
+        current_entry = error_traceback
+        while current_entry is not None:
+            assert "variable_name" not in current_entry.tb_frame.f_locals
+            current_entry = current_entry.tb_next
+
     def test_process_file(self, fake_check_suite, tmp_env, dummy_nc_file):
         """When no previous results exist, should run checks and write output."""
         files_to_check_dict = {
@@ -89,7 +324,6 @@ class TestDummyQA:
                 "consistency_file": str(tmp_env["results"] / "cons.json"),
             }
         }
-        processed_files = []
         checkers = ["cf:latest"]
         checker_options = {}
 
@@ -97,9 +331,8 @@ class TestDummyQA:
             dummy_nc_file,
             checkers,
             checker_options,
-            files_to_check_dict,
-            processed_files,
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         # should write JSON to disk
@@ -148,9 +381,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cf"],
             {},
-            files_to_check_dict,
-            [],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         saved_results = result["cf"]["shared_check"]
@@ -179,9 +411,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cc6"],
             {},
-            files_to_check_dict,
-            [],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         error_msg = result["cc6"]["errors"]["consistency_output"]
@@ -210,7 +441,6 @@ class TestDummyQA:
                 "consistency_file": str(consistency_file),
             }
         }
-        processed_files = [dummy_nc_file]
         checkers = ["cf:latest"]
         checker_options = {}
 
@@ -218,9 +448,8 @@ class TestDummyQA:
             dummy_nc_file,
             checkers,
             checker_options,
-            files_to_check_dict,
-            processed_files,
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            True,
         )
 
         # Should reuse cached result, not rewrite
@@ -245,13 +474,50 @@ class TestDummyQA:
             dummy_nc_file,
             ["cf:latest"],
             {},
-            files_to_check_dict,
-            [dummy_nc_file],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            True,
         )
 
         assert result["cf"]["errors"] == {}
         assert "time_bounds" in result["cf"]
+
+    def test_process_file_removes_stale_outputs_before_rerun(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """A rerun must not accept an old consistency output as newly generated."""
+        result_file = tmp_env["results"] / "res.json"
+        consistency_file = tmp_env["results"] / "cons.json"
+        result_file.write_text(
+            json.dumps({"cc6": {"errors": {"check_old": "previous failure"}}})
+        )
+        consistency_file.write_text("stale consistency output")
+
+        def run_without_consistency_output(*args, **kwargs):
+            assert not result_file.exists()
+            assert not consistency_file.exists()
+            return {"cc6": ([], {})}
+
+        monkeypatch.setattr(
+            workers, "run_compliance_checker", run_without_consistency_output
+        )
+        files_to_check_dict = {
+            dummy_nc_file: {
+                "result_file": str(result_file),
+                "consistency_file": str(consistency_file),
+            }
+        }
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cc6"],
+            {},
+            files_to_check_dict[dummy_nc_file],
+            True,
+        )
+
+        assert not consistency_file.exists()
+        assert "consistency_output" in result["cc6"]["errors"]
+        assert json.loads(result_file.read_text()) == result
 
     def test_process_dataset(self, fake_check_suite, tmp_env, dummy_nc_file):
         """process_dataset should run checks for not yet checked dataset."""
@@ -261,18 +527,16 @@ class TestDummyQA:
 
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file_ds)}}
 
-        processed_datasets = set()
         checkers = ["unknown_checker:latest"]
         checker_options = {}
 
         ds_id, result = process_dataset(
             ds,
-            ds_map,
+            ds_map[ds],
             checkers,
             checker_options,
             files_to_check_dict,
-            processed_datasets,
-            str(tmp_env["progress"]),
+            False,
         )
 
         # should write JSON file for dataset results
@@ -310,18 +574,45 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons"],
             {"cons": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         saved_results = result["cons"]["shared_consistency_check"]
         assert [check["weight"] for check in saved_results] == [3, 1]
         saved_to_disk = json.loads(result_file.read_text())
         assert saved_to_disk == result
+
+    def test_process_dataset_removes_stale_result_before_rerun(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """An erroneous dataset result is removed before its checks run again."""
+        result_file = tmp_env["results"] / "dataset-result.json"
+        result_file.write_text(
+            json.dumps({"cons": {"errors": {"old": "previous failure"}}})
+        )
+
+        def replacement_check(*args, **kwargs):
+            assert not result_file.exists()
+            return {"replacement": {}}
+
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cons", replacement_check)
+        files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file)}}
+
+        _, result = process_dataset(
+            "dataset1",
+            [dummy_nc_file],
+            ["cons"],
+            {"cons": {}},
+            files_to_check_dict,
+            True,
+        )
+
+        assert result == {"cons": {"replacement": {}}}
+        assert json.loads(result_file.read_text()) == result
 
     def test_process_dataset_records_runtime_error(self, tmp_env, dummy_nc_file):
         """An exception in con_checks is reported with its dataset and files."""
@@ -341,12 +632,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": dataset_files},
+            dataset_files,
             ["cons"],
             {"cons": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         error = result["cons"]["errors"]["consistency_checks"]
@@ -380,12 +670,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons", "cont"],
             {"cons": {}, "cont": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         assert "errors" in result["cons"]
@@ -459,19 +748,51 @@ class TestDummyQA:
         result_file_ds.write_text(json.dumps({"cf": {"errors": {}}}))
 
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file_ds)}}
-        processed_datasets = {ds}
         checkers = ["cf:latest"]
         checker_options = {}
 
         ds_id, result = process_dataset(
             ds,
-            ds_map,
+            ds_map[ds],
             checkers,
             checker_options,
             files_to_check_dict,
-            processed_datasets,
-            str(tmp_env["progress"]),
+            True,
         )
 
         assert ds_id == ds
         assert result == {"cf": {"errors": {}}}
+
+    @pytest.mark.parametrize(
+        "cached_contents",
+        ["not JSON", "[]", "{}", json.dumps({"cons": {"errors": {}}})],
+    )
+    def test_process_dataset_reruns_incomplete_cache(
+        self, monkeypatch, tmp_env, dummy_nc_file, cached_contents
+    ):
+        """Malformed or incomplete dataset caches must never be treated as complete."""
+        result_file = tmp_env["results"] / "cached-dataset.json"
+        result_file.write_text(cached_contents)
+        calls = []
+
+        def checked_again(*args, **kwargs):
+            calls.append(True)
+            return {"replacement": {}}
+
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cons", checked_again)
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cont", checked_again)
+
+        _, result = process_dataset(
+            "dataset1",
+            [dummy_nc_file],
+            ["cons", "cont"],
+            {"cons": {}, "cont": {}},
+            {dummy_nc_file: {"result_file_ds": str(result_file)}},
+            True,
+        )
+
+        assert len(calls) == 2
+        assert result == {
+            "cons": {"replacement": {}},
+            "cont": {"replacement": {}},
+        }

@@ -2,7 +2,9 @@
 
 import json
 import os
+import tempfile
 import traceback
+from pathlib import Path
 
 from compliance_checker.runner import CheckSuite
 
@@ -12,7 +14,7 @@ from esgf_qa.con_checks import (
     consistency_checks,
     continuity_checks,
 )
-from esgf_qa.resume import get_reusable_file_result
+from esgf_qa.resume import get_reusable_dataset_result, get_reusable_file_result
 
 DATASET_CHECKERS = {
     "cons": consistency_checks,
@@ -20,13 +22,71 @@ DATASET_CHECKERS = {
     "comp": compatibility_checks,
 }
 
+# Compliance Checker stores registered checker classes on the CheckSuite class.
+# Track successful discovery per suite type while still constructing a fresh
+# CheckSuite instance, with file-specific options, for every checked file.
+_LOADED_CHECK_SUITE_TYPES = set()
+
+
+def _ensure_checkers_loaded(check_suite):
+    """Discover checker plugins once for each CheckSuite type in this process."""
+    suite_type = type(check_suite)
+    if suite_type in _LOADED_CHECK_SUITE_TYPES:
+        return
+    check_suite.load_all_available_checkers()
+    _LOADED_CHECK_SUITE_TYPES.add(suite_type)
+
+
+def _failed_checker_result(error, stage):
+    """Represent a failure outside an individual checker method."""
+    return [], {stage: (error, error.__traceback__)}
+
+
+def _remove_stale_output(path):
+    """Remove one known generated output before rebuilding it."""
+    Path(path).unlink(missing_ok=True)
+
+
+def _replace_json(path, data):
+    """Atomically replace a JSON result after it has been serialized fully."""
+    result_path = Path(path)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            dir=result_path.parent,
+            prefix=f".{result_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary_file:
+            temporary_path = Path(temporary_file.name)
+            json.dump(data, temporary_file, ensure_ascii=False, indent=4)
+        os.replace(temporary_path, result_path)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+
 
 def run_compliance_checker(file_path, checkers, checker_options=None):
-    """Run Compliance Checker for one file."""
+    """Run Compliance Checker for one file, isolating checker-level failures."""
     checker_options = checker_options or {}
-    check_suite = CheckSuite(options=checker_options)
-    check_suite.load_all_available_checkers()
-    dataset = check_suite.load_dataset(file_path)
+    try:
+        check_suite = CheckSuite(options=checker_options)
+        _ensure_checkers_loaded(check_suite)
+    except Exception as error:
+        return {
+            checker: _failed_checker_result(error, "run_compliance_checker")
+            for checker in checkers
+        }
+
+    try:
+        dataset = check_suite.load_dataset(file_path)
+    except Exception as error:
+        return {
+            checker: _failed_checker_result(error, "load_dataset")
+            for checker in checkers
+        }
+
     time_checks_only = checker_options.get("cc6", {}).get(
         "time_checks_only", False
     ) or checker_options.get("mip", {}).get("time_checks_only", False)
@@ -36,51 +96,109 @@ def run_compliance_checker(file_path, checkers, checker_options=None):
         else None
     )
 
-    if include_checks:
-        results = {}
+    results = {}
+    close_error = None
+    try:
         for checker in checkers:
             checker_include = (
                 include_checks if checker.split(":", 1)[0] in {"cc6", "mip"} else None
             )
-            results.update(
-                check_suite.run_all(
+            try:
+                checker_results = check_suite.run_all(
                     dataset,
                     [checker],
                     include_checks=checker_include,
                     skip_checks=[],
                 )
-            )
-    else:
-        results = check_suite.run_all(
-            dataset, checkers, include_checks=None, skip_checks=[]
-        )
-    if hasattr(dataset, "close"):
-        dataset.close()
+                if checker not in checker_results:
+                    raise RuntimeError(
+                        f"Compliance Checker returned no result for '{checker}'."
+                    )
+                results[checker] = checker_results[checker]
+            except Exception as error:
+                results[checker] = _failed_checker_result(error, "run_checker")
+    finally:
+        if hasattr(dataset, "close"):
+            try:
+                dataset.close()
+            except Exception as error:
+                close_error = error
+
+    if close_error is not None:
+        for checker in checkers:
+            results.setdefault(
+                checker, _failed_checker_result(close_error, "close_dataset")
+            )[1]["close_dataset"] = (close_error, close_error.__traceback__)
     return results
+
+
+def _format_compliance_checker_runtime_error(check_method, error_details):
+    """Format checker errors without assuming a matching traceback function."""
+    try:
+        error, traceback_entry = error_details
+    except (TypeError, ValueError):
+        return f"Exception: {error_details}"
+
+    traceback_root = traceback_entry
+    try:
+        matching_entry = None
+        fallback_entry = None
+        current_entry = traceback_entry
+        while current_entry is not None:
+            fallback_entry = current_entry
+            if current_entry.tb_frame.f_code.co_name == check_method:
+                matching_entry = current_entry
+            current_entry = current_entry.tb_next
+        traceback_entry = matching_entry or fallback_entry
+        if traceback_entry is None:
+            return f"Exception: {error}"
+
+        message = (
+            f"Exception: {error} at "
+            f"{traceback_entry.tb_frame.f_code.co_filename}:"
+            f"{traceback_entry.tb_lineno} in function/method "
+            f"'{traceback_entry.tb_frame.f_code.co_name}'."
+        )
+        affected_variables = [
+            value
+            for name, value in traceback_entry.tb_frame.f_locals.items()
+            if "var" in name and isinstance(value, str)
+        ]
+        if affected_variables:
+            message += (
+                f" Potentially affected variables: {', '.join(affected_variables)}."
+            )
+        return message
+    finally:
+        if traceback_root is not None:
+            traceback.clear_frames(traceback_root)
+        if isinstance(error, BaseException):
+            error.__traceback__ = None
 
 
 def process_file(
     file_path,
     checkers,
     checker_options,
-    files_to_check_dict,
-    processed_files,
-    progress_file,
+    file_details,
+    was_processed,
 ):
     """Run or reuse file-level checks for one file."""
-    consistency_file = files_to_check_dict[file_path]["consistency_file"]
-    result_file = files_to_check_dict[file_path]["result_file"]
-    result = get_reusable_file_result(
-        file_path, checkers, files_to_check_dict, processed_files
-    )
+    consistency_file = file_details["consistency_file"]
+    result_file = file_details["result_file"]
+    result = get_reusable_file_result(checkers, file_details, was_processed)
     if result is not None:
         print(f"Read result from disk for '{file_path}'.")
         return file_path, result
-    if file_path in processed_files:
+    if was_processed:
         print(f"Rerunning incomplete or previously erroneous checks for '{file_path}'.")
     else:
         print(f"Running checks for '{file_path}'.")
 
+    # A rerun must not mistake output from an earlier attempt for freshly
+    # generated output when the checker fails before writing its new files.
+    _remove_stale_output(result_file)
+    _remove_stale_output(consistency_file)
     result = run_compliance_checker(file_path, checkers, checker_options)
     check_results = {}
     for checker_spec in checkers:
@@ -108,26 +226,9 @@ def process_file(
         # Error keys are checker method names, whereas normal result keys above
         # are the human-readable check names exposed by Compliance Checker.
         for check_method, error_details in result[checker_spec][1].items():
-            traceback_entry = error_details[1]
-            while traceback_entry.tb_frame.f_code.co_name != check_method:
-                traceback_entry = traceback_entry.tb_next
-            message = (
-                f"Exception: {error_details[0]} at "
-                f"{traceback_entry.tb_frame.f_code.co_filename}:"
-                f"{traceback_entry.tb_frame.f_lineno} in function/method "
-                f"'{traceback_entry.tb_frame.f_code.co_name}'."
+            checker_result["errors"][check_method] = (
+                _format_compliance_checker_runtime_error(check_method, error_details)
             )
-            affected_variables = [
-                value
-                for name, value in traceback_entry.tb_frame.f_locals.items()
-                if "var" in name and isinstance(value, str)
-            ]
-            if affected_variables:
-                message += (
-                    " Potentially affected variables: "
-                    f"{', '.join(affected_variables)}."
-                )
-            checker_result["errors"][check_method] = message
 
     if not os.path.isfile(consistency_file):
         for checker in (
@@ -135,15 +236,11 @@ def process_file(
             for checker in checkers
             if checker.split(":", 1)[0] in checker_supporting_consistency_checks
         ):
-            check_results[checker]["errors"]["consistency_output"] = (
-                "Expected consistency output file was not created: "
-                f"'{consistency_file}'."
-            )
+            check_results[checker]["errors"][
+                "consistency_output"
+            ] = f"Expected consistency output file was not created: '{consistency_file}'."
 
-    with open(result_file, "w") as file:
-        json.dump(check_results, file, ensure_ascii=False, indent=4)
-    with open(progress_file, "a") as file:
-        file.write(file_path + "\n")
+    _replace_json(result_file, check_results)
     return file_path, check_results
 
 
@@ -160,10 +257,7 @@ def _format_dataset_check_runtime_error(error):
     )
     if frame is None:
         return f"Exception: {error}"
-    return (
-        f"Exception: {error} at {frame.filename}:{frame.lineno} "
-        f"in function/method '{frame.name}'."
-    )
+    return f"Exception: {error} at {frame.filename}:{frame.lineno} in function/method '{frame.name}'."
 
 
 def _dataset_check_runtime_error(function_name, error, files):
@@ -204,31 +298,25 @@ def run_dataset_collection_check(
 
 def process_dataset(
     dataset_id,
-    dataset_files_map,
+    dataset_files,
     checkers,
     checker_options,
-    files_to_check_dict,
-    processed_datasets,
-    progress_file,
+    file_details,
+    was_processed,
 ):
     """Run or reuse dataset-level consistency checks."""
-    dataset_files = dataset_files_map[dataset_id]
-    result_file = files_to_check_dict[dataset_files[0]]["result_file_ds"]
-    if dataset_id in processed_datasets and os.path.isfile(result_file):
-        with open(result_file) as file:
-            print(f"Read result from disk for '{dataset_id}'.")
-            result = json.load(file)
-        if all(
-            result[checker.split(":", 1)[0]]["errors"] == {}
-            for checker in checkers
-            if checker.split(":", 1)[0] in result
-            and "errors" in result[checker.split(":", 1)[0]]
-        ):
-            return dataset_id, result
+    dataset_files_map = {dataset_id: dataset_files}
+    result_file = file_details[dataset_files[0]]["result_file_ds"]
+    result = get_reusable_dataset_result(checkers, result_file, was_processed)
+    if result is not None:
+        print(f"Read result from disk for '{dataset_id}'.")
+        return dataset_id, result
+    if was_processed:
         print(f"Rerunning previously erroneous checks for '{dataset_id}'.")
     else:
         print(f"Running checks for '{dataset_id}'.")
 
+    _remove_stale_output(result_file)
     result = {}
     for checker_spec in checkers:
         checker = checker_spec.split(":", 1)[0]
@@ -247,7 +335,7 @@ def process_dataset(
             result[checker] = checker_fct(
                 dataset_id,
                 dataset_files_map,
-                files_to_check_dict,
+                file_details,
                 checker_options[checker],
             )
         except Exception as error:
@@ -255,10 +343,7 @@ def process_dataset(
                 checker_fct.__name__, error, dataset_files
             )
 
-    with open(result_file, "w") as file:
-        json.dump(result, file, ensure_ascii=False, indent=4)
-    with open(progress_file, "a") as file:
-        file.write(dataset_id + "\n")
+    _replace_json(result_file, result)
     return dataset_id, result
 
 
