@@ -256,6 +256,16 @@ def reconcile_resume_inventory(inventory, config):
     return str(report_path)
 
 
+def _load_json_object(path):
+    """Return a JSON object from *path*, or ``None`` if it is unusable."""
+    try:
+        with open(path) as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def get_reusable_file_result(file_path, checkers, files_to_check_dict, processed_files):
     """Return a valid cached result, or ``None`` when the file must be checked."""
     result_file = files_to_check_dict[file_path]["result_file"]
@@ -270,10 +280,24 @@ def get_reusable_file_result(file_path, checkers, files_to_check_dict, processed
         or (consistency_output_required and not os.path.isfile(consistency_file))
     ):
         return None
-    try:
-        with open(result_file) as file:
-            result = json.load(file)
-    except (OSError, json.JSONDecodeError):
+    result = _load_json_object(result_file)
+    if result is None:
+        return None
+    if consistency_output_required and _load_json_object(consistency_file) is None:
+        return None
+    for checker in checkers:
+        checker_result = result.get(checker.split(":", 1)[0])
+        if not isinstance(checker_result, dict) or checker_result.get("errors") != {}:
+            return None
+    return result
+
+
+def get_reusable_dataset_result(dataset_id, checkers, result_file, processed_datasets):
+    """Return a complete, error-free cached dataset result when available."""
+    if dataset_id not in processed_datasets:
+        return None
+    result = _load_json_object(result_file)
+    if result is None:
         return None
     for checker in checkers:
         checker_result = result.get(checker.split(":", 1)[0])

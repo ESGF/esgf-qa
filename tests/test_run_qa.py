@@ -27,6 +27,7 @@ from esgf_qa.discovery import (
     write_excluded_files,
 )
 from esgf_qa.resume import (
+    get_reusable_file_result,
     invalidate_nonreusable_dataset_results,
     reconcile_resume_inventory,
     track_checked_datasets,
@@ -102,6 +103,45 @@ def test_new_file_invalidates_cached_dataset_result(tmp_path):
     )
 
     assert processed_datasets == set()
+
+
+@pytest.mark.parametrize("consistency_contents", ["not JSON", "[]"])
+def test_invalid_consistency_output_is_not_reused(tmp_path, consistency_contents):
+    source_file = str(tmp_path / "source.nc")
+    result_file = tmp_path / "result.json"
+    consistency_file = tmp_path / "consistency.json"
+    result_file.write_text(json.dumps({"cc6": {"errors": {}}}))
+    consistency_file.write_text(consistency_contents)
+    files_to_check_dict = {
+        source_file: {
+            "result_file": str(result_file),
+            "consistency_file": str(consistency_file),
+        }
+    }
+
+    result = get_reusable_file_result(
+        source_file, ["cc6"], files_to_check_dict, {source_file}
+    )
+
+    assert result is None
+
+
+def test_non_object_file_result_cache_is_not_reused(tmp_path):
+    source_file = str(tmp_path / "source.nc")
+    result_file = tmp_path / "result.json"
+    result_file.write_text("[]")
+    files_to_check_dict = {
+        source_file: {
+            "result_file": str(result_file),
+            "consistency_file": str(tmp_path / "unused-consistency.json"),
+        }
+    }
+
+    result = get_reusable_file_result(
+        source_file, ["cf"], files_to_check_dict, {source_file}
+    )
+
+    assert result is None
 
 
 def test_main_retains_info_when_resuming(monkeypatch, tmp_path):
@@ -184,6 +224,48 @@ def test_main_rejects_empty_input_before_writing_inventory(tmp_path):
 
     assert not (output_dir / "files_to_check.json").exists()
     assert not (output_dir / "excluded_files.json").exists()
+
+
+def test_main_rejects_file_as_input_directory(tmp_path):
+    input_file = tmp_path / "input.nc"
+    input_file.touch()
+
+    with pytest.raises(NotADirectoryError, match="is not a directory"):
+        run_qa.main(["-o", str(tmp_path / "output"), str(input_file)])
+
+
+@pytest.mark.parametrize("resume", [False, True])
+def test_discovery_aborts_on_incomplete_filesystem_scan(monkeypatch, tmp_path, resume):
+    """Unreadable directories must not look like files removed during resume."""
+    blocked_path = tmp_path / "input" / "blocked"
+
+    def incomplete_walk(path, onerror=None):
+        onerror(PermissionError(13, "Permission denied", str(blocked_path)))
+        return []
+
+    monkeypatch.setattr("esgf_qa.discovery.os.walk", incomplete_walk)
+    processed_files = {str(blocked_path / "old.nc")}
+    processed_datasets = {"dataset1"}
+    config = SimpleNamespace(
+        parent_dir=str(tmp_path / "input"),
+        result_dir=str(tmp_path / "output"),
+        whitelist=[],
+        blacklist=[],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=resume,
+        processed_files=processed_files,
+        processed_datasets=processed_datasets,
+    )
+
+    with pytest.raises(OSError, match="could not be scanned completely") as error:
+        discover_files(config)
+
+    assert str(blocked_path) in str(error.value)
+    assert ("Resume inventory state was not reconciled" in str(error.value)) is resume
+    assert processed_files == {str(blocked_path / "old.nc")}
+    assert processed_datasets == {"dataset1"}
 
 
 def test_empty_input_with_filters_writes_exclusion_report(tmp_path):

@@ -388,7 +388,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     units=data["time_info"]["units"],
                     calendar=data["time_info"]["calendar"],
                 )
-                if data["time_info"]["timen"]
+                if data["time_info"]["timen"] is not None
                 and data["time_info"]["units"]
                 and data["time_info"]["calendar"]
                 else None
@@ -399,7 +399,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     units=data["time_info"]["units"],
                     calendar=data["time_info"]["calendar"],
                 )
-                if data["time_info"]["boundn"]
+                if data["time_info"]["boundn"] is not None
                 and data["time_info"]["units"]
                 and data["time_info"]["calendar"]
                 else None
@@ -412,7 +412,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     units=data["time_info"]["units"],
                     calendar=data["time_info"]["calendar"],
                 )
-                if data["time_info"]["time0"]
+                if data["time_info"]["time0"] is not None
                 and data["time_info"]["units"]
                 and data["time_info"]["calendar"]
                 else None
@@ -423,7 +423,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                     units=data["time_info"]["units"],
                     calendar=data["time_info"]["calendar"],
                 )
-                if data["time_info"]["bound0"]
+                if data["time_info"]["bound0"] is not None
                 and data["time_info"]["units"]
                 and data["time_info"]["calendar"]
                 else None
@@ -435,6 +435,7 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
                 continue
             elif (time0 or timen or bound0 or boundn) and freq not in deltdic:
                 err_msg = f"Unsupported frequency '{freq}'"
+                results[test]["msgs"][err_msg].append(consistency_files[file])
                 continue
 
             if time0 and prev_timen:
@@ -547,14 +548,16 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
         tsn = None
         try:
             if files_to_check_dict[fl[0]]["ts"] != "":
-                ts0 = files_to_check_dict[fl[0]]["ts"].split("-")[0][0:4]
+                start_timestamp = files_to_check_dict[fl[0]]["ts"].split("-")[0]
+                ts0 = start_timestamp[0:4]
                 # If time interval of timestamp does not start in January, use following year
-                if len(files_to_check_dict[fl[-1]]["ts"].split("-")[0]) >= 6:
-                    if files_to_check_dict[fl[-1]]["ts"].split("-")[0][4:6] != "01":
+                if len(start_timestamp) >= 6:
+                    if start_timestamp[4:6] != "01":
                         coverage_start[ds] = int(ts0) + 1
                     else:
                         coverage_start[ds] = int(ts0)
-                coverage_start[ds] = int(ts0)
+                else:
+                    coverage_start[ds] = int(ts0)
             if files_to_check_dict[fl[-1]]["ts"] != "":
                 tsn = files_to_check_dict[fl[-1]]["ts"].split("-")[1][0:4]
                 # If time interval of timestamp ends in January, use previous year
@@ -579,7 +582,7 @@ def dataset_coverage_checks(ds_map, files_to_check_dict, checker_options):
                     "End of time coverage cannot be inferred."
                 ] = [fl[-1]]
                 continue
-        except IndexError or ValueError:
+        except (IndexError, ValueError):
             results[ds][test]["weight"] = 1
             if len(fl) > 1:
                 results[ds][test]["msgs"]["Time coverage cannot be inferred."] = [

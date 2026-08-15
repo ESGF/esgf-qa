@@ -311,6 +311,10 @@ def prepare_run(default_result_dir, argv=None):
         parser.error("Missing required argument <parent_dir>.")
     if not os.path.exists(parent_dir):
         raise Exception(f"The specified <parent_dir> '{parent_dir}' does not exist.")
+    if not os.path.isdir(parent_dir):
+        raise NotADirectoryError(
+            f"The specified <parent_dir> '{parent_dir}' is not a directory."
+        )
 
     write_resume_info(
         resume_info_file,

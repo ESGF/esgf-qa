@@ -81,6 +81,158 @@ class TestDummyQA:
         assert isinstance(results["cf:latest"], tuple)
         assert isinstance(results["cf:latest"][0], list)
 
+    def test_process_file_records_dataset_load_failure(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        """A file that Compliance Checker cannot open becomes a QA runtime error."""
+
+        class LoadFailureSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                raise RuntimeError("cannot open dataset")
+
+        monkeypatch.setattr(workers, "CheckSuite", LoadFailureSuite)
+        result_file = tmp_env["results"] / "load-failure.json"
+
+        _, result = process_file(
+            dummy_nc_file,
+            ["cf"],
+            {},
+            {
+                dummy_nc_file: {
+                    "result_file": str(result_file),
+                    "consistency_file": str(tmp_env["results"] / "cons.json"),
+                }
+            },
+            set(),
+            str(tmp_env["progress"]),
+        )
+
+        assert "cannot open dataset" in result["cf"]["errors"]["load_dataset"]
+        assert json.loads(result_file.read_text()) == result
+        assert dummy_nc_file in tmp_env["progress"].read_text().splitlines()
+
+    @pytest.mark.parametrize("failure_stage", ["initialization", "registration"])
+    def test_run_compliance_checker_records_suite_setup_failure(
+        self, monkeypatch, dummy_nc_file, failure_stage
+    ):
+        """Suite construction and plugin registration failures are checker errors."""
+
+        class SetupFailureSuite:
+            def __init__(self, options=None):
+                if failure_stage == "initialization":
+                    raise RuntimeError("suite initialization failed")
+
+            def load_all_available_checkers(self):
+                raise RuntimeError("checker registration failed")
+
+        monkeypatch.setattr(workers, "CheckSuite", SetupFailureSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf", "demo"])
+
+        expected_message = f"{'suite' if failure_stage == 'initialization' else 'checker'} {failure_stage} failed"
+        for checker in ["cf", "demo"]:
+            error, error_traceback = result[checker][1]["run_compliance_checker"]
+            assert str(error) == expected_message
+            assert error_traceback is not None
+
+    def test_run_compliance_checker_records_missing_checker_result(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """A suite response without the requested checker is an explicit error."""
+
+        class MissingResultSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {}
+
+        monkeypatch.setattr(workers, "CheckSuite", MissingResultSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        error = result["cf"][1]["run_checker"][0]
+        assert str(error) == "Compliance Checker returned no result for 'cf'."
+
+    def test_run_compliance_checker_records_dataset_close_failure(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """Failure to close an opened dataset is retained in the checker result."""
+
+        class DatasetWithBrokenClose:
+            def close(self):
+                raise RuntimeError("could not close dataset")
+
+        class CloseFailureSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return DatasetWithBrokenClose()
+
+            def run_all(self, dataset, checkers, **kwargs):
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", CloseFailureSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["cf"])
+
+        error, error_traceback = result["cf"][1]["close_dataset"]
+        assert str(error) == "could not close dataset"
+        assert error_traceback is not None
+
+    def test_checker_setup_failures_are_isolated_and_dataset_is_closed(
+        self, monkeypatch, dummy_nc_file
+    ):
+        """One broken checker does not suppress another and the dataset is closed."""
+        opened_dataset = SimpleNamespace(closed=False)
+        opened_dataset.close = lambda: setattr(opened_dataset, "closed", True)
+
+        class PartlyFailingSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return opened_dataset
+
+            def run_all(self, dataset, checkers, **kwargs):
+                checker = checkers[0]
+                if checker == "broken":
+                    raise RuntimeError("broken checker setup")
+                return {checker: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", PartlyFailingSuite)
+
+        result = run_compliance_checker(dummy_nc_file, ["broken", "cf"])
+
+        assert "run_checker" in result["broken"][1]
+        assert result["cf"] == ([], {})
+        assert opened_dataset.closed is True
+
+        message = workers._format_compliance_checker_runtime_error(
+            "run_checker", result["broken"][1]["run_checker"]
+        )
+        assert "broken checker setup" in message
+        assert "PartlyFailingSuite.run_all" not in message
+
     def test_process_file(self, fake_check_suite, tmp_env, dummy_nc_file):
         """When no previous results exist, should run checks and write output."""
         files_to_check_dict = {
@@ -543,3 +695,38 @@ class TestDummyQA:
 
         assert ds_id == ds
         assert result == {"cf": {"errors": {}}}
+
+    @pytest.mark.parametrize(
+        "cached_contents",
+        ["not JSON", "[]", "{}", json.dumps({"cons": {"errors": {}}})],
+    )
+    def test_process_dataset_reruns_incomplete_cache(
+        self, monkeypatch, tmp_env, dummy_nc_file, cached_contents
+    ):
+        """Malformed or incomplete dataset caches must never be treated as complete."""
+        result_file = tmp_env["results"] / "cached-dataset.json"
+        result_file.write_text(cached_contents)
+        calls = []
+
+        def checked_again(*args, **kwargs):
+            calls.append(True)
+            return {"replacement": {}}
+
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cons", checked_again)
+        monkeypatch.setitem(workers.DATASET_CHECKERS, "cont", checked_again)
+
+        _, result = process_dataset(
+            "dataset1",
+            {"dataset1": [dummy_nc_file]},
+            ["cons", "cont"],
+            {"cons": {}, "cont": {}},
+            {dummy_nc_file: {"result_file_ds": str(result_file)}},
+            {"dataset1"},
+            str(tmp_env["progress"]),
+        )
+
+        assert len(calls) == 2
+        assert result == {
+            "cons": {"replacement": {}},
+            "cont": {"replacement": {}},
+        }
