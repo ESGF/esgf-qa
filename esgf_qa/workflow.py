@@ -13,10 +13,10 @@ from esgf_qa._constants import checker_supporting_consistency_checks
 from esgf_qa.checker_registry import format_checker_version, get_checker_metadata
 from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
+from esgf_qa.resume import record_progress
 from esgf_qa.workers import (
     call_process_dataset,
     call_process_file,
-    process_file,
     run_dataset_collection_check,
 )
 
@@ -30,6 +30,12 @@ def _process_count(limit=0, consistency_checks=False):
     if limit > 0:
         count = min(count, limit)
     return count
+
+
+def _process_initial_file(args):
+    """Run the initial file in a disposable process before starting the main pool."""
+    with multiprocessing.Pool(processes=1, maxtasksperchild=1) as pool:
+        return pool.apply(call_process_file, (args,))
 
 
 def run_workflow(config, inventory):
@@ -47,17 +53,18 @@ def run_workflow(config, inventory):
     process_count = _process_count(config.parallel_processes)
     print(f"Using {process_count} parallel processes for cc checks.\n")
 
-    # Run the first file synchronously so checker setup and any initial table
-    # downloads complete before worker processes start using the same resources.
+    # Finish the first file in an isolated process so initial table downloads
+    # precede the main pool without retaining checker state in the parent.
     first_file = inventory.files[0]
-    processed_file, first_result = process_file(
+    first_args = (
         first_file,
         config.checkers,
         inventory.checker_options[first_file],
-        inventory.file_details,
-        config.processed_files,
-        config.progress_file,
+        inventory.file_details[first_file],
+        first_file in config.processed_files,
     )
+    processed_file, first_result = _process_initial_file(first_args)
+    record_progress(config.progress_file, processed_file, config.processed_files)
     summary.update(
         first_result,
         inventory.file_details[processed_file]["id"],
@@ -70,14 +77,16 @@ def run_workflow(config, inventory):
                 file_path,
                 config.checkers,
                 inventory.checker_options[file_path],
-                inventory.file_details,
-                config.processed_files,
-                config.progress_file,
+                inventory.file_details[file_path],
+                file_path in config.processed_files,
             )
             for file_path in inventory.files[1:]
         ]
         with multiprocessing.Pool(processes=process_count, maxtasksperchild=10) as pool:
             for processed_file, result in pool.imap_unordered(call_process_file, args):
+                record_progress(
+                    config.progress_file, processed_file, config.processed_files
+                )
                 summary.update(
                     result,
                     inventory.file_details[processed_file]["id"],
@@ -106,21 +115,29 @@ def run_workflow(config, inventory):
     dataset_args = [
         (
             dataset_id,
-            inventory.dataset_files,
+            inventory.dataset_files[dataset_id],
             ["cons", "cont", "comp"],
             {"cons": {}, "cont": {}, "comp": {}},
-            inventory.file_details,
-            config.processed_datasets,
-            config.dataset_file,
+            {
+                file_path: inventory.file_details[file_path]
+                for file_path in inventory.dataset_files[dataset_id]
+            },
+            dataset_id in config.processed_datasets,
         )
         for dataset_id in sorted(inventory.dataset_files)
         if len(inventory.dataset_files[dataset_id]) > 1
     ]
     if dataset_args:
-        with multiprocessing.Pool(processes=process_count, maxtasksperchild=10) as pool:
+        # Compatibility checks may open every file in a dataset simultaneously.
+        # Recycle after each dataset so xarray/netCDF/HDF5 resources retained by
+        # Python or native-library caches cannot accumulate between datasets.
+        with multiprocessing.Pool(processes=process_count, maxtasksperchild=1) as pool:
             for dataset_id, result in pool.imap_unordered(
                 call_process_dataset, dataset_args
             ):
+                record_progress(
+                    config.dataset_file, dataset_id, config.processed_datasets
+                )
                 summary.update_ds(result, dataset_id)
 
     print("\n# QA Part 2.2 - Continuity & Consistency across all datasets\n")

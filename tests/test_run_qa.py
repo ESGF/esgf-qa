@@ -48,18 +48,12 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
         cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
     )
 
-    def capture_process_file(
-        file_path,
-        checkers,
-        checker_options,
-        files_to_check_dict,
-        processed_files,
-        progress_file,
-    ):
+    def capture_initial_file(args):
+        _, _, checker_options, _, _ = args
         captured_options.update(checker_options)
-        return file_path, {"cf": {"errors": {}}}
+        return args[0], {"cf": {"errors": {}}}
 
-    monkeypatch.setattr(workflow, "process_file", capture_process_file)
+    monkeypatch.setattr(workflow, "_process_initial_file", capture_initial_file)
     monkeypatch.setattr(
         workflow,
         "get_checker_metadata",
@@ -75,6 +69,143 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
 
     assert captured_options["cf"]["enable_appendix_a_checks"] is True
     assert "cf:" not in captured_options
+
+
+def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_path):
+    """Pool tasks contain local data and only the parent records completions."""
+    files = [str(tmp_path / f"file-{index}.nc") for index in range(4)]
+    dataset_files = {
+        "dataset1": files[:2],
+        "dataset2": files[2:],
+    }
+    file_details = {
+        file_path: {
+            "id": dataset_id,
+            "result_file": str(tmp_path / f"result-{index}.json"),
+            "consistency_file": str(tmp_path / f"consistency-{index}.json"),
+            "result_file_ds": str(tmp_path / f"dataset-{dataset_id}.json"),
+        }
+        for dataset_id, dataset_paths in dataset_files.items()
+        for index, file_path in enumerate(dataset_paths)
+    }
+    inventory = SimpleNamespace(
+        files=files,
+        dataset_files=dataset_files,
+        file_details=file_details,
+        checker_options={file_path: {} for file_path in files},
+    )
+    progress_file = tmp_path / "progress.txt"
+    dataset_progress_file = tmp_path / "progress-datasets.txt"
+    progress_file.write_text(files[1] + "\n")
+    dataset_progress_file.write_text("dataset2\n")
+    config = SimpleNamespace(
+        checkers=["cc6"],
+        parallel_processes=2,
+        progress_file=progress_file,
+        dataset_file=dataset_progress_file,
+        processed_files={files[1]},
+        processed_datasets={"dataset2"},
+    )
+    file_tasks = []
+    dataset_tasks = []
+    pool_options = []
+
+    def fake_first_file(args):
+        file_path, _, _, details, was_processed = args
+        assert file_path == files[0]
+        assert details is file_details[file_path]
+        assert was_processed is False
+        return file_path, {"cc6": {"errors": {}}}
+
+    class SynchronousPool:
+        def __init__(self, **kwargs):
+            pool_options.append(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def imap_unordered(self, function, args):
+            if function is workflow.call_process_file:
+                file_tasks.extend(args)
+                return iter((task[0], {"cc6": {"errors": {}}}) for task in file_tasks)
+            dataset_tasks.extend(args)
+            return iter(
+                (
+                    task[0],
+                    {
+                        "cons": {"errors": {}},
+                        "cont": {"errors": {}},
+                        "comp": {"errors": {}},
+                    },
+                )
+                for task in dataset_tasks
+            )
+
+    monkeypatch.setattr(workflow, "_process_initial_file", fake_first_file)
+    monkeypatch.setattr(workflow.multiprocessing, "Pool", SynchronousPool)
+    monkeypatch.setattr(workflow, "run_dataset_collection_check", lambda *args: None)
+
+    workflow.run_workflow(config, inventory)
+
+    assert len(file_tasks) == 3
+    for task in file_tasks:
+        file_path, _, _, task_details, was_processed = task
+        assert task_details is file_details[file_path]
+        assert was_processed is (file_path == files[1])
+
+    assert len(dataset_tasks) == 2
+    for task in dataset_tasks:
+        dataset_id, task_files, _, _, task_details, was_processed = task
+        assert task_files is dataset_files[dataset_id]
+        assert set(task_details) == set(task_files)
+        assert was_processed is (dataset_id == "dataset2")
+
+    assert pool_options == [
+        {"processes": 2, "maxtasksperchild": 10},
+        {"processes": 2, "maxtasksperchild": 1},
+    ]
+
+    assert progress_file.read_text().splitlines().count(files[1]) == 1
+    assert set(progress_file.read_text().splitlines()) == set(files)
+    assert dataset_progress_file.read_text().splitlines().count("dataset2") == 1
+    assert set(dataset_progress_file.read_text().splitlines()) == set(dataset_files)
+    assert config.processed_files == set(files)
+    assert config.processed_datasets == set(dataset_files)
+
+
+def test_initial_file_runs_in_disposable_process(monkeypatch):
+    task = ("first.nc", ["cf"], {}, {"result_file": "result.json"}, False)
+    captured = {}
+
+    class DisposablePool:
+        def __init__(self, **kwargs):
+            captured["pool_options"] = kwargs
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            captured["closed"] = True
+
+        def apply(self, function, args):
+            captured["function"] = function
+            captured["args"] = args
+            return "first.nc", {"cf": {"errors": {}}}
+
+    monkeypatch.setattr(workflow.multiprocessing, "Pool", DisposablePool)
+
+    result = workflow._process_initial_file(task)
+
+    assert result == ("first.nc", {"cf": {"errors": {}}})
+    assert captured == {
+        "pool_options": {"processes": 1, "maxtasksperchild": 1},
+        "function": workflow.call_process_file,
+        "args": (task,),
+        "closed": True,
+    }
 
 
 def test_new_file_invalidates_cached_dataset_result(tmp_path):
@@ -119,9 +250,7 @@ def test_invalid_consistency_output_is_not_reused(tmp_path, consistency_contents
         }
     }
 
-    result = get_reusable_file_result(
-        source_file, ["cc6"], files_to_check_dict, {source_file}
-    )
+    result = get_reusable_file_result(["cc6"], files_to_check_dict[source_file], True)
 
     assert result is None
 
@@ -137,9 +266,7 @@ def test_non_object_file_result_cache_is_not_reused(tmp_path):
         }
     }
 
-    result = get_reusable_file_result(
-        source_file, ["cf"], files_to_check_dict, {source_file}
-    )
+    result = get_reusable_file_result(["cf"], files_to_check_dict[source_file], True)
 
     assert result is None
 
@@ -173,8 +300,8 @@ def test_main_retains_info_when_resuming(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(
         workflow,
-        "process_file",
-        lambda file_path, *args: (file_path, {"cf": {"errors": {}}}),
+        "_process_initial_file",
+        lambda args: (args[0], {"cf": {"errors": {}}}),
     )
     monkeypatch.setattr(sys, "argv", ["esgqa", "-r", "-o", str(output_dir)])
 
@@ -638,12 +765,13 @@ def test_main_configures_checker_consistency_output(
         lambda: {"mip": ["latest"], "wcrp_cmip6plus": ["1.0", "latest"]},
     )
 
-    def capture_process_file(file_path, checkers, checker_options, *args):
+    def capture_process_file(args):
+        file_path, checkers, checker_options, *_ = args
         captured["checkers"] = checkers
         captured["options"] = checker_options
         return file_path, {checker: {"errors": {}}}
 
-    monkeypatch.setattr(workflow, "process_file", capture_process_file)
+    monkeypatch.setattr(workflow, "_process_initial_file", capture_process_file)
     monkeypatch.setattr(
         workflow,
         "get_checker_metadata",

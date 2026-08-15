@@ -125,52 +125,58 @@ def _format_compliance_checker_runtime_error(check_method, error_details):
     except (TypeError, ValueError):
         return f"Exception: {error_details}"
 
-    matching_entry = None
-    fallback_entry = None
-    current_entry = traceback_entry
-    while current_entry is not None:
-        fallback_entry = current_entry
-        if current_entry.tb_frame.f_code.co_name == check_method:
-            matching_entry = current_entry
-        current_entry = current_entry.tb_next
-    traceback_entry = matching_entry or fallback_entry
-    if traceback_entry is None:
-        return f"Exception: {error}"
+    traceback_root = traceback_entry
+    try:
+        matching_entry = None
+        fallback_entry = None
+        current_entry = traceback_entry
+        while current_entry is not None:
+            fallback_entry = current_entry
+            if current_entry.tb_frame.f_code.co_name == check_method:
+                matching_entry = current_entry
+            current_entry = current_entry.tb_next
+        traceback_entry = matching_entry or fallback_entry
+        if traceback_entry is None:
+            return f"Exception: {error}"
 
-    message = (
-        f"Exception: {error} at "
-        f"{traceback_entry.tb_frame.f_code.co_filename}:"
-        f"{traceback_entry.tb_lineno} in function/method "
-        f"'{traceback_entry.tb_frame.f_code.co_name}'."
-    )
-    affected_variables = [
-        value
-        for name, value in traceback_entry.tb_frame.f_locals.items()
-        if "var" in name and isinstance(value, str)
-    ]
-    if affected_variables:
-        message += f" Potentially affected variables: {', '.join(affected_variables)}."
-    return message
+        message = (
+            f"Exception: {error} at "
+            f"{traceback_entry.tb_frame.f_code.co_filename}:"
+            f"{traceback_entry.tb_lineno} in function/method "
+            f"'{traceback_entry.tb_frame.f_code.co_name}'."
+        )
+        affected_variables = [
+            value
+            for name, value in traceback_entry.tb_frame.f_locals.items()
+            if "var" in name and isinstance(value, str)
+        ]
+        if affected_variables:
+            message += (
+                f" Potentially affected variables: {', '.join(affected_variables)}."
+            )
+        return message
+    finally:
+        if traceback_root is not None:
+            traceback.clear_frames(traceback_root)
+        if isinstance(error, BaseException):
+            error.__traceback__ = None
 
 
 def process_file(
     file_path,
     checkers,
     checker_options,
-    files_to_check_dict,
-    processed_files,
-    progress_file,
+    file_details,
+    was_processed,
 ):
     """Run or reuse file-level checks for one file."""
-    consistency_file = files_to_check_dict[file_path]["consistency_file"]
-    result_file = files_to_check_dict[file_path]["result_file"]
-    result = get_reusable_file_result(
-        file_path, checkers, files_to_check_dict, processed_files
-    )
+    consistency_file = file_details["consistency_file"]
+    result_file = file_details["result_file"]
+    result = get_reusable_file_result(checkers, file_details, was_processed)
     if result is not None:
         print(f"Read result from disk for '{file_path}'.")
         return file_path, result
-    if file_path in processed_files:
+    if was_processed:
         print(f"Rerunning incomplete or previously erroneous checks for '{file_path}'.")
     else:
         print(f"Running checks for '{file_path}'.")
@@ -221,8 +227,6 @@ def process_file(
             ] = f"Expected consistency output file was not created: '{consistency_file}'."
 
     _replace_json(result_file, check_results)
-    with open(progress_file, "a") as file:
-        file.write(file_path + "\n")
     return file_path, check_results
 
 
@@ -280,23 +284,20 @@ def run_dataset_collection_check(
 
 def process_dataset(
     dataset_id,
-    dataset_files_map,
+    dataset_files,
     checkers,
     checker_options,
-    files_to_check_dict,
-    processed_datasets,
-    progress_file,
+    file_details,
+    was_processed,
 ):
     """Run or reuse dataset-level consistency checks."""
-    dataset_files = dataset_files_map[dataset_id]
-    result_file = files_to_check_dict[dataset_files[0]]["result_file_ds"]
-    result = get_reusable_dataset_result(
-        dataset_id, checkers, result_file, processed_datasets
-    )
+    dataset_files_map = {dataset_id: dataset_files}
+    result_file = file_details[dataset_files[0]]["result_file_ds"]
+    result = get_reusable_dataset_result(checkers, result_file, was_processed)
     if result is not None:
         print(f"Read result from disk for '{dataset_id}'.")
         return dataset_id, result
-    if dataset_id in processed_datasets:
+    if was_processed:
         print(f"Rerunning previously erroneous checks for '{dataset_id}'.")
     else:
         print(f"Running checks for '{dataset_id}'.")
@@ -320,7 +321,7 @@ def process_dataset(
             result[checker] = checker_fct(
                 dataset_id,
                 dataset_files_map,
-                files_to_check_dict,
+                file_details,
                 checker_options[checker],
             )
         except Exception as error:
@@ -329,8 +330,6 @@ def process_dataset(
             )
 
     _replace_json(result_file, result)
-    with open(progress_file, "a") as file:
-        file.write(dataset_id + "\n")
     return dataset_id, result
 
 

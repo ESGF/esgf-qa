@@ -266,16 +266,16 @@ def _load_json_object(path):
     return data if isinstance(data, dict) else None
 
 
-def get_reusable_file_result(file_path, checkers, files_to_check_dict, processed_files):
+def get_reusable_file_result(checkers, file_details, was_processed):
     """Return a valid cached result, or ``None`` when the file must be checked."""
-    result_file = files_to_check_dict[file_path]["result_file"]
-    consistency_file = files_to_check_dict[file_path]["consistency_file"]
+    result_file = file_details["result_file"]
+    consistency_file = file_details["consistency_file"]
     consistency_output_required = any(
         checker.split(":", 1)[0] in checker_supporting_consistency_checks
         for checker in checkers
     )
     if (
-        file_path not in processed_files
+        not was_processed
         or not os.path.isfile(result_file)
         or (consistency_output_required and not os.path.isfile(consistency_file))
     ):
@@ -292,9 +292,9 @@ def get_reusable_file_result(file_path, checkers, files_to_check_dict, processed
     return result
 
 
-def get_reusable_dataset_result(dataset_id, checkers, result_file, processed_datasets):
+def get_reusable_dataset_result(checkers, result_file, was_processed):
     """Return a complete, error-free cached dataset result when available."""
-    if dataset_id not in processed_datasets:
+    if not was_processed:
         return None
     result = _load_json_object(result_file)
     if result is None:
@@ -317,12 +317,24 @@ def invalidate_nonreusable_dataset_results(
     for dataset_id, dataset_files in dataset_files_map.items():
         if any(
             get_reusable_file_result(
-                file_path, checkers, files_to_check_dict, processed_files
+                checkers,
+                files_to_check_dict[file_path],
+                file_path in processed_files,
             )
             is None
             for file_path in dataset_files
         ):
             processed_datasets.discard(dataset_id)
+
+
+def record_progress(path, identifier, processed_identifiers):
+    """Record a completed identifier once and update the parent-owned set."""
+    if identifier in processed_identifiers:
+        return False
+    with open(path, "a") as file:
+        file.write(identifier + "\n")
+    processed_identifiers.add(identifier)
+    return True
 
 
 def track_checked_datasets(checked_datasets_file, checked_datasets):

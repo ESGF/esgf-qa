@@ -104,18 +104,15 @@ class TestDummyQA:
             ["cf"],
             {},
             {
-                dummy_nc_file: {
-                    "result_file": str(result_file),
-                    "consistency_file": str(tmp_env["results"] / "cons.json"),
-                }
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "cons.json"),
             },
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         assert "cannot open dataset" in result["cf"]["errors"]["load_dataset"]
         assert json.loads(result_file.read_text()) == result
-        assert dummy_nc_file in tmp_env["progress"].read_text().splitlines()
+        assert tmp_env["progress"].read_text() == ""
 
     @pytest.mark.parametrize("failure_stage", ["initialization", "registration"])
     def test_run_compliance_checker_records_suite_setup_failure(
@@ -233,6 +230,30 @@ class TestDummyQA:
         assert "broken checker setup" in message
         assert "PartlyFailingSuite.run_all" not in message
 
+    def test_runtime_error_formatter_clears_traceback_frames(self):
+        """Formatted checker errors do not retain locals through tracebacks."""
+
+        def error_details():
+            variable_name = "tas"
+            assert variable_name
+            try:
+                raise RuntimeError("checker failed")
+            except RuntimeError as error:
+                return error, error.__traceback__
+
+        error, error_traceback = error_details()
+
+        message = workers._format_compliance_checker_runtime_error(
+            "error_details", (error, error_traceback)
+        )
+
+        assert "Potentially affected variables: tas" in message
+        assert error.__traceback__ is None
+        current_entry = error_traceback
+        while current_entry is not None:
+            assert "variable_name" not in current_entry.tb_frame.f_locals
+            current_entry = current_entry.tb_next
+
     def test_process_file(self, fake_check_suite, tmp_env, dummy_nc_file):
         """When no previous results exist, should run checks and write output."""
         files_to_check_dict = {
@@ -241,7 +262,6 @@ class TestDummyQA:
                 "consistency_file": str(tmp_env["results"] / "cons.json"),
             }
         }
-        processed_files = []
         checkers = ["cf:latest"]
         checker_options = {}
 
@@ -249,9 +269,8 @@ class TestDummyQA:
             dummy_nc_file,
             checkers,
             checker_options,
-            files_to_check_dict,
-            processed_files,
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         # should write JSON to disk
@@ -300,9 +319,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cf"],
             {},
-            files_to_check_dict,
-            [],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         saved_results = result["cf"]["shared_check"]
@@ -331,9 +349,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cc6"],
             {},
-            files_to_check_dict,
-            [],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            False,
         )
 
         error_msg = result["cc6"]["errors"]["consistency_output"]
@@ -362,7 +379,6 @@ class TestDummyQA:
                 "consistency_file": str(consistency_file),
             }
         }
-        processed_files = [dummy_nc_file]
         checkers = ["cf:latest"]
         checker_options = {}
 
@@ -370,9 +386,8 @@ class TestDummyQA:
             dummy_nc_file,
             checkers,
             checker_options,
-            files_to_check_dict,
-            processed_files,
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            True,
         )
 
         # Should reuse cached result, not rewrite
@@ -397,9 +412,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cf:latest"],
             {},
-            files_to_check_dict,
-            [dummy_nc_file],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            True,
         )
 
         assert result["cf"]["errors"] == {}
@@ -435,9 +449,8 @@ class TestDummyQA:
             dummy_nc_file,
             ["cc6"],
             {},
-            files_to_check_dict,
-            [dummy_nc_file],
-            str(tmp_env["progress"]),
+            files_to_check_dict[dummy_nc_file],
+            True,
         )
 
         assert not consistency_file.exists()
@@ -452,18 +465,16 @@ class TestDummyQA:
 
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file_ds)}}
 
-        processed_datasets = set()
         checkers = ["unknown_checker:latest"]
         checker_options = {}
 
         ds_id, result = process_dataset(
             ds,
-            ds_map,
+            ds_map[ds],
             checkers,
             checker_options,
             files_to_check_dict,
-            processed_datasets,
-            str(tmp_env["progress"]),
+            False,
         )
 
         # should write JSON file for dataset results
@@ -501,12 +512,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons"],
             {"cons": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         saved_results = result["cons"]["shared_consistency_check"]
@@ -532,12 +542,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons"],
             {"cons": {}},
             files_to_check_dict,
-            {"dataset1"},
-            str(tmp_env["progress"]),
+            True,
         )
 
         assert result == {"cons": {"replacement": {}}}
@@ -561,12 +570,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": dataset_files},
+            dataset_files,
             ["cons"],
             {"cons": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         error = result["cons"]["errors"]["consistency_checks"]
@@ -600,12 +608,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons", "cont"],
             {"cons": {}, "cont": {}},
             files_to_check_dict,
-            set(),
-            str(tmp_env["progress"]),
+            False,
         )
 
         assert "errors" in result["cons"]
@@ -679,18 +686,16 @@ class TestDummyQA:
         result_file_ds.write_text(json.dumps({"cf": {"errors": {}}}))
 
         files_to_check_dict = {dummy_nc_file: {"result_file_ds": str(result_file_ds)}}
-        processed_datasets = {ds}
         checkers = ["cf:latest"]
         checker_options = {}
 
         ds_id, result = process_dataset(
             ds,
-            ds_map,
+            ds_map[ds],
             checkers,
             checker_options,
             files_to_check_dict,
-            processed_datasets,
-            str(tmp_env["progress"]),
+            True,
         )
 
         assert ds_id == ds
@@ -717,12 +722,11 @@ class TestDummyQA:
 
         _, result = process_dataset(
             "dataset1",
-            {"dataset1": [dummy_nc_file]},
+            [dummy_nc_file],
             ["cons", "cont"],
             {"cons": {}, "cont": {}},
             {dummy_nc_file: {"result_file_ds": str(result_file)}},
-            {"dataset1"},
-            str(tmp_env["progress"]),
+            True,
         )
 
         assert len(calls) == 2
