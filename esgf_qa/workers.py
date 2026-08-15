@@ -7,11 +7,12 @@ import traceback
 from compliance_checker.runner import CheckSuite
 
 from esgf_qa._constants import checker_supporting_consistency_checks
-from esgf_qa.con_checks import compatibility_checks
-from esgf_qa.con_checks import consistency_checks
-from esgf_qa.con_checks import continuity_checks
+from esgf_qa.con_checks import (
+    compatibility_checks,
+    consistency_checks,
+    continuity_checks,
+)
 from esgf_qa.resume import get_reusable_file_result
-
 
 DATASET_CHECKERS = {
     "cons": consistency_checks,
@@ -39,9 +40,7 @@ def run_compliance_checker(file_path, checkers, checker_options=None):
         results = {}
         for checker in checkers:
             checker_include = (
-                include_checks
-                if checker.split(":", 1)[0] in {"cc6", "mip"}
-                else None
+                include_checks if checker.split(":", 1)[0] in {"cc6", "mip"} else None
             )
             results.update(
                 check_suite.run_all(

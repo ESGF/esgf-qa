@@ -12,8 +12,7 @@ from compliance_checker import __version__ as cc_version
 from esgf_qa._constants import checker_supporting_consistency_checks
 from esgf_qa.checker_registry import format_checker_version, get_checker_metadata
 from esgf_qa.cluster_results import QAResultAggregator
-from esgf_qa.con_checks import dataset_coverage_checks
-from esgf_qa.con_checks import inter_dataset_consistency_checks
+from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
 from esgf_qa.workers import (
     call_process_dataset,
     call_process_file,
@@ -77,12 +76,8 @@ def run_workflow(config, inventory):
             )
             for file_path in inventory.files[1:]
         ]
-        with multiprocessing.Pool(
-            processes=process_count, maxtasksperchild=10
-        ) as pool:
-            for processed_file, result in pool.imap_unordered(
-                call_process_file, args
-            ):
+        with multiprocessing.Pool(processes=process_count, maxtasksperchild=10) as pool:
+            for processed_file, result in pool.imap_unordered(call_process_file, args):
                 summary.update(
                     result,
                     inventory.file_details[processed_file]["id"],
@@ -106,9 +101,7 @@ def run_workflow(config, inventory):
     print("#" * 50 + "\n")
     print("# QA Part 2.1 - Continuity & Consistency within each dataset")
     print("#   (Reference is the first file of each dataset timeseries)\n")
-    process_count = _process_count(
-        config.parallel_processes, consistency_checks=True
-    )
+    process_count = _process_count(config.parallel_processes, consistency_checks=True)
     print(f"Using {process_count} parallel processes for dataset checks.\n")
     dataset_args = [
         (
@@ -124,9 +117,7 @@ def run_workflow(config, inventory):
         if len(inventory.dataset_files[dataset_id]) > 1
     ]
     if dataset_args:
-        with multiprocessing.Pool(
-            processes=process_count, maxtasksperchild=10
-        ) as pool:
+        with multiprocessing.Pool(processes=process_count, maxtasksperchild=10) as pool:
             for dataset_id, result in pool.imap_unordered(
                 call_process_dataset, dataset_args
             ):

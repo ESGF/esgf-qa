@@ -51,9 +51,7 @@ def get_checker_metadata(checkers, checker_options=None):
         checker_name = getattr(checker_obj, "_cc_spec", None) or getattr(
             checker_obj, "name", None
         )
-        checker_version = str(
-            getattr(checker_obj, "_cc_spec_version", "unknown")
-        )
+        checker_version = str(getattr(checker_obj, "_cc_spec_version", "unknown"))
         distribution = getattr(checker_entry_point, "dist", None)
         if checker_name and distribution is not None:
             checker_packages[(checker_name, checker_version)] = (
@@ -81,9 +79,7 @@ def get_checker_metadata(checkers, checker_options=None):
                 )
                 checker_obj = check_suite.checkers.get(resolved_key)
         checker_version = (
-            str(checker_obj._cc_spec_version)
-            if checker_obj is not None
-            else "unknown"
+            str(checker_obj._cc_spec_version) if checker_obj is not None else "unknown"
         )
         package = checker_packages.get((checker_name, checker_version))
         metadata[checker_name] = CheckerMetadata(
@@ -104,8 +100,7 @@ def format_checker_version(checker, metadata):
     ).strip()
     if checker_metadata.package_name is not None:
         checker_label += (
-            f" ({checker_metadata.package_name} "
-            f"{checker_metadata.package_version})"
+            f" ({checker_metadata.package_name} " f"{checker_metadata.package_version})"
         )
     return checker_label
 
