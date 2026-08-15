@@ -28,6 +28,7 @@ from esgf_qa.discovery import (
 )
 from esgf_qa.resume import (
     invalidate_nonreusable_dataset_results,
+    reconcile_resume_inventory,
     track_checked_datasets,
     verify_options_dict,
 )
@@ -304,6 +305,146 @@ def test_rerun_all_requires_resume(capsys, tmp_path):
         )
 
     assert "--rerun-all requires -r/--resume" in capsys.readouterr().err
+
+
+def test_resume_reports_inventory_changes_and_invalidates_missing_files(
+    capsys, tmp_path
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    progress_file = result_dir / "progress.txt"
+    dataset_file = result_dir / "progress_datasets.txt"
+    retained_file = str(tmp_path / "retained.nc")
+    missing_file = str(tmp_path / "missing.nc")
+    added_file = str(tmp_path / "added.nc")
+    (result_dir / "files_to_check.json").write_text(
+        json.dumps([retained_file, missing_file])
+    )
+    (result_dir / "files_to_check_dict.json").write_text(
+        json.dumps(
+            {
+                retained_file: {"id": "retained-dataset"},
+                missing_file: {"id": "affected-dataset"},
+            }
+        )
+    )
+    processed_files = {retained_file, missing_file}
+    processed_datasets = {"retained-dataset", "affected-dataset"}
+    progress_file.write_text("\n".join(sorted(processed_files)) + "\n")
+    dataset_file.write_text("\n".join(sorted(processed_datasets)) + "\n")
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files=processed_files,
+        processed_datasets=processed_datasets,
+        progress_file=progress_file,
+        dataset_file=dataset_file,
+    )
+    inventory = SimpleNamespace(files=[retained_file, added_file])
+
+    report_path = reconcile_resume_inventory(inventory, config)
+
+    report = json.loads((result_dir / "resume_inventory_changes.json").read_text())
+    assert report_path == str(result_dir / "resume_inventory_changes.json")
+    assert report == {
+        "summary": {
+            "previous_selected": 2,
+            "current_selected": 2,
+            "added": 1,
+            "no_longer_found": 1,
+        },
+        "added": [added_file],
+        "no_longer_found": [missing_file],
+    }
+    assert config.processed_files == {retained_file}
+    assert config.processed_datasets == {"retained-dataset"}
+    assert progress_file.read_text() == retained_file + "\n"
+    assert dataset_file.read_text() == "retained-dataset\n"
+    output = capsys.readouterr().out
+    assert "1 new file will be checked" in output
+    assert "1 previously selected file is no longer found" in output
+
+
+@pytest.mark.parametrize(
+    "inventory_content, warning_match",
+    [
+        (None, "could not be read"),
+        ("not valid JSON", "could not be read"),
+        (json.dumps({"not": "a list"}), "is not a list of file paths"),
+        (json.dumps(["valid.nc", 4]), "is not a list of file paths"),
+    ],
+    ids=["missing", "invalid-json", "not-a-list", "non-string-path"],
+)
+def test_resume_inventory_warns_when_previous_inventory_is_unavailable(
+    tmp_path, inventory_content, warning_match
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    if inventory_content is not None:
+        (result_dir / "files_to_check.json").write_text(inventory_content)
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files={"previous.nc"},
+        processed_datasets={"dataset1"},
+    )
+
+    with pytest.warns(UserWarning, match=warning_match):
+        report_path = reconcile_resume_inventory(SimpleNamespace(files=[]), config)
+
+    assert report_path is None
+    assert config.processed_files == {"previous.nc"}
+    assert config.processed_datasets == {"dataset1"}
+    assert not (result_dir / "resume_inventory_changes.json").exists()
+
+
+@pytest.mark.parametrize(
+    "details_content",
+    [
+        "not valid JSON",
+        json.dumps({"MISSING_FILE": {}}),
+        json.dumps({"MISSING_FILE": {"id": 4}}),
+        json.dumps(["not", "a", "dictionary"]),
+    ],
+    ids=["invalid-json", "missing-dataset-id", "invalid-dataset-id", "not-a-dict"],
+)
+def test_resume_inventory_without_previous_dataset_mapping_invalidates_all_datasets(
+    tmp_path, details_content
+):
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    missing_file = str(tmp_path / "missing.nc")
+    progress_file = result_dir / "progress.txt"
+    dataset_file = result_dir / "progress_datasets.txt"
+    (result_dir / "files_to_check.json").write_text(json.dumps([missing_file]))
+    (result_dir / "files_to_check_dict.json").write_text(
+        details_content.replace("MISSING_FILE", missing_file)
+    )
+    progress_file.write_text(missing_file + "\n")
+    dataset_file.write_text("dataset1\ndataset2\n")
+    config = SimpleNamespace(
+        resume=True,
+        result_dir=str(result_dir),
+        processed_files={missing_file},
+        processed_datasets={"dataset1", "dataset2"},
+        progress_file=progress_file,
+        dataset_file=dataset_file,
+    )
+
+    with pytest.warns(UserWarning, match="invalidating all dataset results"):
+        reconcile_resume_inventory(SimpleNamespace(files=[]), config)
+
+    assert config.processed_files == set()
+    assert config.processed_datasets == set()
+    assert progress_file.read_text() == ""
+    assert dataset_file.read_text() == ""
+
+
+def test_new_run_does_not_write_resume_inventory_report(tmp_path):
+    config = SimpleNamespace(resume=False, result_dir=str(tmp_path))
+
+    assert reconcile_resume_inventory(SimpleNamespace(files=[]), config) is None
+    assert not (tmp_path / "resume_inventory_changes.json").exists()
 
 
 @pytest.mark.parametrize("filter_option", ["-w", "-b"])

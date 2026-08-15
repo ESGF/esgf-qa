@@ -3,6 +3,7 @@
 import csv
 import json
 import os
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -159,6 +160,100 @@ def read_progress(path):
     """Read newline-delimited progress identifiers."""
     with open(path) as file:
         return {line.strip() for line in file}
+
+
+def write_progress(path, identifiers):
+    """Replace a progress file with sorted unique identifiers."""
+    with open(path, "w") as file:
+        for identifier in sorted(identifiers):
+            file.write(identifier + "\n")
+
+
+def reconcile_resume_inventory(inventory, config):
+    """Report resume inventory changes and invalidate results for missing files."""
+    if not config.resume:
+        return None
+
+    previous_inventory_path = Path(config.result_dir, "files_to_check.json")
+    previous_details_path = Path(config.result_dir, "files_to_check_dict.json")
+    report_path = Path(config.result_dir, "resume_inventory_changes.json")
+    try:
+        with open(previous_inventory_path) as file:
+            previous_files = json.load(file)
+    except (OSError, json.JSONDecodeError) as error:
+        warnings.warn(
+            "Could not compare the resumed file inventory because "
+            f"'{previous_inventory_path}' could not be read: {error}"
+        )
+        return None
+    if not isinstance(previous_files, list) or not all(
+        isinstance(file_path, str) for file_path in previous_files
+    ):
+        warnings.warn(
+            "Could not compare the resumed file inventory because "
+            f"'{previous_inventory_path}' is not a list of file paths."
+        )
+        return None
+
+    previous_file_set = set(previous_files)
+    current_file_set = set(inventory.files)
+    added_files = sorted(current_file_set - previous_file_set)
+    missing_files = sorted(previous_file_set - current_file_set)
+    affected_datasets = set()
+    if missing_files:
+        try:
+            with open(previous_details_path) as file:
+                previous_details = json.load(file)
+            if not isinstance(previous_details, dict):
+                raise TypeError("expected a dictionary")
+            for file_path in missing_files:
+                details = previous_details.get(file_path)
+                if not isinstance(details, dict) or not isinstance(
+                    details.get("id"), str
+                ):
+                    raise TypeError(f"missing dataset identifier for '{file_path}'")
+                affected_datasets.add(details["id"])
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
+            # Without the previous file-to-dataset mapping, no dataset result can
+            # safely be assumed independent of the files that disappeared.
+            affected_datasets = set(config.processed_datasets)
+            warnings.warn(
+                "Could not determine which cached dataset results contain files "
+                f"that are no longer found; invalidating all dataset results: {error}"
+            )
+
+        config.processed_files.difference_update(missing_files)
+        config.processed_datasets.difference_update(affected_datasets)
+        write_progress(config.progress_file, config.processed_files)
+        write_progress(config.dataset_file, config.processed_datasets)
+
+    report = {
+        "summary": {
+            "previous_selected": len(previous_file_set),
+            "current_selected": len(current_file_set),
+            "added": len(added_files),
+            "no_longer_found": len(missing_files),
+        },
+        "added": added_files,
+        "no_longer_found": missing_files,
+    }
+    with open(report_path, "w") as file:
+        json.dump(report, file, indent=4)
+
+    if added_files or missing_files:
+        print("Resume inventory changed:")
+        if added_files:
+            label = "file" if len(added_files) == 1 else "files"
+            print(f" - {len(added_files)} new {label} will be checked.")
+        if missing_files:
+            label = "file is" if len(missing_files) == 1 else "files are"
+            print(
+                f" - {len(missing_files)} previously selected {label} no longer found."
+            )
+    else:
+        print("Resume inventory is unchanged.")
+    print(f"Resume inventory comparison was saved to '{report_path}'.")
+    return str(report_path)
 
 
 def get_reusable_file_result(file_path, checkers, files_to_check_dict, processed_files):

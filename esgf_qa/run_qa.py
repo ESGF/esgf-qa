@@ -25,6 +25,7 @@ from esgf_qa.resume import (
     _get_reusable_file_result,
     _invalidate_nonreusable_dataset_results,
     _verify_options_dict,
+    reconcile_resume_inventory,
     track_checked_datasets,
 )
 from esgf_qa.workers import (
@@ -60,6 +61,7 @@ def main(argv=None):
     config = prepare_run(get_default_result_dir(), argv)
     inventory = discover_files(config)
     excluded_report = write_excluded_files(inventory, config)
+    reconcile_resume_inventory(inventory, config)
     if not inventory.files:
         if inventory.discovered_file_count == 0:
             raise FileNotFoundError(
@@ -107,6 +109,7 @@ __all__ = [
     "parse_options",
     "process_dataset",
     "process_file",
+    "reconcile_resume_inventory",
     "run_compliance_checker",
     "run_dataset_collection_check",
     "track_checked_datasets",

@@ -142,6 +142,11 @@ configuration regardless of previously successful results:
 $ esgqa -o QA_results/IAEVALL02_2025-10-20 -r --rerun-all
 ```
 
+On resume, newly selected files and previously selected files that are no longer
+found are reported in the terminal and in `resume_inventory_changes.json`.
+Results for affected datasets are rerun, and a missing file is checked again if
+it later reappears.
+
 For a custom MIP with defined CMOR tables (`"mip"` is not a placeholder but an actual basic checker of the `cc_plugin_cc6`):
 
 ```shell
