@@ -221,6 +221,8 @@ def write_results(
     prefix = f"qa_result_{info_slug + '_' if info_slug else ''}"
     filename = f"{prefix}{timestamp_filename}_{file_id}.json"
     with open(os.path.join(config.result_dir, filename), "w") as file:
+        # Preserve the aggregator's domain-specific order, particularly
+        # descending severity, instead of sorting every JSON key alphabetically.
         json.dump(
             full_summary,
             file,
@@ -235,6 +237,7 @@ def write_results(
     clustered_summary["info"] = summary_info
     filename = f"{prefix}{timestamp_filename}_{file_id}.cluster.json"
     with open(os.path.join(config.result_dir, filename), "w") as file:
+        # Keep the same intentional ordering in the clustered report.
         json.dump(
             clustered_summary,
             file,

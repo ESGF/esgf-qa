@@ -148,6 +148,55 @@ def test_sort_orders_failures_by_weight(aggregator):
     assert weights == sorted(weights, reverse=True)
 
 
+def test_sort_orders_every_nested_result_level():
+    """Aggregation arrival order must not affect the normalized full summary."""
+    fail_entries = [
+        (1, "[CF] check_z", "message z", "dataset-z", "z.nc"),
+        (3, "[CF] check_z", "message z", "dataset-z", "z.nc"),
+        (3, "[CF] check_z", "message z", "dataset-z", "a.nc"),
+        (3, "[CF] check_z", "message z", "dataset-a", "c.nc"),
+        (3, "[CF] check_z", "message a", "dataset-c", "d.nc"),
+        (3, "[CF] check_a", "message c", "dataset-d", "e.nc"),
+    ]
+    error_entries = [
+        ("[CF] error_z", "error z", "dataset-z", "z.nc"),
+        ("[CF] error_z", "error z", "dataset-z", "a.nc"),
+        ("[CF] error_z", "error z", "dataset-a", "c.nc"),
+        ("[CF] error_z", "error a", "dataset-c", "d.nc"),
+        ("[CF] error_a", "error c", "dataset-d", "e.nc"),
+    ]
+
+    def aggregate(failures, errors):
+        result = QAResultAggregator()
+        for weight, test_id, message, dataset_id, filename in failures:
+            result.summary["fail"][weight][test_id][message][dataset_id].append(
+                filename
+            )
+        for test_id, message, dataset_id, filename in errors:
+            result.summary["error"][test_id][message][dataset_id].append(filename)
+        result.sort()
+        return result.summary
+
+    forward = aggregate(fail_entries, error_entries)
+    reverse = aggregate(reversed(fail_entries), reversed(error_entries))
+
+    assert forward == reverse
+    assert list(forward["fail"]) == [3, 1]
+    assert list(forward["fail"][3]) == ["[CF] check_a", "[CF] check_z"]
+    assert list(forward["fail"][3]["[CF] check_z"]) == [
+        "message a",
+        "message z",
+    ]
+    message_results = forward["fail"][3]["[CF] check_z"]["message z"]
+    assert list(message_results) == ["dataset-a", "dataset-z"]
+    assert message_results["dataset-z"] == ["a.nc", "z.nc"]
+    assert list(forward["error"]) == ["[CF] error_a", "[CF] error_z"]
+    assert list(forward["error"]["[CF] error_z"]) == ["error a", "error z"]
+    error_results = forward["error"]["[CF] error_z"]["error z"]
+    assert list(error_results) == ["dataset-a", "dataset-z"]
+    assert error_results["dataset-z"] == ["a.nc", "z.nc"]
+
+
 def test_cluster_messages_basic():
     """Cluster messages with small differences using threshold."""
     messages = [
@@ -214,3 +263,53 @@ def test_cluster_summary_produces_clustered_summary(aggregator):
     # at least one generalized message with "Missing attr"
     found_msg_keys = list(clustered[3]["[CF] check_attrs"].keys())
     assert any("Missing attr" in k for k in found_msg_keys)
+
+
+def test_cluster_summary_is_independent_of_aggregation_order():
+    """Clustering must have stable groups, ordering, and example files."""
+    fail_entries = [
+        (3, "[CF] check", "Missing value for var2", "dataset-z", "b.nc"),
+        (3, "[CF] check", "Missing value for var1", "dataset-z", "a.nc"),
+        (3, "[CF] check", "Missing value for var2", "dataset-a", "d.nc"),
+        (3, "[CF] check", "Missing value for var1", "dataset-a", "c.nc"),
+        (3, "[CF] check", "Zulu unrelated failure", "dataset-z", "z.nc"),
+        (1, "[CF] other", "Suggested failure", "dataset-z", "s.nc"),
+    ]
+    error_entries = [
+        ("[CF] error", "Could not read var2", "dataset-z", "b.nc"),
+        ("[CF] error", "Could not read var1", "dataset-z", "a.nc"),
+    ]
+
+    def cluster(failures, errors):
+        result = QAResultAggregator()
+        for weight, test_id, message, dataset_id, filename in failures:
+            result.summary["fail"][weight][test_id][message][dataset_id].append(
+                filename
+            )
+        for test_id, message, dataset_id, filename in errors:
+            result.summary["error"][test_id][message][dataset_id].append(filename)
+        # Deliberately do not call sort(): cluster_summary() must normalize its
+        # own order rather than depend on its caller having done so.
+        result.cluster_summary(threshold=0.8)
+        return result.clustered_summary
+
+    forward = cluster(fail_entries, error_entries)
+    reverse = cluster(reversed(fail_entries), reversed(error_entries))
+
+    assert forward == reverse
+    assert list(forward["fail"]) == [3, 1]
+    clustered_messages = forward["fail"][3]["[CF] check"]
+    assert list(clustered_messages) == sorted(clustered_messages)
+    missing_value_result = next(
+        datasets
+        for message, datasets in clustered_messages.items()
+        if message.startswith("Missing value for ")
+    )
+    assert list(missing_value_result) == [
+        "dataset-a (2 files affected)",
+        "dataset-z (2 files affected)",
+    ]
+    assert missing_value_result["dataset-a (2 files affected)"] == ["e.g. 'c.nc'"]
+    assert missing_value_result["dataset-z (2 files affected)"] == ["e.g. 'a.nc'"]
+    error_result = next(iter(forward["error"]["[CF] error"].values()))
+    assert error_result["dataset-z (2 files affected)"] == ["e.g. 'a.nc'"]
