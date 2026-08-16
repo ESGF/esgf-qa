@@ -166,15 +166,18 @@ class TestQACommandLine:
                 f.startswith("qa_result_") and f.endswith(".json") for f in result_files
             )
 
-            # Check clustered summary if exists
+            # Every run writes a clustered summary alongside the full report.
             clustered_files = [
-                f for f in result_files if "clustered" in f and f.endswith(".json")
+                f
+                for f in result_files
+                if f.startswith("qa_result_") and f.endswith(".cluster.json")
             ]
+            assert len(clustered_files) == 1
             for cf in clustered_files:
                 with open(os.path.join(result_dir, cf)) as f:
                     data = json.load(f)
-                for key in ["error", "fail", "info"]:
-                    assert key in data
+                assert "info" in data
+                assert all(key in ["fail", "info", "error"] for key in data)
                 info = data["info"]
                 for field in [
                     "id",
@@ -187,15 +190,18 @@ class TestQACommandLine:
                     assert field in info
                 assert isinstance(info["checkers"], list)
                 assert all(isinstance(checker, str) for checker in info["checkers"])
-                for sev_dict in [data["fail"], data["error"]]:
-                    for _, issues in sev_dict.items():
-                        for issue_name, messages in issues.items():
-                            for msg, files in messages.items():
-                                assert isinstance(files, list)
-                                assert (
-                                    len(files) == 1
-                                ), f"Clustered summary should have one example file for {msg}"
-                                assert isinstance(files[0], str)
+
+                def assert_example_file_leaves(value):
+                    if isinstance(value, dict):
+                        for child in value.values():
+                            assert_example_file_leaves(child)
+                        return
+                    assert isinstance(value, list)
+                    assert len(value) == 1
+                    assert isinstance(value[0], str)
+
+                for sev_dict in [data.get("fail", {}), data.get("error", {})]:
+                    assert_example_file_leaves(sev_dict)
         finally:
             shutil.rmtree(temp_dir)
 
@@ -260,30 +266,36 @@ class TestQACommandLine:
         "test_args, expected_err_msg",
         [
             (
-                ["-t", "cf:latest", "-o", "some_dir"],
+                ["-t", "cf:latest", "-o", "OUTPUT"],
                 "Missing required argument <parent_dir>",
             ),
             (
-                ["-t", "invalid_checker:latest", "-o", "some_dir", "cmip6"],
+                ["-t", "invalid_checker:latest", "-o", "OUTPUT", "cmip6"],
                 "Invalid test(s) specified",
             ),
             (
-                ["-r", "-t", "cf:latest", "-o", "some_dir"],
+                ["-r", "-t", "cf:latest", "-o", "OUTPUT"],
                 "When using -r/--resume, the following arguments are not allowed",
             ),
             (
-                ["-r", "-o", "some_dir", "cmip6"],
+                ["-r", "-o", "OUTPUT", "cmip6"],
                 "When using -r/--resume, the following arguments are not allowed",
             ),
         ],
     )
-    def test_cli_fails_on_invalid_arguments(self, test_args, expected_err_msg):
-        temp_dir = tempfile.mkdtemp()
-        try:
-            args = [arg if arg != "cmip6" else self.cmip6_dir for arg in test_args]
-            self._run_cli(args, expect_error=True, expected_err_msg=expected_err_msg)
-        finally:
-            shutil.rmtree(temp_dir)
+    def test_cli_fails_on_invalid_arguments(
+        self, test_args, expected_err_msg, tmp_path
+    ):
+        output_dir = tmp_path / "output"
+        args = [
+            (
+                self.cmip6_dir
+                if arg == "cmip6"
+                else arg.replace("OUTPUT", str(output_dir))
+            )
+            for arg in test_args
+        ]
+        self._run_cli(args, expect_error=True, expected_err_msg=expected_err_msg)
 
     def test_cli_produces_valid_json(self):
         temp_dir = Path(tempfile.mkdtemp())

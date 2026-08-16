@@ -59,15 +59,15 @@ def parse_options(opts):
     """Parse ``checker:option[:value]`` CLI options into a nested mapping."""
     options_dict = defaultdict(dict)
     for option in opts:
-        try:
-            checker_type, checker_option, *checker_value = option.split(":", 2)
-            checker_value = checker_value[0] if checker_value else True
-        except ValueError as error:
+        parts = option.split(":", 2)
+        if len(parts) < 2 or not parts[0] or not parts[1]:
             raise ValueError(
                 f"Could not split option '{option}', seems illegally formatted. "
                 "The required format is '<checker>:<option_name>[:<option_value>]', "
                 "for example 'mip:tables:/path/to/Tables'."
-            ) from error
+            )
+        checker_type, checker_option, *checker_value = parts
+        checker_value = checker_value[0] if checker_value else True
         options_dict[checker_type][checker_option] = checker_value
     return options_dict
 

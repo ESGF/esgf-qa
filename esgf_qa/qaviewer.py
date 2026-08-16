@@ -295,7 +295,10 @@ def main():
     )
     args = parser.parse_args()
 
-    data = load_json(args.qc_result)
+    try:
+        data = load_json(args.qc_result)
+    except (OSError, json.JSONDecodeError) as error:
+        parser.error(f"Could not load QC result '{args.qc_result}': {error}")
     transformed = transform_keys(data)
 
     app = QCViewer(transformed)

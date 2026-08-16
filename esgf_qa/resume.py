@@ -41,6 +41,11 @@ class ResumeInfo:
 
     @classmethod
     def from_dict(cls, data, result_dir):
+        if not isinstance(data, dict):
+            raise Exception(
+                f"Invalid .resume_info file in '{result_dir}'. Its top level must "
+                "be a JSON object."
+            )
         required_keys = {"parent_dir", "info", "tests"}
         if not required_keys.issubset(data):
             raise Exception(
