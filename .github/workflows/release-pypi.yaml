@@ -5,9 +5,7 @@ on:
       - published
   push:
     tags:
-      - 'v*'
-    branches:
-      - release
+      - '[0-9]*'
   workflow_dispatch:
 
 jobs:
@@ -72,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
 
     environment:
-      name: pypi
+      name: testpypi
       url: https://test.pypi.org/p/esgf-qa
     permissions:
       id-token: write

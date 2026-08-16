@@ -1,3 +1,55 @@
+0.6.0 (2026-08-16)
+------------------
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+* The ``info.checkers`` field in result JSON is now a list of readable checker descriptions instead of one comma-separated string. Each description also identifies the Python distribution that supplied the checker and its installed version.
+* ``display_qc_results.html`` and its fonts are now packaged under ``esgf_qa/resources`` instead of the repository root. Installed applications should locate the viewer with ``importlib.resources`` as described in the README.
+* No other intentional breaking changes.
+
+New Features
+^^^^^^^^^^^^
+
+* Added repeatable path filters:
+
+  * ``-w/--whitelist PATH_FRAGMENT`` selects files whose complete path, including the filename, contains at least one supplied literal fragment.
+  * ``-b/--blacklist PATH_FRAGMENT`` excludes files whose complete path contains a supplied literal fragment and takes precedence over the whitelist.
+  * Filter settings are retained on resume and ``excluded_files.json`` records the selected filters, counts, excluded paths, and blacklist matches.
+
+* Added ``--rerun-all`` for use with ``--resume``. It repeats every file- and dataset-level check with the stored configuration, regardless of previously successful results. Outputs from an earlier attempt are removed immediately before each rerun and completed JSON files are replaced atomically, preventing stale results from being reused after a failed rerun.
+* Resume now compares the previous and current selected-file inventories. New and no-longer-found files are reported in the terminal and in ``resume_inventory_changes.json`` - affected dataset-level results are invalidated automatically.
+* Added ``wcrp_cmip6plus`` as a supported checker with automatic consistency-output configuration and consistency/continuity checks.
+* Added an ``F2`` toggle to ``esgqaviewer`` for switching between TUI mouse controls and terminal text selection. The viewer now displays guidance for left-click, right-click, text selection, and terminal-specific copy commands.
+* Result provenance now records the installed distribution and version that provides each checker.
+
+Bug Fixes
+^^^^^^^^^
+
+* When one checker function reports the same named check at multiple severity levels, its result is stored as a list of result records instead of silently retaining only one record. Consumers of unclustered result JSON must therefore accept either one result object or a list of result objects for a check.
+* Fixed the Compliance Checker options mapping, which incorrectly used ``cf:`` instead of ``cf``. This caused CF options, including the enabled Appendix A checks, to be ignored.
+* Checker selection is validated more strictly. Explicitly selecting ``mip`` now always requires ``-O mip:tables:/path/to/Tables`` and ``mip`` cannot be combined with its ``eerie`` alias. Malformed ``-O`` values with a missing checker or option name are rejected with explanatory errors.
+* Preserved every severity returned by one Compliance Checker plugin function instead of overwriting results that share the same check name. The same correction applies to consistency-check aggregation.
+* Missing expected consistency-output files are now recorded as QA runtime errors. Dataset-level consistency checks skip unavailable outputs, select an available replacement reference file where possible, and report only such reference-file substitutions.
+* Exceptions raised by dataset- and collection-level consistency checks are captured in the QA report instead of terminating the complete run. Reports include the failing function, source location, affected datasets, and files.
+* Compliance Checker initialization, plugin discovery, dataset loading, individual checker execution, missing checker results, and dataset-closing failures are isolated and recorded as runtime errors. One failing checker no longer prevents other selected checkers from running, and opened datasets are closed even after failures.
+* Resume restores the original ``info`` value when none is supplied and validates the correct ``checker_options`` field. Cached file, consistency-output, and dataset JSON is now reused only when it is readable, structurally complete, contains every selected checker, and has no runtime errors.
+* Adding a file, removing a file, or encountering an incomplete/error-producing file result now invalidates dependent dataset-level results. A reappearing file is checked again.
+* Fixed time-continuity handling for valid zero-valued coordinates, reporting of unsupported frequencies, inverted decade/century tolerances, non-January coverage calculations, and malformed filename timestamps.
+* Incomplete filesystem traversal is now reported as a scan error and cannot be mistaken for files disappearing during resume reconciliation.
+* Result ordering, clustering input, dataset/file ordering, and clustered example-file selection are deterministic across differing worker-completion and hash iteration orders.
+* ``esgqaviewer`` now reports unreadable or invalid JSON input as a clear command-line error and renders list values without numeric indices for scalar entries.
+
+Other Improvements
+^^^^^^^^^^^^^^^^^^
+
+* Refactored the former monolithic runner into focused modules for CLI handling, discovery, resume/cache handling, checker metadata, workers, and workflow orchestration.
+* Reduced multiprocessing overhead by passing compact per-file or per-dataset tasks and recording progress only in the parent process. Initial checks and multi-file dataset checks run in disposable workers to limit retained netCDF/xarray state, while plugin discovery is cached per worker without sharing ``CheckSuite`` instances between files.
+* Expanded regression coverage for CLI validation, resume and cache corruption, checker failures, consistency errors, deterministic output, TUI interaction, and packaged artifacts.
+* Reworked CI into code-quality, supported-Python test, package-validation, and optional upstream-head workflows. Migrated Flake8 integration to Ruff and added an enforced coverage threshold.
+* Wheels now include ``display_qc_results.html`` and its fonts while excluding the top-level test package. Source distributions retain the tests and provide a ``test`` dependency extra. Release builds validate and smoke-test both distribution formats before publication.
+* Updated the checker/project overview and ``esgvoc`` installation and update instructions.
+
 0.5.1 (2026-05-28)
 ------------------
 
