@@ -1718,15 +1718,15 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse ``checker:option[:value]`` CLI options into a nested mapping.&quot;&quot;&quot;</span>
     <span class="n">options_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">checker_type</span><span class="p">,</span> <span class="n">checker_option</span><span class="p">,</span> <span class="o">*</span><span class="n">checker_value</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-            <span class="n">checker_value</span> <span class="o">=</span> <span class="n">checker_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">checker_value</span> <span class="k">else</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Could not split option &#39;</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&#39;, seems illegally formatted. &quot;</span>
                 <span class="s2">&quot;The required format is &#39;&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]&#39;, &quot;</span>
                 <span class="s2">&quot;for example &#39;mip:tables:/path/to/Tables&#39;.&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+            <span class="p">)</span>
+        <span class="n">checker_type</span><span class="p">,</span> <span class="n">checker_option</span><span class="p">,</span> <span class="o">*</span><span class="n">checker_value</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="n">checker_value</span> <span class="o">=</span> <span class="n">checker_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">checker_value</span> <span class="k">else</span> <span class="kc">True</span>
         <span class="n">options_dict</span><span class="p">[</span><span class="n">checker_type</span><span class="p">][</span><span class="n">checker_option</span><span class="p">]</span> <span class="o">=</span> <span class="n">checker_value</span>
     <span class="k">return</span> <span class="n">options_dict</span>
 </code></pre></div></td></tr></table></div>
@@ -2023,12 +2023,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/resume.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
 <span class="normal">178</span>
 <span class="normal">179</span>
 <span class="normal">180</span>
@@ -2107,7 +2102,12 @@
 <span class="normal">253</span>
 <span class="normal">254</span>
 <span class="normal">255</span>
-<span class="normal">256</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Report resume inventory changes and invalidate results for missing files.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">resume</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -2426,12 +2426,12 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/resume.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Append dataset identifiers to a progress file.&quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
