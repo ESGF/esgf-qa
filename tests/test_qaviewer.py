@@ -1,8 +1,11 @@
 import asyncio
+import sys
 
 import pytest
-from textual.widgets import Input, Static
+from textual.events import MouseUp
+from textual.widgets import Input, Static, Tree
 
+from esgf_qa import qaviewer
 from esgf_qa.qaviewer import QCViewer, iter_nodes, transform_keys
 
 
@@ -96,6 +99,26 @@ async def test_toggle_mouse_support(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_toggle_mouse_support_without_private_driver_methods(monkeypatch):
+    """Text selection still toggles if Textual changes its private helpers."""
+    app = QCViewer({"Info": {"Dataset-ID": "DS1"}})
+
+    async with app.run_test() as pilot:
+        monkeypatch.setattr(app._driver, "_disable_mouse_support", None, raising=False)
+        monkeypatch.setattr(app._driver, "_enable_mouse_support", None, raising=False)
+
+        await pilot.press("f2")
+        await pilot.pause()
+        assert not app.mouse_enabled
+        assert not app._driver._mouse
+
+        await pilot.press("f2")
+        await pilot.pause()
+        assert app.mouse_enabled
+        assert app._driver._mouse
+
+
+@pytest.mark.asyncio
 async def test_qcviewer_tree_population():
     """
     Tests that result.json is correctly converted into the tree widget structure.
@@ -181,6 +204,13 @@ async def test_search_functionality():
         app.action_prev_match()
         assert app.match_index == 0
 
+        app.on_input_submitted(Input.Submitted(search_input, "not-present"))
+        assert app.matches == []
+        assert app.match_index == -1
+        assert "No matches for 'not-present'" in str(
+            app.query_one("#status", Static).render()
+        )
+
 
 @pytest.mark.asyncio
 async def test_toggle_expand_node_behaviour():
@@ -218,3 +248,51 @@ async def test_toggle_expand_node_behaviour():
         # Collapse node
         app.toggle_expand_node(info_node)
         assert not info_node.is_expanded
+
+
+@pytest.mark.asyncio
+async def test_right_click_event_toggles_subtree():
+    app = QCViewer({"Info": {"Dataset-ID": "DS1", "Nested": {"Value": 1}}})
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        info_node = next(
+            node for node in app.qc_tree.root.children if str(node.label) == "Info"
+        )
+        mouse_up = MouseUp(
+            app.qc_tree,
+            x=0,
+            y=0,
+            delta_x=0,
+            delta_y=0,
+            button=3,
+            shift=False,
+            meta=False,
+            ctrl=False,
+        )
+
+        app.on_mouse_up(mouse_up)
+        app.on_tree_node_selected(Tree.NodeSelected(info_node))
+
+        assert info_node.is_expanded
+        assert not getattr(app, "_right_click_pending", False)
+
+        app.on_mouse_up(mouse_up)
+        app.on_tree_node_selected(Tree.NodeSelected(info_node))
+
+        assert not info_node.is_expanded
+        assert all(not child.is_expanded for child in info_node.children)
+
+
+def test_main_reports_invalid_json(monkeypatch, tmp_path, capsys):
+    result_file = tmp_path / "invalid.json"
+    result_file.write_text("not JSON")
+    monkeypatch.setattr(sys, "argv", ["esgqaviewer", str(result_file)])
+
+    with pytest.raises(SystemExit) as error:
+        qaviewer.main()
+
+    assert error.value.code == 2
+    stderr = capsys.readouterr().err
+    assert "Could not load QC result" in stderr
+    assert str(result_file) in stderr

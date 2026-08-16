@@ -29,6 +29,7 @@ from esgf_qa.discovery import (
 from esgf_qa.resume import (
     get_reusable_file_result,
     invalidate_nonreusable_dataset_results,
+    load_resume_info,
     reconcile_resume_inventory,
     track_checked_datasets,
     verify_options_dict,
@@ -344,6 +345,56 @@ def test_main_rejects_invalid_stored_checker_options(monkeypatch, tmp_path):
         run_qa.main()
 
 
+def test_load_resume_info_rejects_malformed_json(tmp_path):
+    resume_file = tmp_path / ".resume_info"
+    resume_file.write_text("not JSON")
+
+    with pytest.raises(Exception, match="valid JSON"):
+        load_resume_info(resume_file, tmp_path)
+
+
+def test_load_resume_info_rejects_missing_required_keys(tmp_path):
+    resume_file = tmp_path / ".resume_info"
+    resume_file.write_text(json.dumps({"parent_dir": "/data", "tests": ["cf"]}))
+
+    with pytest.raises(Exception, match="keys 'parent_dir', 'info', and 'tests'"):
+        load_resume_info(resume_file, tmp_path)
+
+
+@pytest.mark.parametrize("root", [[], ["parent_dir", "info", "tests"], "text", 1, None])
+def test_load_resume_info_rejects_non_object_roots(tmp_path, root):
+    resume_file = tmp_path / ".resume_info"
+    resume_file.write_text(json.dumps(root))
+
+    with pytest.raises(Exception, match="top level must be a JSON object"):
+        load_resume_info(resume_file, tmp_path)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("parent_dir", []),
+        ("info", 1),
+        ("tests", "cf"),
+        ("tests", [1]),
+        ("checker_options", []),
+        ("include_consistency_checks", "yes"),
+        ("whitelist", "tas"),
+        ("whitelist", [""]),
+        ("blacklist", "broken"),
+        ("blacklist", [1]),
+    ],
+)
+def test_load_resume_info_rejects_invalid_field_types(tmp_path, field, value):
+    resume_data = {"parent_dir": "/data", "info": "run", "tests": ["cf"]}
+    resume_data[field] = value
+    resume_file = tmp_path / ".resume_info"
+    resume_file.write_text(json.dumps(resume_data))
+
+    with pytest.raises(Exception, match="should be"):
+        load_resume_info(resume_file, tmp_path)
+
+
 def test_main_rejects_empty_input_before_writing_inventory(tmp_path):
     input_dir = tmp_path / "input"
     input_dir.mkdir()
@@ -396,6 +447,31 @@ def test_discovery_aborts_on_incomplete_filesystem_scan(monkeypatch, tmp_path, r
     assert ("Resume inventory state was not reconciled" in str(error.value)) is resume
     assert processed_files == {str(blocked_path / "old.nc")}
     assert processed_datasets == {"dataset1"}
+
+
+def test_discovery_rejects_filename_with_multiple_timestamps(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    invalid_file = input_dir / "tas_Amon_model_200001-200012_200101-200112.nc"
+    invalid_file.touch()
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    (result_dir / "tables").mkdir()
+    config = SimpleNamespace(
+        parent_dir=str(input_dir),
+        result_dir=str(result_dir),
+        whitelist=[],
+        blacklist=[],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=False,
+        processed_files=set(),
+        processed_datasets=set(),
+    )
+
+    with pytest.raises(Exception, match="Filename contains multiple time stamps"):
+        discover_files(config)
 
 
 def test_empty_input_with_filters_writes_exclusion_report(tmp_path):
@@ -1154,6 +1230,59 @@ def test_parse_options():
         },
     )
     assert verify_options_dict(opt_dict) is True
+
+
+@pytest.mark.parametrize("option", ["cf", ":tables:/tmp", "cf:"])
+def test_parse_options_rejects_invalid_syntax(option):
+    with pytest.raises(ValueError, match="illegally formatted"):
+        parse_options([option])
+
+
+@pytest.mark.parametrize(
+    "tests,checker_options,error_type,message",
+    [
+        (["cf:latest:extra"], {}, Exception, "Invalid test(s) specified"),
+        (["cf", "cf:1.7"], {}, Exception, "multiple instances"),
+        (["not_installed"], {}, ValueError, "not supported or installed"),
+        (["cf:9.9"], {}, ValueError, "supported/installed versions"),
+        (
+            ["cc6", "mip"],
+            {"mip": {"tables": "/tmp/Tables"}},
+            Exception,
+            "Cannot run both 'cc6' and 'mip'",
+        ),
+    ],
+)
+def test_resolve_checker_specs_rejects_invalid_selections(
+    monkeypatch, tests, checker_options, error_type, message
+):
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"cf": ["1.7"], "cc6": ["latest"], "mip": ["latest"]},
+    )
+
+    with pytest.raises(error_type, match=re.escape(message)):
+        cli.resolve_checker_specs(tests, defaultdict(dict, checker_options))
+
+
+@pytest.mark.parametrize("checker", ["cc6", "mip"])
+def test_resolve_checker_specs_normalizes_special_checker_versions(
+    monkeypatch, checker
+):
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"cc6": ["latest"], "mip": ["latest"]},
+    )
+    checker_options = defaultdict(dict)
+    if checker == "mip":
+        checker_options["mip"]["tables"] = "/tmp/Tables"
+
+    with pytest.warns(UserWarning, match="must be 'latest'"):
+        resolved = cli.resolve_checker_specs([f"{checker}:1.0"], checker_options)
+
+    assert resolved == [checker]
 
 
 def test_latest_and_omitted_versions_are_equivalent_in_internal_specs():
