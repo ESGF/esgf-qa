@@ -37,6 +37,8 @@ class RunConfig:
     resume: bool
     include_consistency_checks: bool
     checker_options: dict
+    include_checks: dict[str, list[str]]
+    skip_checks: dict[str, list[str]]
     parallel_processes: int
     time_checks_only: bool
     progress_file: Path
@@ -70,6 +72,101 @@ def parse_options(opts):
         checker_value = checker_value[0] if checker_value else True
         options_dict[checker_type][checker_option] = checker_value
     return options_dict
+
+
+def resolve_check_filters(
+    include_specs,
+    skip_specs,
+    checkers,
+    auxiliary_checkers=(),
+):
+    """Resolve global and checker-qualified Compliance Checker filters."""
+    selected_checkers = list(
+        dict.fromkeys(checker.split(":", 1)[0] for checker in checkers)
+    )
+    selected_set = set(selected_checkers)
+    include_checks = defaultdict(list)
+    skip_checks = defaultdict(list)
+    auxiliary_checkers = set(auxiliary_checkers)
+
+    def canonical_checker(checker):
+        return "mip" if checker == "eerie" else checker
+
+    def add_filter(filters, checker, check_spec):
+        if check_spec not in filters[checker]:
+            filters[checker].append(check_spec)
+
+    def add_global(filters, check_spec):
+        for checker in selected_checkers:
+            add_filter(filters, checker, check_spec)
+
+    def reject_unselected_checker(requested_checker, checker):
+        if checker in auxiliary_checkers:
+            raise ValueError(
+                f"Checker '{requested_checker}' was not explicitly selected. Check "
+                "filters cannot target the auxiliary 'mip' checker added by "
+                "-C/--include_consistency_checks."
+            )
+        raise ValueError(
+            f"Cannot filter checks for unselected checker '{requested_checker}'."
+        )
+
+    for spec in include_specs:
+        parts = spec.split(":")
+        if len(parts) == 1 and parts[0]:
+            add_global(include_checks, parts[0])
+            continue
+        if len(parts) != 2 or not all(parts):
+            raise ValueError(
+                f"Invalid include-check specification '{spec}'. Use '<check_method>' "
+                "or '<checker>:<check_method>'."
+            )
+        checker = canonical_checker(parts[0])
+        if checker not in selected_set:
+            reject_unselected_checker(parts[0], checker)
+        add_filter(include_checks, checker, parts[1])
+
+    for spec in skip_specs:
+        parts = spec.split(":")
+        if len(parts) == 1 and parts[0]:
+            add_global(skip_checks, parts[0])
+            continue
+        if len(parts) == 2 and all(parts):
+            if parts[1] in {"A", "M", "L"}:
+                add_global(skip_checks, spec)
+                continue
+            if parts[0].startswith("check_"):
+                raise ValueError(
+                    f"Invalid skip level '{parts[1]}' in '{spec}'. Use A, M, or L."
+                )
+            checker = canonical_checker(parts[0])
+            if checker not in selected_set:
+                reject_unselected_checker(parts[0], checker)
+            add_filter(skip_checks, checker, parts[1])
+            continue
+        if len(parts) == 3 and all(parts):
+            checker = canonical_checker(parts[0])
+            if checker not in selected_set:
+                reject_unselected_checker(parts[0], checker)
+            if parts[2] not in {"A", "M", "L"}:
+                raise ValueError(
+                    f"Invalid skip level '{parts[2]}' in '{spec}'. Use A, M, or L."
+                )
+            add_filter(skip_checks, checker, ":".join(parts[1:]))
+            continue
+        raise ValueError(
+            f"Invalid skip-check specification '{spec}'. Use '<check_method>', "
+            "'<check_method>:<A|M|L>', '<checker>:<check_method>', or "
+            "'<checker>:<check_method>:<A|M|L>'."
+        )
+
+    conflicting = sorted(set(include_checks) & set(skip_checks))
+    if conflicting:
+        raise ValueError(
+            "Cannot both include and skip checks for the same checker(s): "
+            f"{', '.join(conflicting)}."
+        )
+    return dict(include_checks), dict(skip_checks)
 
 
 def build_parser(default_result_dir):
@@ -115,6 +212,30 @@ def build_parser(default_result_dir):
         "--info",
         type=str,
         help="Information identifying the current run, such as an experiment_id.",
+    )
+    parser.add_argument(
+        "-s",
+        "--skip-checks",
+        action="append",
+        default=[],
+        metavar="CHECK",
+        help=(
+            "Do not run a Compliance Checker method (optionally append :A), or "
+            "append :M/:L to suppress results at that severity and below after "
+            "it runs. Prefix with "
+            "'<checker>:' to target one selected checker. May be repeated."
+        ),
+    )
+    parser.add_argument(
+        "-I",
+        "--include-checks",
+        action="append",
+        default=[],
+        metavar="CHECK",
+        help=(
+            "Run only the named Compliance Checker methods. Prefix with "
+            "'<checker>:' to target one selected checker. May be repeated."
+        ),
     )
     parser.add_argument(
         "-r",
@@ -281,6 +402,8 @@ def prepare_run(default_result_dir, argv=None):
     whitelist = list(args.whitelist)
     blacklist = list(args.blacklist)
     checker_options = parse_options(args.option)
+    include_checks = {}
+    skip_checks = {}
     progress_file = Path(result_dir, "progress.txt")
     dataset_file = Path(result_dir, "progress_datasets.txt")
     resume_info_file = Path(result_dir, ".resume_info")
@@ -300,6 +423,8 @@ def prepare_run(default_result_dir, argv=None):
         elif not info:
             info = stored.info
         checker_options = defaultdict(dict, stored.checker_options)
+        include_checks = stored.include_checks
+        skip_checks = stored.skip_checks
         include_consistency_checks = stored.include_consistency_checks
         whitelist = stored.whitelist
         blacklist = stored.blacklist
@@ -307,6 +432,18 @@ def prepare_run(default_result_dir, argv=None):
         print(f"Storing check results in '{result_dir}'")
 
     checkers = resolve_checker_specs(tests, checker_options)
+    supports_consistency = any(
+        checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        for checker in checkers
+    )
+    time_checks_only = include_consistency_checks and not supports_consistency
+    if not args.resume:
+        include_checks, skip_checks = resolve_check_filters(
+            args.include_checks,
+            args.skip_checks,
+            checkers,
+            auxiliary_checkers={"mip"} if time_checks_only else set(),
+        )
     if parent_dir is None:
         parser.error("Missing required argument <parent_dir>.")
     if not os.path.exists(parent_dir):
@@ -323,17 +460,14 @@ def prepare_run(default_result_dir, argv=None):
             info=info,
             tests=checkers,
             checker_options=dict(checker_options),
+            include_checks=include_checks,
+            skip_checks=skip_checks,
             include_consistency_checks=include_consistency_checks,
             whitelist=whitelist,
             blacklist=blacklist,
         ),
     )
 
-    supports_consistency = any(
-        checker.split(":", 1)[0] in checker_supporting_consistency_checks
-        for checker in checkers
-    )
-    time_checks_only = include_consistency_checks and not supports_consistency
     if time_checks_only:
         checkers.append("mip")
         checkers.sort()
@@ -355,6 +489,8 @@ def prepare_run(default_result_dir, argv=None):
         resume=args.resume,
         include_consistency_checks=include_consistency_checks,
         checker_options=checker_options,
+        include_checks=include_checks,
+        skip_checks=skip_checks,
         parallel_processes=args.parallel_processes,
         time_checks_only=time_checks_only,
         progress_file=progress_file,

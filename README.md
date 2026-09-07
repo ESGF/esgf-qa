@@ -100,7 +100,7 @@ Please see the [esgvoc user guide](https://esgf.github.io/esgf-vocab/user/introd
 ## Usage
 
 ```shell
-$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] <parent_dir>
+$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-s CHECK] [-I CHECK] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] <parent_dir>
 ```
 
 - positional arguments:
@@ -112,6 +112,8 @@ $ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION]
   - `-t, --test TEST`: The test to run (eg. `'wcrp_cmip6:latest'`, `'wcrp_cordex_cmip6:latest'` or `'cf:<version>'`, can be specified multiple times, eg.: `'-t wcrp_cmip6:latest -t cf:1.7'`) - default: running latest CF checks. If the version is omitted, `latest` will be used (`'cf'` and `'cf:latest'` are equivalent).
   - `-O, --option OPTION`: Additional options to be passed to the checkers. Format: `'<checker>:<option_name>[:<option_value>]'`. Multiple invocations possible.
   - `-i, --info INFO`:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.
+  - `-s, --skip-checks CHECK`: Skip a Compliance Checker method, or suppress results at a specified severity and below with `:M` or `:L`. Prefix the method with `'<checker>:'` to affect only that selected checker. May be repeated.
+  - `-I, --include-checks CHECK`: Run only the named Compliance Checker methods. Prefix the method with `'<checker>:'` to affect only that selected checker. May be repeated.
   - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
   - `--rerun-all`: With `--resume`, repeat all checks instead of reusing successful results.
   - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using the `wcrp-*`, `cc6`, `mip` or `eerie` checkers, they are included by default.
@@ -133,6 +135,21 @@ $ esgqa -w historical -w 1950 -b ICON-ESM -o QA_results/filtered /path/to/datase
 
 Configured filters are retained when the run is resumed. To use different filters,
 start a new run with a different output directory.
+
+Compliance Checker method filters may be applied globally or to one selected
+checker. For example, this skips the complete CF `check_units` method while the
+WCRP checker runs only `check_filename`:
+
+```shell
+$ esgqa -t cf -t wcrp_cmip7 -s cf:check_units -I wcrp_cmip7:check_filename -o QA_results/filtered_checks /path/to/datasets
+```
+
+Include and skip filters are mutually exclusive for the same checker, but may be
+combined for different checkers. An unqualified method applies to every selected
+checker. The suffixes `:M` and `:L` do not avoid executing the method: they suppress
+medium-and-low or low-severity results, respectively, after it has run. No suffix
+or `:A` skips the complete method. These filters affect Compliance Checker plugin
+methods, not ESGF-QA's consistency, continuity, or compatibility checks.
 
 To resume at a later date, eg. if the QA run did not finish in time or more files
 have been added to the `<parent_dir>`:

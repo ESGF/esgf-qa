@@ -62,6 +62,8 @@ def run_workflow(config, inventory):
         inventory.checker_options[first_file],
         inventory.file_details[first_file],
         first_file in config.processed_files,
+        config.include_checks,
+        config.skip_checks,
     )
     processed_file, first_result = _process_initial_file(first_args)
     record_progress(config.progress_file, processed_file, config.processed_files)
@@ -79,6 +81,8 @@ def run_workflow(config, inventory):
                 inventory.checker_options[file_path],
                 inventory.file_details[file_path],
                 file_path in config.processed_files,
+                config.include_checks,
+                config.skip_checks,
             )
             for file_path in inventory.files[1:]
         ]

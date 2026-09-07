@@ -50,7 +50,7 @@ def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
     )
 
     def capture_initial_file(args):
-        _, _, checker_options, _, _ = args
+        _, _, checker_options, *_ = args
         captured_options.update(checker_options)
         return args[0], {"cf": {"errors": {}}}
 
@@ -101,6 +101,8 @@ def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_
     dataset_progress_file.write_text("dataset2\n")
     config = SimpleNamespace(
         checkers=["cc6"],
+        include_checks={"cc6": ["check_selected"]},
+        skip_checks={},
         parallel_processes=2,
         progress_file=progress_file,
         dataset_file=dataset_progress_file,
@@ -112,10 +114,12 @@ def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_
     pool_options = []
 
     def fake_first_file(args):
-        file_path, _, _, details, was_processed = args
+        file_path, _, _, details, was_processed, include_checks, skip_checks = args
         assert file_path == files[0]
         assert details is file_details[file_path]
         assert was_processed is False
+        assert include_checks == config.include_checks
+        assert skip_checks == config.skip_checks
         return file_path, {"cc6": {"errors": {}}}
 
     class SynchronousPool:
@@ -156,9 +160,19 @@ def test_workflow_uses_compact_tasks_and_parent_owned_progress(monkeypatch, tmp_
 
     assert len(file_tasks) == 3
     for task in file_tasks:
-        file_path, _, _, task_details, was_processed = task
+        (
+            file_path,
+            _,
+            _,
+            task_details,
+            was_processed,
+            include_checks,
+            skip_checks,
+        ) = task
         assert task_details is file_details[file_path]
         assert was_processed is (file_path == files[1])
+        assert include_checks == config.include_checks
+        assert skip_checks == config.skip_checks
 
     assert len(dataset_tasks) == 2
     for task in dataset_tasks:
@@ -378,6 +392,10 @@ def test_load_resume_info_rejects_non_object_roots(tmp_path, root):
         ("tests", "cf"),
         ("tests", [1]),
         ("checker_options", []),
+        ("include_checks", []),
+        ("include_checks", {"cf": "check_units"}),
+        ("include_checks", {"": ["check_units"]}),
+        ("skip_checks", {"cf": [""]}),
         ("include_consistency_checks", "yes"),
         ("whitelist", "tas"),
         ("whitelist", [""]),
@@ -559,6 +577,48 @@ def test_path_filters_are_restored_when_resuming(tmp_path):
     assert resumed.blacklist == config.blacklist
 
 
+def test_check_filters_are_checker_specific_and_restored_on_resume(
+    monkeypatch, tmp_path
+):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    default_output = str(tmp_path / "unused-default")
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"cf": ["latest"], "demo": ["latest"]},
+    )
+
+    config = prepare_run(
+        default_output,
+        [
+            "-t",
+            "cf",
+            "-t",
+            "demo",
+            "-s",
+            "cf:check_units:L",
+            "-I",
+            "demo:check_filename",
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+
+    assert config.skip_checks == {"cf": ["check_units:L"]}
+    assert config.include_checks == {"demo": ["check_filename"]}
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+    assert resume_info["skip_checks"] == config.skip_checks
+    assert resume_info["include_checks"] == config.include_checks
+
+    resumed = prepare_run(default_output, ["-r", "-o", str(output_dir)])
+
+    assert resumed.skip_checks == config.skip_checks
+    assert resumed.include_checks == config.include_checks
+
+
 def test_rerun_all_resets_resume_progress(monkeypatch, tmp_path):
     input_dir = tmp_path / "input"
     input_dir.mkdir()
@@ -735,8 +795,8 @@ def test_new_run_does_not_write_resume_inventory_report(tmp_path):
     assert not (tmp_path / "resume_inventory_changes.json").exists()
 
 
-@pytest.mark.parametrize("filter_option", ["-w", "-b"])
-def test_resume_rejects_new_path_filters(tmp_path, filter_option):
+@pytest.mark.parametrize("filter_option", ["-w", "-b", "-s", "-I"])
+def test_resume_rejects_new_filters(tmp_path, filter_option):
     input_dir = tmp_path / "input"
     input_dir.mkdir()
     output_dir = tmp_path / "output"
@@ -748,7 +808,7 @@ def test_resume_rejects_new_path_filters(tmp_path, filter_option):
     with pytest.raises(SystemExit):
         prepare_run(
             str(tmp_path / "unused-default"),
-            ["-r", filter_option, "fragment", "-o", str(output_dir)],
+            ["-r", filter_option, "check_fragment", "-o", str(output_dir)],
         )
 
 
@@ -1236,6 +1296,94 @@ def test_parse_options():
 def test_parse_options_rejects_invalid_syntax(option):
     with pytest.raises(ValueError, match="illegally formatted"):
         parse_options([option])
+
+
+def test_resolve_check_filters_expands_global_filters_and_removes_duplicates():
+    include_checks, skip_checks = cli.resolve_check_filters(
+        [],
+        ["check_units:L", "cf:check_units:L", "demo:check_filename"],
+        ["cf", "demo:1.0"],
+    )
+
+    assert include_checks == {}
+    assert skip_checks == {
+        "cf": ["check_units:L"],
+        "demo": ["check_units:L", "check_filename"],
+    }
+
+
+def test_resolve_check_filters_allows_include_and_skip_for_different_checkers():
+    include_checks, skip_checks = cli.resolve_check_filters(
+        ["demo:check_filename"],
+        ["cf:check_units:M"],
+        ["cf", "demo"],
+    )
+
+    assert include_checks == {"demo": ["check_filename"]}
+    assert skip_checks == {"cf": ["check_units:M"]}
+
+
+def test_resolve_check_filters_maps_eerie_alias_to_mip():
+    include_checks, skip_checks = cli.resolve_check_filters(
+        ["eerie:check_filename"], [], ["mip"]
+    )
+
+    assert include_checks == {"mip": ["check_filename"]}
+    assert skip_checks == {}
+
+
+@pytest.mark.parametrize(
+    "include_specs,skip_specs,message",
+    [
+        (["other:check_units"], [], "unselected checker 'other'"),
+        ([], ["check_units:Q"], "Invalid skip level 'Q'"),
+        ([], ["cf:check_units:Q"], "Invalid skip level 'Q'"),
+        (["cf:check_units"], ["cf:check_filename"], "same checker.*cf"),
+    ],
+)
+def test_resolve_check_filters_rejects_invalid_or_conflicting_specs(
+    include_specs, skip_specs, message
+):
+    with pytest.raises(ValueError, match=message):
+        cli.resolve_check_filters(include_specs, skip_specs, ["cf"])
+
+
+@pytest.mark.parametrize(
+    "filter_args",
+    [
+        ["-s", "mip:check_time"],
+        ["-I", "mip:check_institution"],
+    ],
+)
+def test_auxiliary_mip_checker_filter_error_is_explicit(
+    monkeypatch, tmp_path, filter_args
+):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "Checker 'mip' was not explicitly selected.*"
+            "auxiliary 'mip' checker added by -C"
+        ),
+    ):
+        prepare_run(
+            str(tmp_path / "unused-default"),
+            [
+                "-t",
+                "cf",
+                "-C",
+                *filter_args,
+                "-o",
+                str(output_dir),
+                str(input_dir),
+            ],
+        )
 
 
 @pytest.mark.parametrize(

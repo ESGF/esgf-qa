@@ -27,6 +27,17 @@ def verify_options_dict(options):
         return False
 
 
+def verify_check_filters(filters):
+    """Return whether serialized per-checker filters have the expected shape."""
+    return isinstance(filters, dict) and all(
+        isinstance(checker, str)
+        and checker
+        and isinstance(checks, list)
+        and all(isinstance(check, str) and check for check in checks)
+        for checker, checks in filters.items()
+    )
+
+
 @dataclass
 class ResumeInfo:
     """Configuration persisted alongside a resumable QA run."""
@@ -35,6 +46,8 @@ class ResumeInfo:
     info: str
     tests: list[str]
     checker_options: dict = field(default_factory=dict)
+    include_checks: dict[str, list[str]] = field(default_factory=dict)
+    skip_checks: dict[str, list[str]] = field(default_factory=dict)
     include_consistency_checks: bool = False
     whitelist: list[str] = field(default_factory=list)
     blacklist: list[str] = field(default_factory=list)
@@ -58,6 +71,8 @@ class ResumeInfo:
             and isinstance(data["tests"], list)
             and all(isinstance(test, str) for test in data["tests"])
             and verify_options_dict(data.get("checker_options", {}))
+            and verify_check_filters(data.get("include_checks", {}))
+            and verify_check_filters(data.get("skip_checks", {}))
             and isinstance(data.get("include_consistency_checks", False), bool)
             and isinstance(data.get("whitelist", []), list)
             and all(
@@ -74,6 +89,8 @@ class ResumeInfo:
                 f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and "
                 "'info' should be strings, 'tests' should be a list of strings, "
                 "'checker_options' should be a nested dictionary, and "
+                "'include_checks' and 'skip_checks' should map checker names to "
+                "lists of non-empty strings. "
                 "'include_consistency_checks' should be a boolean. 'whitelist' "
                 "and 'blacklist' should be lists of non-empty strings."
             )
@@ -82,6 +99,8 @@ class ResumeInfo:
             info=data["info"],
             tests=data["tests"],
             checker_options=data.get("checker_options", {}),
+            include_checks=data.get("include_checks", {}),
+            skip_checks=data.get("skip_checks", {}),
             include_consistency_checks=data.get("include_consistency_checks", False),
             whitelist=data.get("whitelist", []),
             blacklist=data.get("blacklist", []),
@@ -97,6 +116,10 @@ class ResumeInfo:
             data["include_consistency_checks"] = True
         if self.checker_options:
             data["checker_options"] = self.checker_options
+        if self.include_checks:
+            data["include_checks"] = self.include_checks
+        if self.skip_checks:
+            data["skip_checks"] = self.skip_checks
         if self.whitelist:
             data["whitelist"] = self.whitelist
         if self.blacklist:
