@@ -151,6 +151,12 @@ medium-and-low or low-severity results, respectively, after it has run. No suffi
 or `:A` skips the complete method. These filters affect Compliance Checker plugin
 methods, not ESGF-QA's consistency, continuity, or compatibility checks.
 
+When an explicitly selected checker already supports consistency checks, `-C` has
+no additional effect and does not override include or skip filters. ESGF-QA emits
+a warning and omits the redundant `-C` setting from `.resume_info`, while retaining
+the effective method filters. When `-C` adds the auxiliary MIP time checks, it and
+the method filters are both retained for resume.
+
 To resume at a later date, eg. if the QA run did not finish in time or more files
 have been added to the `<parent_dir>`:
 

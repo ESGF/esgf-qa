@@ -1387,6 +1387,99 @@ def test_auxiliary_mip_checker_filter_error_is_explicit(
 
 
 @pytest.mark.parametrize(
+    "checker,checker_args,filter_args,filter_field,expected_filter",
+    [
+        (
+            "cc6",
+            ["-t", "cc6"],
+            ["-I", "cc6:check_institution"],
+            "include_checks",
+            {"cc6": ["check_institution"]},
+        ),
+        (
+            "mip",
+            ["-t", "mip", "-O", "mip:tables:/tmp/Tables"],
+            ["-s", "mip:check_time:L"],
+            "skip_checks",
+            {"mip": ["check_time:L"]},
+        ),
+    ],
+)
+def test_redundant_consistency_flag_warns_and_stores_effective_filters(
+    monkeypatch,
+    tmp_path,
+    checker,
+    checker_args,
+    filter_args,
+    filter_field,
+    expected_filter,
+):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {checker: ["latest"]},
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "-C/--include_consistency_checks has no additional effect.*"
+            "does not override -I/--include-checks or -s/--skip-checks"
+        ),
+    ):
+        config = prepare_run(
+            str(tmp_path / "unused-default"),
+            [
+                *checker_args,
+                "-C",
+                *filter_args,
+                "-o",
+                str(output_dir),
+                str(input_dir),
+            ],
+        )
+
+    assert config.include_consistency_checks is False
+    assert getattr(config, filter_field) == expected_filter
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+    assert "include_consistency_checks" not in resume_info
+    assert resume_info[filter_field] == expected_filter
+
+
+def test_effective_consistency_flag_and_filters_are_stored(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        cli, "get_installed_checker_versions", lambda: {"cf": ["latest"]}
+    )
+
+    config = prepare_run(
+        str(tmp_path / "unused-default"),
+        [
+            "-t",
+            "cf",
+            "-C",
+            "-I",
+            "cf:check_standard_name",
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+
+    assert config.include_consistency_checks is True
+    assert config.include_checks == {"cf": ["check_standard_name"]}
+    assert config.checkers == ["cf", "mip"]
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+    assert resume_info["include_consistency_checks"] is True
+    assert resume_info["include_checks"] == config.include_checks
+
+
+@pytest.mark.parametrize(
     "tests,checker_options,error_type,message",
     [
         (["cf:latest:extra"], {}, Exception, "Invalid test(s) specified"),

@@ -444,6 +444,26 @@ def prepare_run(default_result_dir, argv=None):
             checkers,
             auxiliary_checkers={"mip"} if time_checks_only else set(),
         )
+    if include_consistency_checks and supports_consistency:
+        supporting_checkers = sorted(
+            checker.split(":", 1)[0]
+            for checker in checkers
+            if checker.split(":", 1)[0] in checker_supporting_consistency_checks
+        )
+        message = (
+            "-C/--include_consistency_checks has no additional effect because "
+            "the following explicitly selected checker(s) already support "
+            f"consistency checks: {', '.join(supporting_checkers)}."
+        )
+        if include_checks or skip_checks:
+            message += (
+                " It does not override -I/--include-checks or -s/--skip-checks; "
+                "methods excluded by those filters will not run."
+            )
+        warnings.warn(message, stacklevel=2)
+        # Resume metadata describes the effective configuration. Avoid retaining
+        # a redundant flag and repeating this warning on every future resume.
+        include_consistency_checks = False
     if parent_dir is None:
         parser.error("Missing required argument <parent_dir>.")
     if not os.path.exists(parent_dir):
