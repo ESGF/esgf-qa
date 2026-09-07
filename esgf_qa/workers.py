@@ -67,9 +67,17 @@ def _replace_json(path, data):
             temporary_path.unlink(missing_ok=True)
 
 
-def run_compliance_checker(file_path, checkers, checker_options=None):
+def run_compliance_checker(
+    file_path,
+    checkers,
+    checker_options=None,
+    include_checks=None,
+    skip_checks=None,
+):
     """Run Compliance Checker for one file, isolating checker-level failures."""
     checker_options = checker_options or {}
+    include_checks = include_checks or {}
+    skip_checks = skip_checks or {}
     try:
         check_suite = CheckSuite(options=checker_options)
         _ensure_checkers_loaded(check_suite)
@@ -90,7 +98,7 @@ def run_compliance_checker(file_path, checkers, checker_options=None):
     time_checks_only = checker_options.get("cc6", {}).get(
         "time_checks_only", False
     ) or checker_options.get("mip", {}).get("time_checks_only", False)
-    include_checks = (
+    time_include_checks = (
         ["check_time_continuity", "check_time_bounds", "check_time_range"]
         if time_checks_only
         else None
@@ -100,15 +108,19 @@ def run_compliance_checker(file_path, checkers, checker_options=None):
     close_error = None
     try:
         for checker in checkers:
-            checker_include = (
-                include_checks if checker.split(":", 1)[0] in {"cc6", "mip"} else None
-            )
+            checker_name = checker.split(":", 1)[0]
+            checker_include = include_checks.get(checker_name)
+            if time_checks_only and checker_name in {"cc6", "mip"}:
+                # This checker was added internally to produce the time metadata
+                # needed by ESGF-QA's consistency checks. User include filters
+                # apply only to explicitly selected checkers.
+                checker_include = time_include_checks
             try:
                 checker_results = check_suite.run_all(
                     dataset,
                     [checker],
                     include_checks=checker_include,
-                    skip_checks=[],
+                    skip_checks=skip_checks.get(checker_name, []),
                 )
                 if checker not in checker_results:
                     raise RuntimeError(
@@ -182,6 +194,8 @@ def process_file(
     checker_options,
     file_details,
     was_processed,
+    include_checks=None,
+    skip_checks=None,
 ):
     """Run or reuse file-level checks for one file."""
     consistency_file = file_details["consistency_file"]
@@ -199,7 +213,13 @@ def process_file(
     # generated output when the checker fails before writing its new files.
     _remove_stale_output(result_file)
     _remove_stale_output(consistency_file)
-    result = run_compliance_checker(file_path, checkers, checker_options)
+    result = run_compliance_checker(
+        file_path,
+        checkers,
+        checker_options,
+        include_checks,
+        skip_checks,
+    )
     check_results = {}
     for checker_spec in checkers:
         checker = checker_spec.split(":", 1)[0]

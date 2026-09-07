@@ -81,6 +81,121 @@ class TestDummyQA:
         assert isinstance(results["cf:latest"], tuple)
         assert isinstance(results["cf:latest"][0], list)
 
+    def test_run_compliance_checker_forwards_filters_per_checker(
+        self, monkeypatch, dummy_nc_file
+    ):
+        calls = []
+
+        class FilterSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, include_checks=None, skip_checks=None):
+                calls.append((checkers[0], include_checks, skip_checks))
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", FilterSuite)
+
+        run_compliance_checker(
+            dummy_nc_file,
+            ["cf:1.11", "demo"],
+            include_checks={"demo": ["check_filename"]},
+            skip_checks={"cf": ["check_units:L"]},
+        )
+
+        assert calls == [
+            ("cf:1.11", None, ["check_units:L"]),
+            ("demo", ["check_filename"], []),
+        ]
+
+    def test_internal_time_checker_keeps_required_include_filter(
+        self, monkeypatch, dummy_nc_file
+    ):
+        calls = []
+
+        class TimeFilterSuite:
+            def __init__(self, options=None):
+                pass
+
+            def load_all_available_checkers(self):
+                pass
+
+            def load_dataset(self, file_path):
+                return SimpleNamespace(close=lambda: None)
+
+            def run_all(self, dataset, checkers, include_checks=None, skip_checks=None):
+                calls.append((checkers[0], include_checks, skip_checks))
+                return {checkers[0]: ([], {})}
+
+        monkeypatch.setattr(workers, "CheckSuite", TimeFilterSuite)
+
+        run_compliance_checker(
+            dummy_nc_file,
+            ["cf", "mip"],
+            {"mip": {"time_checks_only": True}},
+            include_checks={"cf": ["check_standard_name"]},
+            skip_checks={"cf": ["check_units"]},
+        )
+
+        assert calls == [
+            ("cf", ["check_standard_name"], ["check_units"]),
+            (
+                "mip",
+                ["check_time_continuity", "check_time_bounds", "check_time_range"],
+                [],
+            ),
+        ]
+
+    def test_process_file_forwards_check_filters(
+        self, monkeypatch, tmp_env, dummy_nc_file
+    ):
+        captured = {}
+
+        def capture_run(
+            file_path,
+            checkers,
+            checker_options,
+            include_checks,
+            skip_checks,
+        ):
+            captured.update(
+                file_path=file_path,
+                checkers=checkers,
+                checker_options=checker_options,
+                include_checks=include_checks,
+                skip_checks=skip_checks,
+            )
+            return {"cf": ([], {})}
+
+        monkeypatch.setattr(workers, "run_compliance_checker", capture_run)
+        result_file = tmp_env["results"] / "filtered.json"
+        include_checks = {"cf": ["check_standard_name"]}
+        skip_checks = {}
+
+        process_file(
+            dummy_nc_file,
+            ["cf"],
+            {"cf": {"enable_appendix_a_checks": True}},
+            {
+                "result_file": str(result_file),
+                "consistency_file": str(tmp_env["results"] / "consistency.json"),
+            },
+            False,
+            include_checks,
+            skip_checks,
+        )
+
+        assert captured["file_path"] == dummy_nc_file
+        assert captured["checkers"] == ["cf"]
+        assert captured["include_checks"] is include_checks
+        assert captured["skip_checks"] is skip_checks
+
     def test_checker_discovery_is_cached_but_suite_instances_are_distinct(
         self, monkeypatch, dummy_nc_file
     ):
