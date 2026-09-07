@@ -942,15 +942,15 @@ that come with esgf-qa.</p>
     <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">esgf_qa._constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">checker_dict</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span> <span class="o">=</span> <span class="n">QAResultAggregator</span><span class="p">(</span><span class="n">checker_dict</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span>    <span class="s2">&quot;cf&quot;</span><span class="p">:</span> <span class="p">{</span>
-<span class="gp">... </span>        <span class="s2">&quot;test_1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;msgs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Missing attribute &#39;units&#39;&quot;</span><span class="p">]},</span>
+<span class="gp">... </span>    <span class="s2">"cf"</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s2">"test_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">"msgs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"Missing attribute 'units'"</span><span class="p">]},</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dsid</span><span class="o">=</span><span class="s2">&quot;dataset_001&quot;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;tas_day.nc&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dsid</span><span class="o">=</span><span class="s2">"dataset_001"</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">"tas_day.nc"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">cluster_summary</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span>
-<span class="go">{3: {&#39;[CF-Conventions] test_1&#39;: {&#39;Missing attribute {A} (1 occurrences, e.g. A=&#39;units&#39;)&#39;: {...}}}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">agg</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span>
+<span class="go">{3: {'[CF-Conventions] test_1': {'Missing attribute {A} (1 occurrences, e.g. A='units')': {...}}}}</span>
 </code></pre></div>
 
 
@@ -1464,7 +1464,7 @@ that come with esgf-qa.</p>
 <span class="normal">507</span>
 <span class="normal">508</span>
 <span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QAResultAggregator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Aggregate, organize, and cluster the results of multiple ESGF-Quality Assurance (QA)</span>
 <span class="sd">    or Climate Checker (cc) runs.</span>
 
@@ -1477,8 +1477,8 @@ that come with esgf-qa.</p>
 <span class="sd">    summary : dict of defaultdict</span>
 <span class="sd">        Nested dictionary structure that stores the aggregated QA results.</span>
 <span class="sd">        It contains two top-level keys:</span>
-<span class="sd">            - ``&quot;error&quot;`` : maps checker functions to error messages → dataset IDs → file names.</span>
-<span class="sd">            - ``&quot;fail&quot;``  : maps test weights → test names → messages → dataset IDs → file names.</span>
+<span class="sd">            - ``"error"`` : maps checker functions to error messages → dataset IDs → file names.</span>
+<span class="sd">            - ``"fail"``  : maps test weights → test names → messages → dataset IDs → file names.</span>
 <span class="sd">    clustered_summary : dict of defaultdict</span>
 <span class="sd">        Summary structure produced after clustering messages using</span>
 <span class="sd">        :meth:`cluster_summary`. Keys and nesting mirror ``summary``, but</span>
@@ -1513,26 +1513,26 @@ that come with esgf-qa.</p>
 <span class="sd">    &gt;&gt;&gt; from esgf_qa._constants import checker_dict</span>
 <span class="sd">    &gt;&gt;&gt; agg = QAResultAggregator(checker_dict)</span>
 <span class="sd">    &gt;&gt;&gt; result = {</span>
-<span class="sd">    ...     &quot;cf&quot;: {</span>
-<span class="sd">    ...         &quot;test_1&quot;: {&quot;value&quot;: (0, 1), &quot;msgs&quot;: [&quot;Missing attribute &#39;units&#39;&quot;]},</span>
+<span class="sd">    ...     "cf": {</span>
+<span class="sd">    ...         "test_1": {"value": (0, 1), "msgs": ["Missing attribute 'units'"]},</span>
 <span class="sd">    ...     }</span>
 <span class="sd">    ... }</span>
-<span class="sd">    &gt;&gt;&gt; agg.update(result, dsid=&quot;dataset_001&quot;, file_name=&quot;tas_day.nc&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; agg.update(result, dsid="dataset_001", file_name="tas_day.nc")</span>
 <span class="sd">    &gt;&gt;&gt; agg.sort()</span>
 <span class="sd">    &gt;&gt;&gt; agg.cluster_summary(threshold=0.8)</span>
-<span class="sd">    &gt;&gt;&gt; agg.clustered_summary[&quot;fail&quot;]</span>
-<span class="sd">    {3: {&#39;[CF-Conventions] test_1&#39;: {&#39;Missing attribute {A} (1 occurrences, e.g. A=\&#39;units\&#39;)&#39;: {...}}}}</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; agg.clustered_summary["fail"]</span>
+<span class="sd">    {3: {'[CF-Conventions] test_1': {'Missing attribute {A} (1 occurrences, e.g. A=\'units\')': {...}}}}</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Initialize the aggregator with an empty summary.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
                 <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
             <span class="p">),</span>  <span class="c1"># No weight, just function -&gt; error msg</span>
-            <span class="s2">&quot;fail&quot;</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
+            <span class="s2">"fail"</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
                 <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)))</span>
             <span class="p">),</span>  <span class="c1"># weight -&gt; test -&gt; msg -&gt; dsid -&gt; filenames</span>
         <span class="p">}</span>
@@ -1540,7 +1540,7 @@ that come with esgf-qa.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">checker_dict_ext</span> <span class="o">=</span> <span class="n">checker_dict_ext</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the summary with a single result of a cc-run.</span>
 
 <span class="sd">        Parameters</span>
@@ -1551,32 +1551,32 @@ that come with esgf-qa.</p>
 <span class="sd">            Dataset ID.</span>
 <span class="sd">        file_name : str</span>
 <span class="sd">            File name.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">&quot;errors&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">"errors"</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">error_msg</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span>
-                        <span class="s2">&quot;errors&quot;</span>
+                        <span class="s2">"errors"</span>
                     <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">][</span>
+                            <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span> <span class="o">+</span> <span class="n">function_name</span>
                         <span class="p">][</span><span class="n">error_msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">test_results</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_results</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                         <span class="n">test_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_results</span><span class="p">]</span>
                     <span class="k">for</span> <span class="n">test_result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="p">:</span>
-                        <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">test_result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-                        <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-                        <span class="n">msgs</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;msgs&quot;</span><span class="p">,</span> <span class="p">[])</span>
+                        <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">test_result</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span>
+                        <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                        <span class="n">msgs</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msgs"</span><span class="p">,</span> <span class="p">[])</span>
                         <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="n">max_score</span><span class="p">:</span>  <span class="c1"># test outcome: fail</span>
                             <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                    <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
+                                    <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span> <span class="o">+</span> <span class="n">test</span>
                                 <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Update the summary with a single result of an esgf-qa (inter-file/dataset) run.</span>
 
 <span class="sd">        Parameters</span>
@@ -1585,38 +1585,38 @@ that come with esgf-qa.</p>
 <span class="sd">            Dictionary containing the results of a single esgf-qa (inter-file/dataset) run.</span>
 <span class="sd">        dsid : str</span>
 <span class="sd">            Dataset ID.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">&quot;errors&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">"errors"</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">errdict</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span>
-                        <span class="s2">&quot;errors&quot;</span>
+                        <span class="s2">"errors"</span>
                     <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">"files"</span><span class="p">]:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">][</span>
+                                <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span>
                                 <span class="o">+</span> <span class="n">function_name</span>
-                            <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;msg&quot;</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+                            <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">"msg"</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">test_results</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_results</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                         <span class="n">test_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_results</span><span class="p">]</span>
                     <span class="k">for</span> <span class="n">test_result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="p">:</span>
-                        <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-                        <span class="n">fails</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;msgs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                        <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                        <span class="n">fails</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msgs"</span><span class="p">,</span> <span class="p">{})</span>
                         <span class="k">for</span> <span class="n">msg</span><span class="p">,</span> <span class="n">file_names</span> <span class="ow">in</span> <span class="n">fails</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                             <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                    <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
+                                    <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span>
                                     <span class="o">+</span> <span class="n">test</span>
                                 <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Sort every result level using its domain-specific display order.</span>
 
 <span class="sd">        Modifies the `summary` attribute.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span>
@@ -1627,36 +1627,36 @@ that come with esgf-qa.</p>
                 <span class="k">for</span> <span class="n">message</span><span class="p">,</span> <span class="n">datasets</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="p">}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">weight</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="p">}</span>
-            <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_format_cluster_files</span><span class="p">(</span><span class="n">combined</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format sorted datasets with a deterministic example file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Format sorted datasets with a deterministic example file."""</span>
         <span class="n">formatted</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">dataset_id</span><span class="p">,</span> <span class="n">affected_files</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="n">files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">affected_files</span><span class="p">)</span>
             <span class="n">dataset_label</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">dataset_id</span>
-                <span class="o">+</span> <span class="s2">&quot; (&quot;</span>
+                <span class="o">+</span> <span class="s2">" ("</span>
                 <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">))</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; file</span><span class="si">{</span><span class="s1">&#39;s&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2"> affected)&quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">" file</span><span class="si">{</span><span class="s1">'s'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2"> affected)"</span>
             <span class="p">)</span>
-            <span class="n">example_prefix</span> <span class="o">=</span> <span class="s2">&quot;e.g. &quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">formatted</span><span class="p">[</span><span class="n">dataset_label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_prefix</span><span class="si">}</span><span class="s2">&#39;</span><span class="si">{</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">]</span>
+            <span class="n">example_prefix</span> <span class="o">=</span> <span class="s2">"e.g. "</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="n">formatted</span><span class="p">[</span><span class="n">dataset_label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">example_prefix</span><span class="si">}</span><span class="s2">'</span><span class="si">{</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">formatted</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sort_clustered_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply deterministic ordering to the completed clustered summary.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Apply deterministic ordering to the completed clustered summary."""</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{</span>
@@ -1664,25 +1664,25 @@ that come with esgf-qa.</p>
                 <span class="k">for</span> <span class="n">message</span><span class="p">,</span> <span class="n">datasets</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="p">}</span>
 
-        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
             <span class="p">}</span>
-        <span class="k">if</span> <span class="s2">&quot;fail&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="s2">"fail"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">weight</span><span class="p">:</span> <span class="p">{</span>
                     <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
                 <span class="p">}</span>
                 <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span>
                 <span class="p">)</span>
             <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cluster_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Cluster messages based on similarity.</span>
 
 <span class="sd">        Parameters</span>
@@ -1696,7 +1696,7 @@ that come with esgf-qa.</p>
 <span class="sd">        -------</span>
 <span class="sd">        list</span>
 <span class="sd">            List of clusters.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">while</span> <span class="n">messages</span><span class="p">:</span>
             <span class="n">base</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -1714,7 +1714,7 @@ that come with esgf-qa.</p>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">generalize_message_group</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generalize a group of messages.</span>
 
 <span class="sd">        Parameters</span>
@@ -1728,12 +1728,12 @@ that come with esgf-qa.</p>
 <span class="sd">            Generalized message.</span>
 <span class="sd">        dict</span>
 <span class="sd">            Placeholders.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{}</span>
 
         <span class="c1"># Split messages into tokens</span>
-        <span class="n">split_messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+|\W&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">]</span>
+        <span class="n">split_messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\w+|\W"</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">]</span>
         <span class="n">transposed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">split_messages</span><span class="p">))</span>
         <span class="n">template</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">placeholders</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1744,8 +1744,8 @@ that come with esgf-qa.</p>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">var_name</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">var_index</span><span class="p">)</span>
-                <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">var_name</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span> <span class="o">+</span> <span class="n">var_index</span><span class="p">)</span>
+                <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span>
                 <span class="n">placeholders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
 
@@ -1755,12 +1755,12 @@ that come with esgf-qa.</p>
         <span class="p">)</span>
 
         <span class="c1"># Return the generalized message and the placeholders</span>
-        <span class="n">generalized</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+        <span class="n">generalized</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">merge_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Merge adjacent placeholders in message templates where possible.</span>
 
 <span class="sd">        Avoids too many placeholders in a clustered message.</span>
@@ -1780,11 +1780,11 @@ that come with esgf-qa.</p>
 <span class="sd">            List of strings with placeholders merged.</span>
 <span class="sd">        dict</span>
 <span class="sd">            Dictionary of placeholders.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">find_next_two_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">skip</span><span class="p">):</span>
             <span class="n">placeholders</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+                <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span>
             <span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">placeholders</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -1797,31 +1797,31 @@ that come with esgf-qa.</p>
         <span class="p">):</span>
             <span class="n">idx1</span> <span class="o">=</span> <span class="n">list_of_strings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">placeholder1</span><span class="p">)</span>
             <span class="n">idx2</span> <span class="o">=</span> <span class="n">list_of_strings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">placeholder2</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">idx2</span><span class="p">])</span>
+            <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">idx2</span><span class="p">])</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">merge_two_placeholders</span><span class="p">(</span>
             <span class="n">placeholder1</span><span class="p">,</span> <span class="n">placeholder2</span><span class="p">,</span> <span class="n">text_between</span><span class="p">,</span> <span class="n">dictionary</span>
         <span class="p">):</span>
             <span class="n">new_value</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
                 <span class="o">+</span> <span class="n">text_between</span>
-                <span class="o">+</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+                <span class="o">+</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
             <span class="p">)</span>
-            <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_value</span>
-            <span class="k">del</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+            <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="k">del</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
             <span class="k">return</span> <span class="n">dictionary</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">update_placeholder_names</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">):</span>
             <span class="n">old_placeholders</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
             <span class="n">new_placeholders</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">))</span>
+                <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">))</span>
             <span class="p">]</span>
             <span class="n">new_dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
                 <span class="nb">zip</span><span class="p">(</span><span class="n">new_placeholders</span><span class="p">,</span> <span class="p">[</span><span class="n">dictionary</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">old_placeholders</span><span class="p">])</span>
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">,</span> <span class="n">new_placeholders</span><span class="p">):</span>
                 <span class="n">list_of_strings</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="n">old</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="n">new</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span>
+                    <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"{"</span> <span class="o">+</span> <span class="n">old</span> <span class="o">+</span> <span class="s2">"}"</span><span class="p">,</span> <span class="s2">"{"</span> <span class="o">+</span> <span class="n">new</span> <span class="o">+</span> <span class="s2">"}"</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span>
                 <span class="p">]</span>
             <span class="k">return</span> <span class="n">list_of_strings</span><span class="p">,</span> <span class="n">new_dictionary</span>
 
@@ -1835,7 +1835,7 @@ that come with esgf-qa.</p>
                 <span class="n">list_of_strings_new</span> <span class="o">+=</span> <span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx2</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
             <span class="k">return</span> <span class="n">list_of_strings_new</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span>
 
         <span class="n">placeholder1</span><span class="p">,</span> <span class="n">placeholder2</span> <span class="o">=</span> <span class="n">find_next_two_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">skip</span><span class="p">)</span>
@@ -1864,7 +1864,7 @@ that come with esgf-qa.</p>
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Cluster messages in the summary into groups of similar messages.</span>
 
 <span class="sd">        Drastically reduces number of messages in the summary for datasets accumulating</span>
@@ -1879,12 +1879,12 @@ that come with esgf-qa.</p>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
 <span class="sd">            Modifies the `clustered_summary` attribute.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
             <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)))</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">test_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">]:</span>
                     <span class="n">messages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">test_id</span><span class="p">])</span>
                     <span class="n">clusters</span> <span class="o">=</span> <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">cluster_messages</span><span class="p">(</span>
@@ -1895,20 +1895,20 @@ that come with esgf-qa.</p>
                         <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">generalize_message_group</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
                         <span class="p">)</span>
-                        <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                             <span class="p">[</span>
                                 <span class="p">(</span>
-                                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span>
                                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-                                    <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                    <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">'"</span>
                                 <span class="p">)</span>
                                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">placeholders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                             <span class="p">]</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">example_parts</span><span class="p">:</span>
-                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)&quot;</span>
+                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)"</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">&#39; (&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; occurrences)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">' ('</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' occurrences)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span>
 
                         <span class="c1"># Gather all ds_ids and filenames across the cluster</span>
                         <span class="n">combined</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
@@ -1922,7 +1922,7 @@ that come with esgf-qa.</p>
                         <span class="n">formatted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_cluster_files</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
 
                         <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">test_id</span><span class="p">][</span><span class="n">msg_summary</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatted</span>
-            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;fail&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"fail"</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">]:</span>
                     <span class="k">for</span> <span class="n">test_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">weight</span><span class="p">]:</span>
                         <span class="n">messages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span><span class="n">test_id</span><span class="p">])</span>
@@ -1934,20 +1934,20 @@ that come with esgf-qa.</p>
                             <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span> <span class="o">=</span> <span class="p">(</span>
                                 <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">generalize_message_group</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
                             <span class="p">)</span>
-                            <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                                 <span class="p">[</span>
                                     <span class="p">(</span>
-                                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span>
                                         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-                                        <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                        <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">'"</span>
                                     <span class="p">)</span>
                                     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">placeholders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                                 <span class="p">]</span>
                             <span class="p">)</span>
                             <span class="k">if</span> <span class="n">example_parts</span><span class="p">:</span>
-                                <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)&quot;</span>
+                                <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)"</span>
                             <span class="k">else</span><span class="p">:</span>
-                                <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">&#39; (&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; occurrences)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+                                <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">' ('</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' occurrences)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span>
 
                             <span class="c1"># Gather all ds_ids and filenames across the cluster</span>
                             <span class="n">combined</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
@@ -2011,14 +2011,14 @@ that come with esgf-qa.</p>
 <span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Initialize the aggregator with an empty summary.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
+        <span class="s2">"error"</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
             <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
         <span class="p">),</span>  <span class="c1"># No weight, just function -&gt; error msg</span>
-        <span class="s2">&quot;fail&quot;</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
+        <span class="s2">"fail"</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
             <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)))</span>
         <span class="p">),</span>  <span class="c1"># weight -&gt; test -&gt; msg -&gt; dsid -&gt; filenames</span>
     <span class="p">}</span>
@@ -2152,7 +2152,7 @@ that come with esgf-qa.</p>
 <span class="normal">254</span>
 <span class="normal">255</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">cluster_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Cluster messages based on similarity.</span>
 
 <span class="sd">    Parameters</span>
@@ -2166,7 +2166,7 @@ that come with esgf-qa.</p>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
 <span class="sd">        List of clusters.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">while</span> <span class="n">messages</span><span class="p">:</span>
         <span class="n">base</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -2361,7 +2361,7 @@ large numbers of check failure messages.</p>
 <span class="normal">507</span>
 <span class="normal">508</span>
 <span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cluster_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.75</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Cluster messages in the summary into groups of similar messages.</span>
 
 <span class="sd">    Drastically reduces number of messages in the summary for datasets accumulating</span>
@@ -2376,12 +2376,12 @@ large numbers of check failure messages.</p>
 <span class="sd">    -------</span>
 <span class="sd">    None</span>
 <span class="sd">        Modifies the `clustered_summary` attribute.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
         <span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)))</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">test_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">]:</span>
                 <span class="n">messages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">test_id</span><span class="p">])</span>
                 <span class="n">clusters</span> <span class="o">=</span> <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">cluster_messages</span><span class="p">(</span>
@@ -2392,20 +2392,20 @@ large numbers of check failure messages.</p>
                     <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">generalize_message_group</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
                     <span class="p">)</span>
-                    <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                         <span class="p">[</span>
                             <span class="p">(</span>
-                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span>
                                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-                                <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">'"</span>
                             <span class="p">)</span>
                             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">placeholders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                         <span class="p">]</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">example_parts</span><span class="p">:</span>
-                        <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)&quot;</span>
+                        <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)"</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">&#39; (&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; occurrences)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">' ('</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' occurrences)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span>
 
                     <span class="c1"># Gather all ds_ids and filenames across the cluster</span>
                     <span class="n">combined</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
@@ -2419,7 +2419,7 @@ large numbers of check failure messages.</p>
                     <span class="n">formatted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_cluster_files</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">clustered_summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">test_id</span><span class="p">][</span><span class="n">msg_summary</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatted</span>
-        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;fail&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">"fail"</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">]:</span>
                 <span class="k">for</span> <span class="n">test_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">weight</span><span class="p">]:</span>
                     <span class="n">messages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="n">status</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span><span class="n">test_id</span><span class="p">])</span>
@@ -2431,20 +2431,20 @@ large numbers of check failure messages.</p>
                         <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="n">QAResultAggregator</span><span class="o">.</span><span class="n">generalize_message_group</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
                         <span class="p">)</span>
-                        <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">example_parts</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                             <span class="p">[</span>
                                 <span class="p">(</span>
-                                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'"</span>
                                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
-                                    <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=&#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                    <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">='</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">'"</span>
                                 <span class="p">)</span>
                                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">placeholders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                             <span class="p">]</span>
                         <span class="p">)</span>
                         <span class="k">if</span> <span class="n">example_parts</span><span class="p">:</span>
-                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)&quot;</span>
+                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="si">}</span><span class="s2"> occurrences, e.g. </span><span class="si">{</span><span class="n">example_parts</span><span class="si">}</span><span class="s2">)"</span>
                         <span class="k">else</span><span class="p">:</span>
-                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">&#39; (&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39; occurrences)&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="n">msg_summary</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">generalized</span><span class="si">}{</span><span class="s1">' ('</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">' occurrences)'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">"</span>
 
                         <span class="c1"># Gather all ds_ids and filenames across the cluster</span>
                         <span class="n">combined</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
@@ -2598,7 +2598,7 @@ large numbers of check failure messages.</p>
 <span class="normal">300</span>
 <span class="normal">301</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">generalize_message_group</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Generalize a group of messages.</span>
 
 <span class="sd">    Parameters</span>
@@ -2612,12 +2612,12 @@ large numbers of check failure messages.</p>
 <span class="sd">        Generalized message.</span>
 <span class="sd">    dict</span>
 <span class="sd">        Placeholders.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{}</span>
 
     <span class="c1"># Split messages into tokens</span>
-    <span class="n">split_messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+|\W&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">]</span>
+    <span class="n">split_messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\w+|\W"</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">]</span>
     <span class="n">transposed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">split_messages</span><span class="p">))</span>
     <span class="n">template</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">placeholders</span> <span class="o">=</span> <span class="p">{}</span>
@@ -2628,8 +2628,8 @@ large numbers of check failure messages.</p>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">var_name</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">var_index</span><span class="p">)</span>
-            <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span> <span class="o">+</span> <span class="n">var_index</span><span class="p">)</span>
+            <span class="n">template</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="se">}}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">placeholders</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">var_index</span> <span class="o">+=</span> <span class="mi">1</span>
 
@@ -2639,7 +2639,7 @@ large numbers of check failure messages.</p>
     <span class="p">)</span>
 
     <span class="c1"># Return the generalized message and the placeholders</span>
-    <span class="n">generalized</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">generalized</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">generalized</span><span class="p">,</span> <span class="n">placeholders</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -2869,7 +2869,7 @@ large numbers of check failure messages.</p>
 <span class="normal">405</span>
 <span class="normal">406</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Merge adjacent placeholders in message templates where possible.</span>
 
 <span class="sd">    Avoids too many placeholders in a clustered message.</span>
@@ -2889,11 +2889,11 @@ large numbers of check failure messages.</p>
 <span class="sd">        List of strings with placeholders merged.</span>
 <span class="sd">    dict</span>
 <span class="sd">        Dictionary of placeholders.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">find_next_two_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">skip</span><span class="p">):</span>
         <span class="n">placeholders</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span>
+            <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">placeholders</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -2906,31 +2906,31 @@ large numbers of check failure messages.</p>
     <span class="p">):</span>
         <span class="n">idx1</span> <span class="o">=</span> <span class="n">list_of_strings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">placeholder1</span><span class="p">)</span>
         <span class="n">idx2</span> <span class="o">=</span> <span class="n">list_of_strings</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">placeholder2</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">idx2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">idx2</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">merge_two_placeholders</span><span class="p">(</span>
         <span class="n">placeholder1</span><span class="p">,</span> <span class="n">placeholder2</span><span class="p">,</span> <span class="n">text_between</span><span class="p">,</span> <span class="n">dictionary</span>
     <span class="p">):</span>
         <span class="n">new_value</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+            <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
             <span class="o">+</span> <span class="n">text_between</span>
-            <span class="o">+</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
         <span class="p">)</span>
-        <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_value</span>
-        <span class="k">del</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)]</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder1</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_value</span>
+        <span class="k">del</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">placeholder2</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">dictionary</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_placeholder_names</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">):</span>
         <span class="n">old_placeholders</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
         <span class="n">new_placeholders</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">))</span>
+            <span class="nb">chr</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="s2">"A"</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">))</span>
         <span class="p">]</span>
         <span class="n">new_dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="nb">zip</span><span class="p">(</span><span class="n">new_placeholders</span><span class="p">,</span> <span class="p">[</span><span class="n">dictionary</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">old_placeholders</span><span class="p">])</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">old_placeholders</span><span class="p">,</span> <span class="n">new_placeholders</span><span class="p">):</span>
             <span class="n">list_of_strings</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="n">old</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">,</span> <span class="s2">&quot;{&quot;</span> <span class="o">+</span> <span class="n">new</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"{"</span> <span class="o">+</span> <span class="n">old</span> <span class="o">+</span> <span class="s2">"}"</span><span class="p">,</span> <span class="s2">"{"</span> <span class="o">+</span> <span class="n">new</span> <span class="o">+</span> <span class="s2">"}"</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span>
             <span class="p">]</span>
         <span class="k">return</span> <span class="n">list_of_strings</span><span class="p">,</span> <span class="n">new_dictionary</span>
 
@@ -2944,7 +2944,7 @@ large numbers of check failure messages.</p>
             <span class="n">list_of_strings_new</span> <span class="o">+=</span> <span class="n">list_of_strings</span><span class="p">[</span><span class="n">idx2</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
         <span class="k">return</span> <span class="n">list_of_strings_new</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"{"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"}"</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">list_of_strings</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">list_of_strings</span><span class="p">,</span> <span class="n">dictionary</span>
 
     <span class="n">placeholder1</span><span class="p">,</span> <span class="n">placeholder2</span> <span class="o">=</span> <span class="n">find_next_two_placeholders</span><span class="p">(</span><span class="n">list_of_strings</span><span class="p">,</span> <span class="n">skip</span><span class="p">)</span>
@@ -3021,11 +3021,11 @@ large numbers of check failure messages.</p>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Sort every result level using its domain-specific display order.</span>
 
 <span class="sd">    Modifies the `summary` attribute.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -3036,16 +3036,16 @@ large numbers of check failure messages.</p>
             <span class="k">for</span> <span class="n">message</span><span class="p">,</span> <span class="n">datasets</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">messages</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="p">}</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
     <span class="p">}</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">weight</span><span class="p">:</span> <span class="p">{</span>
             <span class="n">test_id</span><span class="p">:</span> <span class="n">sort_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">test_id</span><span class="p">,</span> <span class="n">messages</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="p">}</span>
-        <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">tests</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -3167,7 +3167,7 @@ large numbers of check failure messages.</p>
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Update the summary with a single result of a cc-run.</span>
 
 <span class="sd">    Parameters</span>
@@ -3178,28 +3178,28 @@ large numbers of check failure messages.</p>
 <span class="sd">        Dataset ID.</span>
 <span class="sd">    file_name : str</span>
 <span class="sd">        File name.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">&quot;errors&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">"errors"</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">error_msg</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span>
-                    <span class="s2">&quot;errors&quot;</span>
+                    <span class="s2">"errors"</span>
                 <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                        <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">function_name</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">][</span>
+                        <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span> <span class="o">+</span> <span class="n">function_name</span>
                     <span class="p">][</span><span class="n">error_msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">test_results</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_results</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                     <span class="n">test_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_results</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">test_result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="p">:</span>
-                    <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">test_result</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
-                    <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-                    <span class="n">msgs</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;msgs&quot;</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="n">score</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">=</span> <span class="n">test_result</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="n">msgs</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msgs"</span><span class="p">,</span> <span class="p">[])</span>
                     <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="n">max_score</span><span class="p">:</span>  <span class="c1"># test outcome: fail</span>
                         <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">msgs</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="n">test</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
+                                <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span> <span class="o">+</span> <span class="n">test</span>
                             <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -3305,7 +3305,7 @@ large numbers of check failure messages.</p>
 <span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_dict</span><span class="p">,</span> <span class="n">dsid</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Update the summary with a single result of an esgf-qa (inter-file/dataset) run.</span>
 
 <span class="sd">    Parameters</span>
@@ -3314,29 +3314,29 @@ large numbers of check failure messages.</p>
 <span class="sd">        Dictionary containing the results of a single esgf-qa (inter-file/dataset) run.</span>
 <span class="sd">    dsid : str</span>
 <span class="sd">        Dataset ID.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">test</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">&quot;errors&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">test</span> <span class="o">==</span> <span class="s2">"errors"</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">errdict</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span>
-                    <span class="s2">&quot;errors&quot;</span>
+                    <span class="s2">"errors"</span>
                 <span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">][</span>
-                            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">errdict</span><span class="p">[</span><span class="s2">"files"</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"error"</span><span class="p">][</span>
+                            <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span>
                             <span class="o">+</span> <span class="n">function_name</span>
-                        <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">&quot;msg&quot;</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+                        <span class="p">][</span><span class="n">errdict</span><span class="p">[</span><span class="s2">"msg"</span><span class="p">]][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">test_results</span> <span class="o">=</span> <span class="n">result_dict</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="n">test</span><span class="p">]</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_results</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                     <span class="n">test_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_results</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">test_result</span> <span class="ow">in</span> <span class="n">test_results</span><span class="p">:</span>
-                    <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-                    <span class="n">fails</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;msgs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"weight"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="n">fails</span> <span class="o">=</span> <span class="n">test_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"msgs"</span><span class="p">,</span> <span class="p">{})</span>
                     <span class="k">for</span> <span class="n">msg</span><span class="p">,</span> <span class="n">file_names</span> <span class="ow">in</span> <span class="n">fails</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                         <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
-                                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] &quot;</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">][</span><span class="n">weight</span><span class="p">][</span>
+                                <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">checker_dict_ext</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span><span class="w"> </span><span class="n">checker</span><span class="p">)</span><span class="si">}</span><span class="s2">] "</span>
                                 <span class="o">+</span> <span class="n">test</span>
                             <span class="p">][</span><span class="n">msg</span><span class="p">][</span><span class="n">dsid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>

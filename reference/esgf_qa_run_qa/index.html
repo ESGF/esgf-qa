@@ -1017,7 +1017,7 @@
 <span class="normal">18</span>
 <span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CheckerMetadata</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolved version and package provenance for one checker.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Resolved version and package provenance for one checker."""</span>
 
     <span class="n">checker_version</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">package_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1089,7 +1089,7 @@
 <span class="normal">27</span>
 <span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FileInventory</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Files and mappings consumed by the QA workflow.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Files and mappings consumed by the QA workflow."""</span>
 
     <span class="n">files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">file_details</span><span class="p">:</span> <span class="nb">dict</span>
@@ -1172,9 +1172,11 @@
 <span class="normal">45</span>
 <span class="normal">46</span>
 <span class="normal">47</span>
-<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RunConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validated configuration required by the QA workflow.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Validated configuration required by the QA workflow."""</span>
 
     <span class="n">parent_dir</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">result_dir</span><span class="p">:</span> <span class="nb">str</span>
@@ -1183,6 +1185,8 @@
     <span class="n">resume</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="n">include_consistency_checks</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="n">checker_options</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">include_checks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+    <span class="n">skip_checks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="n">parallel_processes</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">time_checks_only</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="n">progress_file</span><span class="p">:</span> <span class="n">Path</span>
@@ -1233,10 +1237,10 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/workers.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">call_process_dataset</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unpack multiprocessing arguments for :func:`process_dataset`.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">call_process_dataset</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Unpack multiprocessing arguments for :func:`process_dataset`."""</span>
     <span class="k">return</span> <span class="n">process_dataset</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1260,10 +1264,10 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/workers.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">call_process_file</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unpack multiprocessing arguments for :func:`process_file`.&quot;&quot;&quot;</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">call_process_file</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Unpack multiprocessing arguments for :func:`process_file`."""</span>
     <span class="k">return</span> <span class="n">process_file</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1300,16 +1304,16 @@
 <span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">format_checker_version</span><span class="p">(</span><span class="n">checker</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format a checker specification with its providing package version.&quot;&quot;&quot;</span>
-    <span class="n">checker_name</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""Format a checker specification with its providing package version."""</span>
+    <span class="n">checker_name</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">checker_metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">checker_name</span><span class="p">]</span>
     <span class="n">checker_label</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker_name</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker_name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">checker_version</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">checker_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker_name</span><span class="p">,</span><span class="w"> </span><span class="s1">''</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">checker_name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">checker_version</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">checker_metadata</span><span class="o">.</span><span class="n">package_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">checker_label</span> <span class="o">+=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">package_version</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">package_name</span><span class="si">}</span><span class="s2"> "</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">checker_metadata</span><span class="o">.</span><span class="n">package_version</span><span class="si">}</span><span class="s2">)"</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">checker_label</span>
 </code></pre></div></td></tr></table></div>
@@ -1385,21 +1389,21 @@
 <span class="normal">88</span>
 <span class="normal">89</span>
 <span class="normal">90</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_checker_metadata</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve checker versions and their providing distributions.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Resolve checker versions and their providing distributions."""</span>
     <span class="n">check_suite</span> <span class="o">=</span> <span class="n">CheckSuite</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">checker_options</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">check_suite</span><span class="o">.</span><span class="n">load_all_available_checkers</span><span class="p">()</span>
 
     <span class="n">checker_packages</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">checker_entry_point</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">&quot;compliance_checker.suites&quot;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">checker_entry_point</span> <span class="ow">in</span> <span class="n">entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="s2">"compliance_checker.suites"</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">checker_obj</span> <span class="o">=</span> <span class="n">checker_entry_point</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">continue</span>
-        <span class="n">checker_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">checker_obj</span><span class="p">,</span> <span class="s2">&quot;_cc_spec&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span>
-            <span class="n">checker_obj</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">checker_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">checker_obj</span><span class="p">,</span> <span class="s2">"_cc_spec"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">checker_obj</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="kc">None</span>
         <span class="p">)</span>
-        <span class="n">checker_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">checker_obj</span><span class="p">,</span> <span class="s2">&quot;_cc_spec_version&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">))</span>
-        <span class="n">distribution</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">checker_entry_point</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">checker_version</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">checker_obj</span><span class="p">,</span> <span class="s2">"_cc_spec_version"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">))</span>
+        <span class="n">distribution</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">checker_entry_point</span><span class="p">,</span> <span class="s2">"dist"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">checker_name</span> <span class="ow">and</span> <span class="n">distribution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">checker_packages</span><span class="p">[(</span><span class="n">checker_name</span><span class="p">,</span> <span class="n">checker_version</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">distribution</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -1408,25 +1412,25 @@
 
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
-        <span class="n">checker_name</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">checker_name</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">checker_name</span> <span class="ow">in</span> <span class="n">checker_dict_ext</span> <span class="ow">and</span> <span class="n">checker_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">checker_dict</span><span class="p">:</span>
             <span class="n">metadata</span><span class="p">[</span><span class="n">checker_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">CheckerMetadata</span><span class="p">(</span>
-                <span class="n">esgf_qa_version</span><span class="p">,</span> <span class="s2">&quot;esgf-qa&quot;</span><span class="p">,</span> <span class="n">esgf_qa_version</span>
+                <span class="n">esgf_qa_version</span><span class="p">,</span> <span class="s2">"esgf-qa"</span><span class="p">,</span> <span class="n">esgf_qa_version</span>
             <span class="p">)</span>
             <span class="k">continue</span>
 
         <span class="n">checker_obj</span> <span class="o">=</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">checker_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">prefix</span> <span class="o">=</span> <span class="n">checker_name</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">checker_name</span> <span class="o">+</span> <span class="s2">":"</span>
             <span class="n">candidates</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
             <span class="k">if</span> <span class="n">candidates</span><span class="p">:</span>
                 <span class="n">resolved_key</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
                     <span class="n">candidates</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">key</span><span class="p">:</span> <span class="n">pversion</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">key</span><span class="p">:</span> <span class="n">pversion</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span>
                 <span class="p">)</span>
                 <span class="n">checker_obj</span> <span class="o">=</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">resolved_key</span><span class="p">)</span>
         <span class="n">checker_version</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="nb">str</span><span class="p">(</span><span class="n">checker_obj</span><span class="o">.</span><span class="n">_cc_spec_version</span><span class="p">)</span> <span class="k">if</span> <span class="n">checker_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;unknown&quot;</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">checker_obj</span><span class="o">.</span><span class="n">_cc_spec_version</span><span class="p">)</span> <span class="k">if</span> <span class="n">checker_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"unknown"</span>
         <span class="p">)</span>
         <span class="n">package</span> <span class="o">=</span> <span class="n">checker_packages</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">checker_name</span><span class="p">,</span> <span class="n">checker_version</span><span class="p">))</span>
         <span class="n">metadata</span><span class="p">[</span><span class="n">checker_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">CheckerMetadata</span><span class="p">(</span>
@@ -1461,9 +1465,9 @@
 <span class="normal">54</span>
 <span class="normal">55</span>
 <span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_default_result_dir</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the timestamped default result directory.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the timestamped default result directory."""</span>
     <span class="n">result_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">_timestamp_with_ms</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;esgf-qa-results_</span><span class="si">{</span><span class="n">_timestamp_filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result_hash</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="sa">f</span><span class="s2">"esgf-qa-results_</span><span class="si">{</span><span class="n">_timestamp_filename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">result_hash</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1501,19 +1505,19 @@
 <span class="normal">43</span>
 <span class="normal">44</span>
 <span class="normal">45</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_dsid</span><span class="p">(</span><span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">dataset_files_map_ext</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">project_ids</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a dataset identifier from its directory and filename.&quot;&quot;&quot;</span>
-    <span class="n">directory_parts</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_dir&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-    <span class="n">filename_parts</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_fn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
-    <span class="n">dataset_id</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_parts</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Build a dataset identifier from its directory and filename."""</span>
+    <span class="n">directory_parts</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">"id_dir"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="n">filename_parts</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">"id_fn"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)</span>
+    <span class="n">dataset_id</span> <span class="o">=</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_parts</span><span class="p">)</span>
     <span class="n">lower_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">directory_parts</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">project_ids</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">lower_parts</span><span class="p">:</span>
             <span class="n">last_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lower_parts</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">lower_parts</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
-            <span class="n">dataset_id</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_parts</span><span class="p">[</span><span class="n">last_index</span><span class="p">:])</span>
+            <span class="n">dataset_id</span> <span class="o">=</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_parts</span><span class="p">[</span><span class="n">last_index</span><span class="p">:])</span>
             <span class="k">break</span>
-    <span class="n">directory</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">&quot;id_dir&quot;</span><span class="p">]</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">files_to_check_dict</span><span class="p">[</span><span class="n">file_path</span><span class="p">][</span><span class="s2">"id_dir"</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset_files_map_ext</span><span class="p">[</span><span class="n">directory</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">dataset_id</span> <span class="o">+=</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename_parts</span><span class="p">)</span>
+        <span class="n">dataset_id</span> <span class="o">+=</span> <span class="s2">"."</span> <span class="o">+</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename_parts</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dataset_id</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1553,20 +1557,20 @@
 <span class="normal">35</span>
 <span class="normal">36</span>
 <span class="normal">37</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_installed_checker_versions</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return installed checker versions grouped by checker name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return installed checker versions grouped by checker name."""</span>
     <span class="n">check_suite</span> <span class="o">=</span> <span class="n">CheckSuite</span><span class="p">()</span>
     <span class="n">check_suite</span><span class="o">.</span><span class="n">load_all_available_checkers</span><span class="p">()</span>
     <span class="n">installed_versions</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">checkers</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">name</span><span class="p">,</span> <span class="n">checker_version</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">checker_version</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="n">name</span><span class="p">,</span> <span class="n">checker_version</span> <span class="o">=</span> <span class="n">checker</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span>
-        <span class="k">if</span> <span class="n">checker_version</span> <span class="o">==</span> <span class="s2">&quot;latest&quot;</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">checker_version</span> <span class="o">=</span> <span class="n">checker</span><span class="p">,</span> <span class="s2">"latest"</span>
+        <span class="k">if</span> <span class="n">checker_version</span> <span class="o">==</span> <span class="s2">"latest"</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="n">installed_versions</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">checker_version</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">versions</span> <span class="ow">in</span> <span class="n">installed_versions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">installed_versions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">versions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">pversion</span><span class="o">.</span><span class="n">parse</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">]</span>
+        <span class="n">installed_versions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">versions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">pversion</span><span class="o">.</span><span class="n">parse</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"latest"</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">installed_versions</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1618,7 +1622,7 @@
 <span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the complete QA command-line workflow.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run the complete QA command-line workflow."""</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">prepare_run</span><span class="p">(</span><span class="n">get_default_result_dir</span><span class="p">(),</span> <span class="n">argv</span><span class="p">)</span>
     <span class="n">inventory</span> <span class="o">=</span> <span class="n">discover_files</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">excluded_report</span> <span class="o">=</span> <span class="n">write_excluded_files</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
@@ -1626,13 +1630,13 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">inventory</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">inventory</span><span class="o">.</span><span class="n">discovered_file_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;No NetCDF files found under &#39;</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">parent_dir</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                <span class="sa">f</span><span class="s2">"No NetCDF files found under '</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">parent_dir</span><span class="si">}</span><span class="s2">'."</span>
             <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="s2">&quot;No files remain to check: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">inventory</span><span class="o">.</span><span class="n">discovered_file_count</span><span class="si">}</span><span class="s2"> NetCDF files were discovered, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">format_exclusion_counts</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;See &#39;</span><span class="si">{</span><span class="n">excluded_report</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+            <span class="s2">"No files remain to check: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">inventory</span><span class="o">.</span><span class="n">discovered_file_count</span><span class="si">}</span><span class="s2"> NetCDF files were discovered, "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">format_exclusion_counts</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span><span class="w"> </span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"See '</span><span class="si">{</span><span class="n">excluded_report</span><span class="si">}</span><span class="s2">'."</span>
         <span class="p">)</span>
     <span class="n">write_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">)</span>
     <span class="n">summary</span><span class="p">,</span> <span class="n">reference_datasets</span> <span class="o">=</span> <span class="n">run_workflow</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">inventory</span><span class="p">)</span>
@@ -1673,9 +1677,9 @@
 <span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalize_checker_specs</span><span class="p">(</span><span class="n">checkers_versions</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize latest versions to Compliance Checker&#39;s unversioned form.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Normalize latest versions to Compliance Checker's unversioned form."""</span>
     <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
-        <span class="n">checker</span> <span class="k">if</span> <span class="n">checker_version</span> <span class="o">==</span> <span class="s2">&quot;latest&quot;</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_version</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">checker</span> <span class="k">if</span> <span class="n">checker_version</span> <span class="o">==</span> <span class="s2">"latest"</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">checker_version</span><span class="si">}</span><span class="s2">"</span>
         <span class="k">for</span> <span class="n">checker</span><span class="p">,</span> <span class="n">checker_version</span> <span class="ow">in</span> <span class="n">checkers_versions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -1700,9 +1704,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/cli.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
@@ -1714,16 +1716,18 @@
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
-<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_options</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse ``checker:option[:value]`` CLI options into a nested mapping.&quot;&quot;&quot;</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">parse_options</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Parse ``checker:option[:value]`` CLI options into a nested mapping."""</span>
     <span class="n">options_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Could not split option &#39;</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&#39;, seems illegally formatted. &quot;</span>
-                <span class="s2">&quot;The required format is &#39;&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]&#39;, &quot;</span>
-                <span class="s2">&quot;for example &#39;mip:tables:/path/to/Tables&#39;.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Could not split option '</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">', seems illegally formatted. "</span>
+                <span class="s2">"The required format is '&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]', "</span>
+                <span class="s2">"for example 'mip:tables:/path/to/Tables'."</span>
             <span class="p">)</span>
         <span class="n">checker_type</span><span class="p">,</span> <span class="n">checker_option</span><span class="p">,</span> <span class="o">*</span><span class="n">checker_value</span> <span class="o">=</span> <span class="n">parts</span>
         <span class="n">checker_value</span> <span class="o">=</span> <span class="n">checker_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">checker_value</span> <span class="k">else</span> <span class="kc">True</span>
@@ -1751,27 +1755,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/workers.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
 <span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
@@ -1799,7 +1783,27 @@
 <span class="normal">344</span>
 <span class="normal">345</span>
 <span class="normal">346</span>
-<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataset</span><span class="p">(</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_dataset</span><span class="p">(</span>
     <span class="n">dataset_id</span><span class="p">,</span>
     <span class="n">dataset_files</span><span class="p">,</span>
     <span class="n">checkers</span><span class="p">,</span>
@@ -1807,29 +1811,29 @@
     <span class="n">file_details</span><span class="p">,</span>
     <span class="n">was_processed</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run or reuse dataset-level consistency checks.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run or reuse dataset-level consistency checks."""</span>
     <span class="n">dataset_files_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">dataset_id</span><span class="p">:</span> <span class="n">dataset_files</span><span class="p">}</span>
-    <span class="n">result_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="n">dataset_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">&quot;result_file_ds&quot;</span><span class="p">]</span>
+    <span class="n">result_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="n">dataset_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">"result_file_ds"</span><span class="p">]</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">get_reusable_dataset_result</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">result_file</span><span class="p">,</span> <span class="n">was_processed</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Read result from disk for &#39;</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Read result from disk for '</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dataset_id</span><span class="p">,</span> <span class="n">result</span>
     <span class="k">if</span> <span class="n">was_processed</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rerunning previously erroneous checks for &#39;</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rerunning previously erroneous checks for '</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running checks for &#39;</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Running checks for '</span><span class="si">{</span><span class="n">dataset_id</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
 
     <span class="n">_remove_stale_output</span><span class="p">(</span><span class="n">result_file</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">checker_spec</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
-        <span class="n">checker</span> <span class="o">=</span> <span class="n">checker_spec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="n">checker_spec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">checker_fct</span> <span class="o">=</span> <span class="n">DATASET_CHECKERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">checker_fct</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"errors"</span><span class="p">:</span> <span class="p">{</span>
                     <span class="n">checker</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;msg&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Checker &#39;</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="n">dataset_files</span><span class="p">,</span>
+                        <span class="s2">"msg"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Checker '</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">' not found."</span><span class="p">,</span>
+                        <span class="s2">"files"</span><span class="p">:</span> <span class="n">dataset_files</span><span class="p">,</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
             <span class="p">}</span>
@@ -1858,7 +1862,7 @@
 
 
 <h2 id="esgf_qa.run_qa.process_file" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">,</span> <span class="n">file_details</span><span class="p">,</span> <span class="n">was_processed</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">process_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">,</span> <span class="n">file_details</span><span class="p">,</span> <span class="n">was_processed</span><span class="p">,</span> <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -1870,174 +1874,7 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/workers.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_file</span><span class="p">(</span>
-    <span class="n">file_path</span><span class="p">,</span>
-    <span class="n">checkers</span><span class="p">,</span>
-    <span class="n">checker_options</span><span class="p">,</span>
-    <span class="n">file_details</span><span class="p">,</span>
-    <span class="n">was_processed</span><span class="p">,</span>
-<span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run or reuse file-level checks for one file.&quot;&quot;&quot;</span>
-    <span class="n">consistency_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="s2">&quot;consistency_file&quot;</span><span class="p">]</span>
-    <span class="n">result_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="s2">&quot;result_file&quot;</span><span class="p">]</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">get_reusable_file_result</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">file_details</span><span class="p">,</span> <span class="n">was_processed</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Read result from disk for &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">result</span>
-    <span class="k">if</span> <span class="n">was_processed</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rerunning incomplete or previously erroneous checks for &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running checks for &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-
-    <span class="c1"># A rerun must not mistake output from an earlier attempt for freshly</span>
-    <span class="c1"># generated output when the checker fails before writing its new files.</span>
-    <span class="n">_remove_stale_output</span><span class="p">(</span><span class="n">result_file</span><span class="p">)</span>
-    <span class="n">_remove_stale_output</span><span class="p">(</span><span class="n">consistency_file</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">)</span>
-    <span class="n">check_results</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">checker_spec</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
-        <span class="n">checker</span> <span class="o">=</span> <span class="n">checker_spec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">checker_result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;errors&quot;</span><span class="p">:</span> <span class="p">{}}</span>
-        <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="n">checker_result</span>
-        <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">checker_spec</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">serialized_check</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
-                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
-                <span class="s2">&quot;msgs&quot;</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">msgs</span><span class="p">,</span>
-                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">check_method</span><span class="p">,</span>
-                <span class="s2">&quot;children&quot;</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">children</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="n">previous_result</span> <span class="o">=</span> <span class="n">checker_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">previous_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">checker_result</span><span class="p">[</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">serialized_check</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_result</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">previous_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">serialized_check</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># A single Compliance Checker method can report the same named</span>
-                <span class="c1"># check at multiple severities; retain every result record.</span>
-                <span class="n">checker_result</span><span class="p">[</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">previous_result</span><span class="p">,</span> <span class="n">serialized_check</span><span class="p">]</span>
-
-        <span class="c1"># Error keys are checker method names, whereas normal result keys above</span>
-        <span class="c1"># are the human-readable check names exposed by Compliance Checker.</span>
-        <span class="k">for</span> <span class="n">check_method</span><span class="p">,</span> <span class="n">error_details</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">checker_spec</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">checker_result</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">][</span><span class="n">check_method</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">_format_compliance_checker_runtime_error</span><span class="p">(</span><span class="n">check_method</span><span class="p">,</span> <span class="n">error_details</span><span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">consistency_file</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span>
-            <span class="k">if</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">checker_supporting_consistency_checks</span>
-        <span class="p">):</span>
-            <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="s2">&quot;errors&quot;</span><span class="p">][</span>
-                <span class="s2">&quot;consistency_output&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Expected consistency output file was not created: &#39;</span><span class="si">{</span><span class="n">consistency_file</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
-
-    <span class="n">_replace_json</span><span class="p">(</span><span class="n">result_file</span><span class="p">,</span> <span class="n">check_results</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">check_results</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="esgf_qa.run_qa.reconcile_resume_inventory" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span></code>
-
-</h2>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Report resume inventory changes and invalidate results for missing files.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>esgf_qa/resume.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
 <span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
@@ -2107,29 +1944,212 @@
 <span class="normal">258</span>
 <span class="normal">259</span>
 <span class="normal">260</span>
-<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Report resume inventory changes and invalidate results for missing files.&quot;&quot;&quot;</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">process_file</span><span class="p">(</span>
+    <span class="n">file_path</span><span class="p">,</span>
+    <span class="n">checkers</span><span class="p">,</span>
+    <span class="n">checker_options</span><span class="p">,</span>
+    <span class="n">file_details</span><span class="p">,</span>
+    <span class="n">was_processed</span><span class="p">,</span>
+    <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run or reuse file-level checks for one file."""</span>
+    <span class="n">consistency_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="s2">"consistency_file"</span><span class="p">]</span>
+    <span class="n">result_file</span> <span class="o">=</span> <span class="n">file_details</span><span class="p">[</span><span class="s2">"result_file"</span><span class="p">]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">get_reusable_file_result</span><span class="p">(</span><span class="n">checkers</span><span class="p">,</span> <span class="n">file_details</span><span class="p">,</span> <span class="n">was_processed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Read result from disk for '</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">result</span>
+    <span class="k">if</span> <span class="n">was_processed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rerunning incomplete or previously erroneous checks for '</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Running checks for '</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
+
+    <span class="c1"># A rerun must not mistake output from an earlier attempt for freshly</span>
+    <span class="c1"># generated output when the checker fails before writing its new files.</span>
+    <span class="n">_remove_stale_output</span><span class="p">(</span><span class="n">result_file</span><span class="p">)</span>
+    <span class="n">_remove_stale_output</span><span class="p">(</span><span class="n">consistency_file</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">run_compliance_checker</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">,</span>
+        <span class="n">checkers</span><span class="p">,</span>
+        <span class="n">checker_options</span><span class="p">,</span>
+        <span class="n">include_checks</span><span class="p">,</span>
+        <span class="n">skip_checks</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">check_results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">checker_spec</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="n">checker_spec</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">checker_result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"errors"</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="n">checker_result</span>
+        <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">checker_spec</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">serialized_check</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"weight"</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
+                <span class="s2">"value"</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                <span class="s2">"msgs"</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">msgs</span><span class="p">,</span>
+                <span class="s2">"method"</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">check_method</span><span class="p">,</span>
+                <span class="s2">"children"</span><span class="p">:</span> <span class="n">check</span><span class="o">.</span><span class="n">children</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">previous_result</span> <span class="o">=</span> <span class="n">checker_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">previous_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">checker_result</span><span class="p">[</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">serialized_check</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_result</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">previous_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">serialized_check</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># A single Compliance Checker method can report the same named</span>
+                <span class="c1"># check at multiple severities; retain every result record.</span>
+                <span class="n">checker_result</span><span class="p">[</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">previous_result</span><span class="p">,</span> <span class="n">serialized_check</span><span class="p">]</span>
+
+        <span class="c1"># Error keys are checker method names, whereas normal result keys above</span>
+        <span class="c1"># are the human-readable check names exposed by Compliance Checker.</span>
+        <span class="k">for</span> <span class="n">check_method</span><span class="p">,</span> <span class="n">error_details</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">checker_spec</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">checker_result</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">][</span><span class="n">check_method</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">_format_compliance_checker_runtime_error</span><span class="p">(</span><span class="n">check_method</span><span class="p">,</span> <span class="n">error_details</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">consistency_file</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span>
+            <span class="k">if</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">checker_supporting_consistency_checks</span>
+        <span class="p">):</span>
+            <span class="n">check_results</span><span class="p">[</span><span class="n">checker</span><span class="p">][</span><span class="s2">"errors"</span><span class="p">][</span>
+                <span class="s2">"consistency_output"</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Expected consistency output file was not created: '</span><span class="si">{</span><span class="n">consistency_file</span><span class="si">}</span><span class="s2">'."</span>
+
+    <span class="n">_replace_json</span><span class="p">(</span><span class="n">result_file</span><span class="p">,</span> <span class="n">check_results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">check_results</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="esgf_qa.run_qa.reconcile_resume_inventory" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Report resume inventory changes and invalidate results for missing files.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>esgf_qa/resume.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">reconcile_resume_inventory</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Report resume inventory changes and invalidate results for missing files."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">resume</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="n">previous_inventory_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;files_to_check.json&quot;</span><span class="p">)</span>
-    <span class="n">previous_details_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;files_to_check_dict.json&quot;</span><span class="p">)</span>
-    <span class="n">report_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">&quot;resume_inventory_changes.json&quot;</span><span class="p">)</span>
+    <span class="n">previous_inventory_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">"files_to_check.json"</span><span class="p">)</span>
+    <span class="n">previous_details_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">"files_to_check_dict.json"</span><span class="p">)</span>
+    <span class="n">report_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">result_dir</span><span class="p">,</span> <span class="s2">"resume_inventory_changes.json"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">previous_inventory_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">previous_files</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;Could not compare the resumed file inventory because &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">previous_inventory_path</span><span class="si">}</span><span class="s2">&#39; could not be read: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="s2">"Could not compare the resumed file inventory because "</span>
+            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">previous_inventory_path</span><span class="si">}</span><span class="s2">' could not be read: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_files</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">previous_files</span>
     <span class="p">):</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;Could not compare the resumed file inventory because &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">previous_inventory_path</span><span class="si">}</span><span class="s2">&#39; is not a list of file paths.&quot;</span>
+            <span class="s2">"Could not compare the resumed file inventory because "</span>
+            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">previous_inventory_path</span><span class="si">}</span><span class="s2">' is not a list of file paths."</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
@@ -2143,21 +2163,21 @@
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">previous_details_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
                 <span class="n">previous_details</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_details</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;expected a dictionary&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"expected a dictionary"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">missing_files</span><span class="p">:</span>
                 <span class="n">details</span> <span class="o">=</span> <span class="n">previous_details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">details</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                    <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span> <span class="nb">str</span>
+                    <span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span> <span class="nb">str</span>
                 <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing dataset identifier for &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-                <span class="n">affected_datasets</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"missing dataset identifier for '</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+                <span class="n">affected_datasets</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="c1"># Without the previous file-to-dataset mapping, no dataset result can</span>
             <span class="c1"># safely be assumed independent of the files that disappeared.</span>
             <span class="n">affected_datasets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">processed_datasets</span><span class="p">)</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;Could not determine which cached dataset results contain files &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;that are no longer found; invalidating all dataset results: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">"Could not determine which cached dataset results contain files "</span>
+                <span class="sa">f</span><span class="s2">"that are no longer found; invalidating all dataset results: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
         <span class="n">config</span><span class="o">.</span><span class="n">processed_files</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span>
@@ -2166,31 +2186,31 @@
         <span class="n">write_progress</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dataset_file</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">processed_datasets</span><span class="p">)</span>
 
     <span class="n">report</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;summary&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;previous_selected&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">previous_file_set</span><span class="p">),</span>
-            <span class="s2">&quot;current_selected&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_file_set</span><span class="p">),</span>
-            <span class="s2">&quot;added&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">),</span>
-            <span class="s2">&quot;no_longer_found&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">),</span>
+        <span class="s2">"summary"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"previous_selected"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">previous_file_set</span><span class="p">),</span>
+            <span class="s2">"current_selected"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_file_set</span><span class="p">),</span>
+            <span class="s2">"added"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">),</span>
+            <span class="s2">"no_longer_found"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">),</span>
         <span class="p">},</span>
-        <span class="s2">&quot;added&quot;</span><span class="p">:</span> <span class="n">added_files</span><span class="p">,</span>
-        <span class="s2">&quot;no_longer_found&quot;</span><span class="p">:</span> <span class="n">missing_files</span><span class="p">,</span>
+        <span class="s2">"added"</span><span class="p">:</span> <span class="n">added_files</span><span class="p">,</span>
+        <span class="s2">"no_longer_found"</span><span class="p">:</span> <span class="n">missing_files</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">report_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">report_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">added_files</span> <span class="ow">or</span> <span class="n">missing_files</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resume inventory changed:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Resume inventory changed:"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">added_files</span><span class="p">:</span>
-            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;file&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;files&quot;</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> new </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> will be checked.&quot;</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">"file"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"files"</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">" - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">added_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> new </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> will be checked."</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">missing_files</span><span class="p">:</span>
-            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;file is&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;files are&quot;</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">"file is"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">"files are"</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot; - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> previously selected </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> no longer found.&quot;</span>
+                <span class="sa">f</span><span class="s2">" - </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> previously selected </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> no longer found."</span>
             <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Resume inventory is unchanged.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resume inventory comparison was saved to &#39;</span><span class="si">{</span><span class="n">report_path</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Resume inventory is unchanged."</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Resume inventory comparison was saved to '</span><span class="si">{</span><span class="n">report_path</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">report_path</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -2202,7 +2222,7 @@
 
 
 <h2 id="esgf_qa.run_qa.run_compliance_checker" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">skip_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -2276,15 +2296,35 @@
 <span class="normal">129</span>
 <span class="normal">130</span>
 <span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_compliance_checker</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">checkers</span><span class="p">,</span> <span class="n">checker_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run Compliance Checker for one file, isolating checker-level failures.&quot;&quot;&quot;</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_compliance_checker</span><span class="p">(</span>
+    <span class="n">file_path</span><span class="p">,</span>
+    <span class="n">checkers</span><span class="p">,</span>
+    <span class="n">checker_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_checks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run Compliance Checker for one file, isolating checker-level failures."""</span>
     <span class="n">checker_options</span> <span class="o">=</span> <span class="n">checker_options</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">include_checks</span> <span class="o">=</span> <span class="n">include_checks</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">skip_checks</span> <span class="o">=</span> <span class="n">skip_checks</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">check_suite</span> <span class="o">=</span> <span class="n">CheckSuite</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="n">checker_options</span><span class="p">)</span>
         <span class="n">_ensure_checkers_loaded</span><span class="p">(</span><span class="n">check_suite</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="n">checker</span><span class="p">:</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;run_compliance_checker&quot;</span><span class="p">)</span>
+            <span class="n">checker</span><span class="p">:</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">"run_compliance_checker"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span>
         <span class="p">}</span>
 
@@ -2292,15 +2332,15 @@
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="n">checker</span><span class="p">:</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;load_dataset&quot;</span><span class="p">)</span>
+            <span class="n">checker</span><span class="p">:</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">"load_dataset"</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span>
         <span class="p">}</span>
 
-    <span class="n">time_checks_only</span> <span class="o">=</span> <span class="n">checker_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cc6&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-        <span class="s2">&quot;time_checks_only&quot;</span><span class="p">,</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="ow">or</span> <span class="n">checker_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mip&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;time_checks_only&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="n">include_checks</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="p">[</span><span class="s2">&quot;check_time_continuity&quot;</span><span class="p">,</span> <span class="s2">&quot;check_time_bounds&quot;</span><span class="p">,</span> <span class="s2">&quot;check_time_range&quot;</span><span class="p">]</span>
+    <span class="n">time_checks_only</span> <span class="o">=</span> <span class="n">checker_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cc6"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s2">"time_checks_only"</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="ow">or</span> <span class="n">checker_options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mip"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"time_checks_only"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">time_include_checks</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="s2">"check_time_continuity"</span><span class="p">,</span> <span class="s2">"check_time_bounds"</span><span class="p">,</span> <span class="s2">"check_time_range"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">time_checks_only</span>
         <span class="k">else</span> <span class="kc">None</span>
     <span class="p">)</span>
@@ -2309,25 +2349,29 @@
     <span class="n">close_error</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
-            <span class="n">checker_include</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">include_checks</span> <span class="k">if</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;cc6&quot;</span><span class="p">,</span> <span class="s2">&quot;mip&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
+            <span class="n">checker_name</span> <span class="o">=</span> <span class="n">checker</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">checker_include</span> <span class="o">=</span> <span class="n">include_checks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">time_checks_only</span> <span class="ow">and</span> <span class="n">checker_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"cc6"</span><span class="p">,</span> <span class="s2">"mip"</span><span class="p">}:</span>
+                <span class="c1"># This checker was added internally to produce the time metadata</span>
+                <span class="c1"># needed by ESGF-QA's consistency checks. User include filters</span>
+                <span class="c1"># apply only to explicitly selected checkers.</span>
+                <span class="n">checker_include</span> <span class="o">=</span> <span class="n">time_include_checks</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">checker_results</span> <span class="o">=</span> <span class="n">check_suite</span><span class="o">.</span><span class="n">run_all</span><span class="p">(</span>
                     <span class="n">dataset</span><span class="p">,</span>
                     <span class="p">[</span><span class="n">checker</span><span class="p">],</span>
                     <span class="n">include_checks</span><span class="o">=</span><span class="n">checker_include</span><span class="p">,</span>
-                    <span class="n">skip_checks</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">skip_checks</span><span class="o">=</span><span class="n">skip_checks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">checker_name</span><span class="p">,</span> <span class="p">[]),</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="n">checker</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">checker_results</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Compliance Checker returned no result for &#39;</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Compliance Checker returned no result for '</span><span class="si">{</span><span class="n">checker</span><span class="si">}</span><span class="s2">'."</span>
                     <span class="p">)</span>
                 <span class="n">results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="n">checker_results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-                <span class="n">results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;run_checker&quot;</span><span class="p">)</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">checker</span><span class="p">]</span> <span class="o">=</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">"run_checker"</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;close&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">"close"</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">dataset</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
@@ -2336,8 +2380,8 @@
     <span class="k">if</span> <span class="n">close_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">checker</span> <span class="ow">in</span> <span class="n">checkers</span><span class="p">:</span>
             <span class="n">results</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-                <span class="n">checker</span><span class="p">,</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">close_error</span><span class="p">,</span> <span class="s2">&quot;close_dataset&quot;</span><span class="p">)</span>
-            <span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;close_dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">close_error</span><span class="p">,</span> <span class="n">close_error</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">)</span>
+                <span class="n">checker</span><span class="p">,</span> <span class="n">_failed_checker_result</span><span class="p">(</span><span class="n">close_error</span><span class="p">,</span> <span class="s2">"close_dataset"</span><span class="p">)</span>
+            <span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="s2">"close_dataset"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">close_error</span><span class="p">,</span> <span class="n">close_error</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">results</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -2361,28 +2405,28 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/workers.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_dataset_collection_check</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_dataset_collection_check</span><span class="p">(</span>
     <span class="n">summary</span><span class="p">,</span>
     <span class="n">checker</span><span class="p">,</span>
     <span class="n">checker_fct</span><span class="p">,</span>
@@ -2390,7 +2434,7 @@
     <span class="n">files_to_check_dict</span><span class="p">,</span>
     <span class="n">checker_options</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run an all-dataset check and aggregate a runtime error if it fails.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Run an all-dataset check and aggregate a runtime error if it fails."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">checker_fct</span><span class="p">(</span><span class="n">ds_map</span><span class="p">,</span> <span class="n">files_to_check_dict</span><span class="p">,</span> <span class="n">checker_options</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
@@ -2426,14 +2470,14 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>esgf_qa/resume.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append dataset identifiers to a progress file.&quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">track_checked_datasets</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="n">checked_datasets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Append dataset identifiers to a progress file."""</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">checked_datasets_file</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">dataset_id</span> <span class="ow">in</span> <span class="n">checked_datasets</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">dataset_id</span><span class="p">])</span>

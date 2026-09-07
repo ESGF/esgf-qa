@@ -1025,11 +1025,11 @@
 <span class="normal">287</span>
 <span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">QCViewer</span><span class="p">(</span><span class="n">App</span><span class="p">):</span>
     <span class="n">BINDINGS</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">(</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="s2">&quot;quit&quot;</span><span class="p">,</span> <span class="s2">&quot;Quit&quot;</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;focus_search&quot;</span><span class="p">,</span> <span class="s2">&quot;Search&quot;</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="s2">&quot;next_match&quot;</span><span class="p">,</span> <span class="s2">&quot;Next Match&quot;</span><span class="p">),</span>
-        <span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;prev_match&quot;</span><span class="p">,</span> <span class="s2">&quot;Prev Match&quot;</span><span class="p">),</span>
-        <span class="n">Binding</span><span class="p">(</span><span class="s2">&quot;f2&quot;</span><span class="p">,</span> <span class="s2">&quot;toggle_mouse&quot;</span><span class="p">,</span> <span class="s2">&quot;Toggle Text Selection&quot;</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"q"</span><span class="p">,</span> <span class="s2">"quit"</span><span class="p">,</span> <span class="s2">"Quit"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="s2">"focus_search"</span><span class="p">,</span> <span class="s2">"Search"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"n"</span><span class="p">,</span> <span class="s2">"next_match"</span><span class="p">,</span> <span class="s2">"Next Match"</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"p"</span><span class="p">,</span> <span class="s2">"prev_match"</span><span class="p">,</span> <span class="s2">"Prev Match"</span><span class="p">),</span>
+        <span class="n">Binding</span><span class="p">(</span><span class="s2">"f2"</span><span class="p">,</span> <span class="s2">"toggle_mouse"</span><span class="p">,</span> <span class="s2">"Toggle Text Selection"</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -1043,31 +1043,31 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComposeResult</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">Header</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s2">&quot;QC Results&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;qc-tree&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s2">"QC Results"</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"qc-tree"</span><span class="p">)</span>
         <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span>
-        <span class="k">yield</span> <span class="n">Input</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">&quot;Search...&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">Static</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">Static</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">&quot;mouse-guidance&quot;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Input</span><span class="p">(</span><span class="n">placeholder</span><span class="o">=</span><span class="s2">"Search..."</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"search"</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Static</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"status"</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Static</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s2">"mouse-guidance"</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">Footer</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mouse_guidance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return instructions for the active mouse mode.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return instructions for the active mouse mode."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span>
-                <span class="s2">&quot;Mouse mode | Left-click: toggle node | Right-click: expand/collapse &quot;</span>
-                <span class="s2">&quot;subtree | F2: enable text selection&quot;</span>
+                <span class="s2">"Mouse mode | Left-click: toggle node | Right-click: expand/collapse "</span>
+                <span class="s2">"subtree | F2: enable text selection"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="s2">&quot;Text-selection mode | Drag: select text | Copy: Ctrl+Shift+C (not Ctrl+C), &quot;</span>
-            <span class="s2">&quot;Cmd+C on macOS, or right-click the selection | F2: disable text selection&quot;</span>
+            <span class="s2">"Text-selection mode | Drag: select text | Copy: Ctrl+Shift+C (not Ctrl+C), "</span>
+            <span class="s2">"Cmd+C on macOS, or right-click the selection | F2: disable text selection"</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">on_tree_node_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Tree</span><span class="o">.</span><span class="n">NodeSelected</span><span class="p">):</span>
         <span class="c1"># Right-click simulation: expand all children</span>
         <span class="c1"># Unfortunately, Tree.NodeSelected does not carry button info</span>
         <span class="c1"># We rely on a right-click flag set in on_mouse_down</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_right_click_pending&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_right_click_pending"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">toggle_expand_node</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">node</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_right_click_pending</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -1080,8 +1080,8 @@
             <span class="c1">#    self.toggle_expand_node(node)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">toggle_expand_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Right-click: expand if collapsed, collapse if expanded, recursively.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;_expanded_state&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Right-click: expand if collapsed, collapse if expanded, recursively."""</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"_expanded_state"</span><span class="p">):</span>
             <span class="c1"># toggle previous state</span>
             <span class="n">expanding</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">_expanded_state</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1100,7 +1100,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_expand_tree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_node_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return depth of node (root=0).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return depth of node (root=0)."""</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">parent</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span>
         <span class="k">while</span> <span class="n">parent</span><span class="p">:</span>
@@ -1109,7 +1109,7 @@
         <span class="k">return</span> <span class="n">depth</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_expand_tree_up_to_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">current_lvl</span><span class="p">,</span> <span class="n">target_lvl</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively expand node up to certain depth level.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Recursively expand node up to certain depth level."""</span>
         <span class="n">node</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
         <span class="n">node</span><span class="o">.</span><span class="n">_expanded_state</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="n">current_lvl</span> <span class="o">&gt;=</span> <span class="n">target_lvl</span><span class="p">:</span>
@@ -1118,14 +1118,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_expand_tree_up_to_depth</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">current_lvl</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">target_lvl</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_expand_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively expand node and all children.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Recursively expand node and all children."""</span>
         <span class="n">node</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
         <span class="n">node</span><span class="o">.</span><span class="n">_expanded_state</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_expand_tree</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_collapse_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively collapses node and all children.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Recursively collapses node and all children."""</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_collapse_tree</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
         <span class="n">node</span><span class="o">.</span><span class="n">collapse</span><span class="p">()</span>
@@ -1143,7 +1143,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-                    <span class="n">child</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">child</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">]"</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">populate_tree</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">node</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
@@ -1151,34 +1151,34 @@
             <span class="n">node</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">action_focus_search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#search&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#search"</span><span class="p">)</span><span class="o">.</span><span class="n">focus</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">action_toggle_mouse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Toggle between TUI mouse controls and terminal text selection.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Toggle between TUI mouse controls and terminal text selection."""</span>
         <span class="n">driver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span><span class="p">:</span>
             <span class="c1"># Textual has no public runtime API for toggling mouse reporting.</span>
-            <span class="c1"># Set the driver&#39;s startup flag first so its enable method takes effect.</span>
+            <span class="c1"># Set the driver's startup flag first so its enable method takes effect.</span>
             <span class="n">driver</span><span class="o">.</span><span class="n">_mouse</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">enable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">&quot;_enable_mouse_support&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">enable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">"_enable_mouse_support"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">enable_mouse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">enable_mouse</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">disable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">&quot;_disable_mouse_support&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">disable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">"_disable_mouse_support"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">disable_mouse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">disable_mouse</span><span class="p">()</span>
             <span class="c1"># Keep Textual from re-enabling reporting after a terminal resume.</span>
             <span class="n">driver</span><span class="o">.</span><span class="n">_mouse</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#mouse-guidance&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#mouse-guidance"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">)</span>
 
-        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;Mouse controls&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="k">else</span> <span class="s2">&quot;Text selection&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> enabled (F2 to toggle)&quot;</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">"Mouse controls"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="k">else</span> <span class="s2">"Text selection"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> enabled (F2 to toggle)"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">on_input_submitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Input</span><span class="o">.</span><span class="n">Submitted</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when the user submits a search in the input.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Called when the user submits a search in the input."""</span>
         <span class="n">query</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">match_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -1197,15 +1197,15 @@
             <span class="c1"># Return focus to tree so n/p work</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_focus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No matches for &#39;</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No matches for '</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">focus_match</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="p">]</span>
         <span class="n">node</span><span class="o">.</span><span class="n">expand_all</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="o">.</span><span class="n">select_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="o">.</span><span class="n">scroll_to_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">action_next_match</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1219,12 +1219,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">jump_to_match</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">jump_to_match</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Jump to the current match, expanding its parents and collapsing previous.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Jump to the current match, expanding its parents and collapsing previous."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
 
         <span class="c1"># Collapse the previously focused node if any</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;current_match_node&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"current_match_node"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span><span class="o">.</span><span class="n">collapse</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
@@ -1249,8 +1249,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="o">.</span><span class="n">select_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
         <span class="c1"># Status line</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -1329,28 +1329,28 @@
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">action_toggle_mouse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle between TUI mouse controls and terminal text selection.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Toggle between TUI mouse controls and terminal text selection."""</span>
     <span class="n">driver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_driver</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span><span class="p">:</span>
         <span class="c1"># Textual has no public runtime API for toggling mouse reporting.</span>
-        <span class="c1"># Set the driver&#39;s startup flag first so its enable method takes effect.</span>
+        <span class="c1"># Set the driver's startup flag first so its enable method takes effect.</span>
         <span class="n">driver</span><span class="o">.</span><span class="n">_mouse</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">enable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">&quot;_enable_mouse_support&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">enable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">"_enable_mouse_support"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">enable_mouse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">enable_mouse</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">disable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">&quot;_disable_mouse_support&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">disable_mouse</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">driver</span><span class="p">,</span> <span class="s2">"_disable_mouse_support"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">disable_mouse</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">disable_mouse</span><span class="p">()</span>
         <span class="c1"># Keep Textual from re-enabling reporting after a terminal resume.</span>
         <span class="n">driver</span><span class="o">.</span><span class="n">_mouse</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#mouse-guidance&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#mouse-guidance"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mouse_guidance</span><span class="p">)</span>
 
-    <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;Mouse controls&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="k">else</span> <span class="s2">&quot;Text selection&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> enabled (F2 to toggle)&quot;</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">"Mouse controls"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_enabled</span> <span class="k">else</span> <span class="s2">"Text selection"</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2"> enabled (F2 to toggle)"</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1381,7 +1381,7 @@
 <span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_node_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return depth of node (root=0).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return depth of node (root=0)."""</span>
     <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">parent</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span>
     <span class="k">while</span> <span class="n">parent</span><span class="p">:</span>
@@ -1444,12 +1444,12 @@
 <span class="normal">286</span>
 <span class="normal">287</span>
 <span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">jump_to_match</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Jump to the current match, expanding its parents and collapsing previous.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Jump to the current match, expanding its parents and collapsing previous."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span>
 
     <span class="c1"># Collapse the previously focused node if any</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;current_match_node&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"current_match_node"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">current_match_node</span><span class="o">.</span><span class="n">collapse</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
@@ -1474,8 +1474,8 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="o">.</span><span class="n">select_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
     <span class="c1"># Status line</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">match_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1520,7 +1520,7 @@
 <span class="normal">232</span>
 <span class="normal">233</span>
 <span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">on_input_submitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Input</span><span class="o">.</span><span class="n">Submitted</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Called when the user submits a search in the input.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Called when the user submits a search in the input."""</span>
     <span class="n">query</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">match_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -1539,7 +1539,7 @@
         <span class="c1"># Return focus to tree so n/p work</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_focus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qc_tree</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">&quot;#status&quot;</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No matches for &#39;</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_one</span><span class="p">(</span><span class="s2">"#status"</span><span class="p">,</span> <span class="n">Static</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No matches for '</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -1581,8 +1581,8 @@
 <span class="normal">132</span>
 <span class="normal">133</span>
 <span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">toggle_expand_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Right-click: expand if collapsed, collapse if expanded, recursively.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">&quot;_expanded_state&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Right-click: expand if collapsed, collapse if expanded, recursively."""</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"_expanded_state"</span><span class="p">):</span>
         <span class="c1"># toggle previous state</span>
         <span class="n">expanding</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">_expanded_state</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1635,7 +1635,7 @@
 <span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">iter_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively yield all nodes starting from this one.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Recursively yield all nodes starting from this one."""</span>
     <span class="k">yield</span> <span class="n">node</span>
     <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
         <span class="k">yield from</span> <span class="n">iter_nodes</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
@@ -1697,39 +1697,39 @@
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">transform_keys</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply similar renaming logic than in display_qc_results.html&quot;&quot;&quot;</span>
-    <span class="n">weight_map</span> <span class="o">=</span> <span class="p">{</span><span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Required&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Recommended&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Suggested&quot;</span><span class="p">}</span>
+<span class="w">    </span><span class="sd">"""Apply similar renaming logic than in display_qc_results.html"""</span>
+    <span class="n">weight_map</span> <span class="o">=</span> <span class="p">{</span><span class="mi">3</span><span class="p">:</span> <span class="s2">"Required"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"Recommended"</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">"Suggested"</span><span class="p">}</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">info_map</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;Dataset-ID&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;Date&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;parent_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;Root Directory&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="s2">&quot;# Files&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;datasets&quot;</span><span class="p">:</span> <span class="s2">&quot;# Datasets&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;cc_version&quot;</span><span class="p">:</span> <span class="s2">&quot;Compliance Checker Version&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;checkers&quot;</span><span class="p">:</span> <span class="s2">&quot;Applied Checkers&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;inter_ds_con_checks_ref&quot;</span><span class="p">:</span> <span class="s2">&quot;Reference Datasets (inter-dataset consistency checks)&quot;</span><span class="p">,</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="s2">"Dataset-ID"</span><span class="p">,</span>
+        <span class="s2">"date"</span><span class="p">:</span> <span class="s2">"Date"</span><span class="p">,</span>
+        <span class="s2">"parent_dir"</span><span class="p">:</span> <span class="s2">"Root Directory"</span><span class="p">,</span>
+        <span class="s2">"files"</span><span class="p">:</span> <span class="s2">"# Files"</span><span class="p">,</span>
+        <span class="s2">"datasets"</span><span class="p">:</span> <span class="s2">"# Datasets"</span><span class="p">,</span>
+        <span class="s2">"cc_version"</span><span class="p">:</span> <span class="s2">"Compliance Checker Version"</span><span class="p">,</span>
+        <span class="s2">"checkers"</span><span class="p">:</span> <span class="s2">"Applied Checkers"</span><span class="p">,</span>
+        <span class="s2">"inter_ds_con_checks_ref"</span><span class="p">:</span> <span class="s2">"Reference Datasets (inter-dataset consistency checks)"</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">if</span> <span class="s2">&quot;info&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">]:</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;Info&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s2">"info"</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">"info"</span><span class="p">]:</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"Info"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">info_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;Info&quot;</span><span class="p">][</span><span class="n">val</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;info&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;UNSPECIFIED&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">"Info"</span><span class="p">][</span><span class="n">val</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"info"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">"UNSPECIFIED"</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]:</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;Runtime Errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]:</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"Runtime Errors"</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="s2">&quot;fail&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="s2">"fail"</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]:</span>
         <span class="n">fail_section</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">weight_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">fail_section</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;fail&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">{}))</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;Failed Checks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fail_section</span>
+            <span class="n">fail_section</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="s2">"fail"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"Failed Checks"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fail_section</span>
 
-    <span class="k">if</span> <span class="s2">&quot;pass&quot;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="s2">"pass"</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">"pass"</span><span class="p">]:</span>
         <span class="n">pass_section</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">weight_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">pass_section</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;pass&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">{}))</span>
-        <span class="n">result</span><span class="p">[</span><span class="s2">&quot;Passed Checks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pass_section</span>
+            <span class="n">pass_section</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"pass"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="s2">"pass"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"Passed Checks"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pass_section</span>
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div></td></tr></table></div>

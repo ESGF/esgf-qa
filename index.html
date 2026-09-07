@@ -907,7 +907,7 @@ pytest
 </code></pre>
 <p>Please see the <a href="https://esgf.github.io/esgf-vocab/user/introduction.html">esgvoc user guide</a> for more information.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] &lt;parent_dir&gt;
+<pre><code class="language-shell">$ esgqa [-h] [-P &lt;parallel_processes&gt;] [-o &lt;OUTPUT_DIR&gt;] [-t &lt;TEST&gt;] [-O OPTION] [-i &lt;INFO&gt;] [-s CHECK] [-I CHECK] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] &lt;parent_dir&gt;
 </code></pre>
 <ul>
 <li>positional arguments:</li>
@@ -919,6 +919,8 @@ pytest
 <li><code>-t, --test TEST</code>: The test to run (eg. <code>'wcrp_cmip6:latest'</code>, <code>'wcrp_cordex_cmip6:latest'</code> or <code>'cf:&lt;version&gt;'</code>, can be specified multiple times, eg.: <code>'-t wcrp_cmip6:latest -t cf:1.7'</code>) - default: running latest CF checks. If the version is omitted, <code>latest</code> will be used (<code>'cf'</code> and <code>'cf:latest'</code> are equivalent).</li>
 <li><code>-O, --option OPTION</code>: Additional options to be passed to the checkers. Format: <code>'&lt;checker&gt;:&lt;option_name&gt;[:&lt;option_value&gt;]'</code>. Multiple invocations possible.</li>
 <li><code>-i, --info INFO</code>:  Information used to tag the QA results, eg. the simulation id to identify the checked run. Suggested is the original experiment-id you gave the run.</li>
+<li><code>-s, --skip-checks CHECK</code>: Skip a Compliance Checker method, or suppress results at a specified severity and below with <code>:M</code> or <code>:L</code>. Prefix the method with <code>'&lt;checker&gt;:'</code> to affect only that selected checker. May be repeated.</li>
+<li><code>-I, --include-checks CHECK</code>: Run only the named Compliance Checker methods. Prefix the method with <code>'&lt;checker&gt;:'</code> to affect only that selected checker. May be repeated.</li>
 <li><code>-r, --resume</code>: Specify to continue a previous QC run. Requires the <code>&lt;output_dir&gt;</code> argument to be set.</li>
 <li><code>--rerun-all</code>: With <code>--resume</code>, repeat all checks instead of reusing successful results.</li>
 <li><code>-C, --include_consistency_checks</code>: Include basic consistency and continuity checks. When using the <code>wcrp-*</code>, <code>cc6</code>, <code>mip</code> or <code>eerie</code> checkers, they are included by default.</li>
@@ -934,6 +936,22 @@ containing <code>ICON-ESM</code>:</p>
 </code></pre>
 <p>Configured filters are retained when the run is resumed. To use different filters,
 start a new run with a different output directory.</p>
+<p>Compliance Checker method filters may be applied globally or to one selected
+checker. For example, this skips the complete CF <code>check_units</code> method while the
+WCRP checker runs only <code>check_filename</code>:</p>
+<pre><code class="language-shell">$ esgqa -t cf -t wcrp_cmip7 -s cf:check_units -I wcrp_cmip7:check_filename -o QA_results/filtered_checks /path/to/datasets
+</code></pre>
+<p>Include and skip filters are mutually exclusive for the same checker, but may be
+combined for different checkers. An unqualified method applies to every selected
+checker. The suffixes <code>:M</code> and <code>:L</code> do not avoid executing the method: they suppress
+medium-and-low or low-severity results, respectively, after it has run. No suffix
+or <code>:A</code> skips the complete method. These filters affect Compliance Checker plugin
+methods, not ESGF-QA's consistency, continuity, or compatibility checks.</p>
+<p>When an explicitly selected checker already supports consistency checks, <code>-C</code> has
+no additional effect and does not override include or skip filters. ESGF-QA emits
+a warning and omits the redundant <code>-C</code> setting from <code>.resume_info</code>, while retaining
+the effective method filters. When <code>-C</code> adds the auxiliary MIP time checks, it and
+the method filters are both retained for resume.</p>
 <p>To resume at a later date, eg. if the QA run did not finish in time or more files
 have been added to the <code>&lt;parent_dir&gt;</code>:</p>
 <pre><code class="language-shell">$ esgqa -o QA_results/IAEVALL02_2025-10-20 -r
