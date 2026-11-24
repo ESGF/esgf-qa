@@ -1,0 +1,52 @@
+schema_version = 1
+
+[profile]
+name = "CMIP7"
+version = "1.0"
+extends = "default"
+
+# CMIP7 datasets are initially grouped only by branding suffix and grid label.
+# This can be refined as experience with real project data accumulates.
+[groups.project]
+attributes = [
+    ["branding_suffix"],
+    ["grid_label"],
+]
+on_missing = "separate"
+
+[checks.within_group.selected_global_attributes]
+compare_only = ["branding_suffix", "grid_label"]
+
+# Grouping attributes may differ between groups without becoming collection-wide
+# consistency failures.
+[checks.across_all.required_global_attributes]
+allow_differences = [
+    "branding_suffix",
+    "creation_date",
+    "history",
+    "tracking_id",
+    "variable_id",
+    "frequency",
+    "external_variables",
+    "table_id",
+    "grid",
+    "grid_label",
+    "realm",
+    "modeling_realm",
+]
+
+[checks.across_all.non_required_global_attributes]
+allow_differences = [
+    "branding_suffix",
+    "creation_date",
+    "history",
+    "tracking_id",
+    "variable_id",
+    "frequency",
+    "external_variables",
+    "table_id",
+    "grid",
+    "grid_label",
+    "realm",
+    "modeling_realm",
+]

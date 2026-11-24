@@ -13,6 +13,7 @@ from esgf_qa._constants import checker_supporting_consistency_checks
 from esgf_qa.checker_registry import format_checker_version, get_checker_metadata
 from esgf_qa.cluster_results import QAResultAggregator
 from esgf_qa.con_checks import dataset_coverage_checks, inter_dataset_consistency_checks
+from esgf_qa.consistency_config import load_consistency_config
 from esgf_qa.resume import record_progress
 from esgf_qa.workers import (
     call_process_dataset,
@@ -44,6 +45,10 @@ def run_workflow(config, inventory):
         f"\nFound {len(inventory.files)} files "
         f"(organized in {len(inventory.dataset_files)} datasets) to check."
     )
+
+    consistency_config = getattr(config, "consistency_config", None)
+    if consistency_config is None:
+        consistency_config = load_consistency_config(checkers=config.checkers)
 
     print("\n" + "#" * 50)
     print("# QA Part 1 - Run all compliance-checker checks")
@@ -116,12 +121,34 @@ def run_workflow(config, inventory):
     print("#   (Reference is the first file of each dataset timeseries)\n")
     process_count = _process_count(config.parallel_processes, consistency_checks=True)
     print(f"Using {process_count} parallel processes for dataset checks.\n")
+    dataset_checkers = []
+    if consistency_config.any_enabled(
+        "within_dataset",
+        {
+            "required_global_attributes",
+            "non_required_global_attributes",
+            "global_attribute_types",
+            "selected_global_attributes",
+            "variable_attributes",
+            "variable_attribute_types",
+            "dimensions",
+            "coordinates",
+        },
+    ):
+        dataset_checkers.append("cons")
+    if consistency_config.enabled("within_dataset", "time_continuity"):
+        dataset_checkers.append("cont")
+    if consistency_config.any_enabled(
+        "within_dataset", {"compatibility_override", "compatibility_exact"}
+    ):
+        dataset_checkers.append("comp")
+
     dataset_args = [
         (
             dataset_id,
             inventory.dataset_files[dataset_id],
-            ["cons", "cont", "comp"],
-            {"cons": {}, "cont": {}, "comp": {}},
+            dataset_checkers,
+            dict.fromkeys(dataset_checkers, consistency_config),
             {
                 file_path: inventory.file_details[file_path]
                 for file_path in inventory.dataset_files[dataset_id]
@@ -129,7 +156,7 @@ def run_workflow(config, inventory):
             dataset_id in config.processed_datasets,
         )
         for dataset_id in sorted(inventory.dataset_files)
-        if len(inventory.dataset_files[dataset_id]) > 1
+        if len(inventory.dataset_files[dataset_id]) > 1 and dataset_checkers
     ]
     if dataset_args:
         # Compatibility checks may open every file in a dataset simultaneously.
@@ -144,14 +171,14 @@ def run_workflow(config, inventory):
                 )
                 summary.update_ds(result, dataset_id)
 
-    print("\n# QA Part 2.2 - Continuity & Consistency across all datasets\n")
+    print("\n# QA Part 2.2 - Continuity & Consistency across datasets\n")
     inter_dataset_results = run_dataset_collection_check(
         summary,
         "cons",
         inter_dataset_consistency_checks,
         inventory.dataset_files,
         inventory.file_details,
-        {},
+        consistency_config,
     )
     if inter_dataset_results is not None:
         extra_results, reference_datasets = inter_dataset_results
@@ -164,7 +191,7 @@ def run_workflow(config, inventory):
         dataset_coverage_checks,
         inventory.dataset_files,
         inventory.file_details,
-        {},
+        consistency_config,
     )
     if coverage_results is not None:
         for dataset_id, result in coverage_results.items():
@@ -207,6 +234,9 @@ def write_results(
         ],
         "parent_dir": config.parent_dir,
     }
+    consistency_config = getattr(config, "consistency_config", None)
+    if supports_consistency and consistency_config is not None:
+        summary_info["consistency_config"] = consistency_config.metadata
     if reference_datasets:
         summary_info["inter_ds_con_checks_ref"] = reference_datasets
 

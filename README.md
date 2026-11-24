@@ -100,7 +100,7 @@ Please see the [esgvoc user guide](https://esgf.github.io/esgf-vocab/user/introd
 ## Usage
 
 ```shell
-$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-s CHECK] [-I CHECK] [-r] [--rerun-all] [-C] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] <parent_dir>
+$ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION] [-i <INFO>] [-s CHECK] [-I CHECK] [-r] [--rerun-all] [-C] [--consistency-config FILE] [-w PATH_FRAGMENT] [-b PATH_FRAGMENT] <parent_dir>
 ```
 
 - positional arguments:
@@ -117,6 +117,7 @@ $ esgqa [-h] [-P <parallel_processes>] [-o <OUTPUT_DIR>] [-t <TEST>] [-O OPTION]
   - `-r, --resume`: Specify to continue a previous QC run. Requires the `<output_dir>` argument to be set.
   - `--rerun-all`: With `--resume`, repeat all checks instead of reusing successful results.
   - `-C, --include_consistency_checks`: Include basic consistency and continuity checks. When using the `wcrp-*`, `cc6`, `mip` or `eerie` checkers, they are included by default.
+  - `--consistency-config FILE`: Use a project-specific TOML profile for ESGF-QA's consistency, continuity, coverage, and compatibility checks. The default configuration applied is inferred from the project associated with a checker (eg. "CMIP7" for "wcrp_cmip7").
   - `-w, --whitelist PATH_FRAGMENT`: Only check files whose complete path, including the filename, contains at least one of the specified case-sensitive literal fragments. May be repeated.
   - `-b, --blacklist PATH_FRAGMENT`: Exclude files whose complete path contains any specified case-sensitive literal fragment. May be repeated and takes precedence over the whitelist.
 
@@ -137,12 +138,18 @@ Configured filters are retained when the run is resumed. To use different filter
 start a new run with a different output directory.
 
 Compliance Checker method filters may be applied globally or to one selected
-checker. For example, this skips the complete CF `check_units` method while the
-WCRP checker runs only `check_filename`:
+checker. For example, this skips the complete CF `check_units` method while
+leaving the WCRP checker unfiltered:
 
 ```shell
-$ esgqa -t cf -t wcrp_cmip7 -s cf:check_units -I wcrp_cmip7:check_filename -o QA_results/filtered_checks /path/to/datasets
+$ esgqa -t cf -t wcrp_cmip7 -s cf:check_units -o QA_results/filtered_checks /path/to/datasets
 ```
+
+Avoid applying `--skip-checks` or `--include-checks` to cc-plugin-wcrp checks.
+External filtering can bypass its prerequisite ownership and fallback reporting,
+leading to incomplete or unexpected results. Use cc-plugin-wcrp's own TOML
+configuration to enable or disable its checks instead. This is separate from
+ESGF-QA's `--consistency-config`, which controls the cross-file checks.
 
 Include and skip filters are mutually exclusive for the same checker, but may be
 combined for different checkers. An unqualified method applies to every selected
@@ -156,6 +163,30 @@ no additional effect and does not override include or skip filters. ESGF-QA emit
 a warning and omits the redundant `-C` setting from `.resume_info`, while retaining
 the effective method filters. When `-C` adds the auxiliary MIP time checks, it and
 the method filters are both retained for resume.
+
+### Configuring consistency checks
+
+ESGF-QA's own dataset-level checks are controlled by a TOML profile. Without an
+explicit profile, the packaged `default.toml` reproduces the established checks,
+severity levels, allowed differences, and realm/grid grouping. Selecting
+`wcrp_cmip7` automatically uses the packaged CMIP7 profile, which currently groups
+datasets by `branding_suffix` and `grid_label`. Similarly, selecting `wcrp_cordex_cmip6`
+or/and `cc6` automatically uses the CORDEX-CMIP6 profile.
+It groups datasets by `domain_id` and the exact free-text `grid` description.
+For CORDEX-CMIP6, scalar coordinates remain subject to within-dataset consistency checks.
+Custom cross-dataset coordinate rules can enable this behaviour with `shared_non_scalar_only = true`.
+Within-dataset rules and severities are inherited from the default profile.
+
+Only one major data project can be selected per run because one consistency
+profile governs the complete dataset collection. Project-specific checkers may
+still be combined when they describe the same project (for example, `cc6` with
+`wcrp_cordex_cmip6`), and generic checkers such as CF and UGRID may be added to
+any project checker.
+
+For more information, refer to the [customization guide](instruction.md) and
+the [configuration schema and versioning reference](schema.md).
+
+### Resuming and rerunning checks
 
 To resume at a later date, eg. if the QA run did not finish in time or more files
 have been added to the `<parent_dir>`:

@@ -11,6 +11,7 @@ from esgf_qa._constants import (
     checker_supporting_consistency_checks,
     supported_project_ids,
 )
+from esgf_qa.consistency_config import load_consistency_config
 from esgf_qa.resume import invalidate_nonreusable_dataset_results
 
 
@@ -64,6 +65,7 @@ def _checker_options_for_file(
     cli_options,
     time_checks_only,
     resume,
+    consistency_output_required=True,
 ):
     tables_dir = result_dir + "/tables"
     force_table_download = file_path == first_file and (
@@ -76,8 +78,9 @@ def _checker_options_for_file(
 
     # This list is the authoritative declaration that a plugin writes the
     # per-file consistency data consumed by ESGF-QA's dataset-level checks.
-    for checker in checker_supporting_consistency_checks:
-        options.setdefault(checker, {})["consistency_output"] = consistency_file
+    if consistency_output_required:
+        for checker in checker_supporting_consistency_checks:
+            options.setdefault(checker, {})["consistency_output"] = consistency_file
 
     options.setdefault("mip", {})["time_checks_only"] = time_checks_only
     options.setdefault("cc6", {}).update(
@@ -95,6 +98,16 @@ def _checker_options_for_file(
 
 def discover_files(config):
     """Scan the configured data root and construct all workflow mappings."""
+    consistency_config = getattr(config, "consistency_config", None)
+    if consistency_config is None:
+        consistency_config = load_consistency_config(checkers=config.checkers)
+    consistency_output_required = (
+        consistency_config.requires_consistency_output
+        and any(
+            checker.split(":", 1)[0] in checker_supporting_consistency_checks
+            for checker in config.checkers
+        )
+    )
     files = []
     file_details = {}
     directory_datasets = {}
@@ -140,6 +153,7 @@ def discover_files(config):
                 "ts": timestamp,
                 "result_file": result_file,
                 "consistency_file": consistency_file,
+                "consistency_output_required": consistency_output_required,
             }
             directory_datasets.setdefault(dataset_dir, {}).setdefault(
                 dataset_name, []
@@ -180,6 +194,7 @@ def discover_files(config):
             config.checker_options,
             config.time_checks_only,
             config.resume,
+            consistency_output_required,
         )
 
     invalidate_nonreusable_dataset_results(

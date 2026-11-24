@@ -1,0 +1,382 @@
+import json
+
+import pytest
+
+from esgf_qa import cli
+from esgf_qa.consistency_config import (
+    ConsistencyConfigError,
+    load_consistency_config,
+    load_resolved_consistency_config,
+    write_resolved_consistency_config,
+)
+
+
+def write_profile(tmp_path, contents):
+    path = tmp_path / "profile.toml"
+    path.write_text(contents)
+    return path
+
+
+def test_default_profile_preserves_existing_rules():
+    config = load_consistency_config(checkers=["wcrp_cmip6"])
+
+    assert config.profile_name == "default"
+    assert config.check("within_dataset", "required_global_attributes").severity == 3
+    assert (
+        config.check("within_dataset", "non_required_global_attributes").severity == 1
+    )
+    assert config.check("within_dataset", "dimensions").allow_differences == ("time",)
+    assert config.check("within_group", "dimensions").group == "project"
+    assert config.check("across_all", "time_coverage").enabled is True
+
+
+def test_cmip7_profile_groups_by_branding_suffix_and_grid_label():
+    config = load_consistency_config(checkers=["cf", "wcrp_cmip7:1.0"])
+
+    assert config.profile_name == "CMIP7"
+    assert config.groups["project"].attributes == (
+        ("branding_suffix",),
+        ("grid_label",),
+    )
+    assert config.groups["project"].on_missing == "separate"
+    assert config.check("within_group", "selected_global_attributes").compare_only == (
+        "branding_suffix",
+        "grid_label",
+    )
+    assert (
+        "branding_suffix"
+        in config.check("across_all", "required_global_attributes").allow_differences
+    )
+
+
+@pytest.mark.parametrize("checkers", [
+    ["cc6"], ["wcrp_cordex_cmip6:1.0"],
+    ["cf", "cc6", "wcrp_cordex_cmip6"],
+])
+def test_cordex_profile_selection_and_rules(checkers):
+    config = load_consistency_config(checkers=checkers)
+    assert config.profile_name == "CORDEX-CMIP6"
+    assert config.groups["project"].attributes == (
+        ("domain_id",), ("grid",),
+    )
+    assert config.groups["project"].on_missing == "separate"
+    assert "grid" in config.check("within_group", "selected_global_attributes").compare_only
+    assert config.check("within_group", "coordinates").shared_non_scalar_only
+    assert not config.check("within_dataset", "coordinates").shared_non_scalar_only
+    for scope in ("required_global_attributes", "non_required_global_attributes"):
+        assert "domain_id" in config.check("across_all", scope).allow_differences
+        assert "domain_id" not in config.check("within_dataset", scope).allow_differences
+    assert config.check("within_dataset", "dimensions").severity == 3
+    assert config.check("within_group", "coordinates").severity == 2
+    assert config.check("across_all", "time_coverage").severity == 1
+
+
+def test_custom_profile_extends_cordex(tmp_path):
+    path = write_profile(tmp_path, '''
+schema_version = 1
+[profile]
+name = "custom-cordex"
+version = "1"
+extends = "cordex_cmip6"
+[checks.within_group.coordinates]
+severity = "H"
+''')
+    config = load_consistency_config(path=path, checkers=["cc6"])
+    assert config.profile_name == "custom-cordex"
+    assert config.groups["project"].attributes[0] == ("domain_id",)
+    assert config.check("within_group", "coordinates").severity == 3
+
+
+def test_profile_selection_rejects_multiple_major_projects():
+    with pytest.raises(ConsistencyConfigError, match="multiple major projects"):
+        load_consistency_config(checkers=["wcrp_cmip6", "wcrp_cmip7:1.0"])
+
+
+def test_custom_profile_extends_default_and_overrides_rules(tmp_path):
+    profile = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+
+[profile]
+name = "test-project"
+version = "2"
+extends = "default"
+
+[checks.within_dataset.required_global_attributes]
+severity = "LOW"
+allow_differences = ["history", "project_specific"]
+
+[checks.within_dataset.compatibility_exact]
+enabled = false
+""",
+    )
+
+    config = load_consistency_config(path=profile)
+
+    assert config.profile_name == "test-project"
+    assert config.check("within_dataset", "required_global_attributes").severity == 1
+    assert (
+        config.check("within_dataset", "required_global_attributes").severity_name
+        == "L"
+    )
+    assert config.check(
+        "within_dataset", "required_global_attributes"
+    ).allow_differences == ("history", "project_specific")
+    assert config.check("within_dataset", "compatibility_exact").enabled is False
+    assert config.check("within_dataset", "compatibility_override").enabled is True
+    assert "extends" not in config.resolved["profile"]
+
+
+def test_custom_profile_can_refine_cmip7(tmp_path):
+    profile = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+[profile]
+name = "cmip7-trial"
+version = "1"
+extends = "cmip7"
+[groups.project]
+attributes = [["branding_suffix"], ["grid_label"], ["region"]]
+""",
+    )
+
+    config = load_consistency_config(path=profile)
+
+    assert config.groups["project"].attributes == (
+        ("branding_suffix",),
+        ("grid_label",),
+        ("region",),
+    )
+    assert config.groups["project"].on_missing == "separate"
+
+
+def test_profile_with_only_compatibility_checks_needs_no_consistency_output(tmp_path):
+    profile = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+[profile]
+name = "compatibility-only"
+version = "1"
+[checks.within_dataset.compatibility_override]
+enabled = true
+severity = "H"
+""",
+    )
+
+    config = load_consistency_config(path=profile)
+
+    assert config.requires_consistency_output is False
+
+
+def test_resolved_profile_makes_implicit_defaults_explicit(tmp_path):
+    profile = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+[profile]
+name = "minimal"
+version = "1"
+[groups.project]
+attributes = [["realm"]]
+[checks.within_dataset.dimensions]
+""",
+    )
+
+    config = load_consistency_config(path=profile)
+
+    assert config.resolved["groups"]["project"]["on_missing"] == "together"
+    assert config.resolved["checks"]["within_dataset"]["dimensions"] == {
+        "enabled": True,
+        "severity": "M",
+        "allow_differences": [],
+    }
+    assert config.resolved["checks"]["within_dataset"]["time_continuity"] == {
+        "enabled": False,
+        "severity": "M",
+    }
+    assert set(config.resolved["checks"]) == {
+        "within_dataset",
+        "within_group",
+        "across_all",
+    }
+
+
+@pytest.mark.parametrize(
+    "body, match",
+    [
+        ("schema_version = 2\n[profile]\nname='x'\nversion='1'", "schema_version"),
+        ("schema_version = true\n[profile]\nname='x'\nversion='1'", "schema_version"),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[checks.within_dataset.unknown] \nseverity='H'",
+            "Unknown consistency check",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[checks.within_dataset.dimensions] \nseverity='critical'",
+            "severity",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[checks.within_group.dimensions] \nseverity='H'\ngroup='missing'",
+            "unknown group",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[groups.project]\nattributes=[['realm']]\non_missing='guess'",
+            "on_missing",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[groups.project]\nattributes=[[]]",
+            "must not be empty",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\n"
+            "[groups.project]\nattributes=[['realm']]\non_missing=[]",
+            "on_missing",
+        ),
+        (
+            "schema_version = 1\n[profile]\nname='x'\nversion='1'\nextends=[]",
+            "profile.extends",
+        ),
+    ],
+)
+def test_invalid_profiles_are_rejected(tmp_path, body, match):
+    profile = write_profile(tmp_path, body)
+
+    with pytest.raises(ConsistencyConfigError, match=match):
+        load_consistency_config(path=profile)
+
+
+def test_resolved_profile_round_trip_and_hash_validation(tmp_path):
+    config = load_consistency_config(checkers=["wcrp_cmip7"])
+    metadata = write_resolved_consistency_config(config, tmp_path)
+    archived = tmp_path / metadata["file"]
+
+    restored = load_resolved_consistency_config(
+        archived, expected_sha256=metadata["sha256"]
+    )
+    assert restored == config
+
+    archived.write_text(
+        archived.read_text().replace('version = "1.0"', 'version = "2"')
+    )
+    with pytest.raises(ConsistencyConfigError, match="does not match"):
+        load_resolved_consistency_config(archived, expected_sha256=metadata["sha256"])
+
+
+def test_severity_aliases_have_canonical_resolved_form(tmp_path):
+    long_profile = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+[profile]
+name = "severity-alias"
+version = "1"
+[checks.within_dataset.dimensions]
+severity = "LOW"
+""",
+    )
+    short_profile = tmp_path / "short.toml"
+    short_profile.write_text(long_profile.read_text().replace('"LOW"', '"L"'))
+
+    long_config = load_consistency_config(path=long_profile)
+    short_config = load_consistency_config(path=short_profile)
+
+    assert long_config == short_config
+    assert long_config.serialized == short_config.serialized
+    assert long_config.sha256 == short_config.sha256
+
+
+def test_prepare_run_archives_and_restores_custom_profile(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    source = write_profile(
+        tmp_path,
+        """
+schema_version = 1
+[profile]
+name = "custom"
+version = "1"
+extends = "default"
+[checks.within_dataset.time_continuity]
+severity = "L"
+""",
+    )
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"wcrp_cmip7": ["1.0"]},
+    )
+
+    config = cli.prepare_run(
+        str(tmp_path / "unused"),
+        [
+            "-t",
+            "wcrp_cmip7:1.0",
+            "--consistency-config",
+            str(source),
+            "-o",
+            str(output_dir),
+            str(input_dir),
+        ],
+    )
+    resume_info = json.loads((output_dir / ".resume_info").read_text())
+
+    assert config.consistency_config.profile_name == "custom"
+    assert resume_info["consistency_config"] == config.consistency_config.metadata
+    assert (output_dir / "consistency_config.toml").is_file()
+
+    source.unlink()
+    resumed = cli.prepare_run(str(tmp_path / "unused"), ["-r", "-o", str(output_dir)])
+    assert resumed.consistency_config == config.consistency_config
+
+
+def test_prepare_run_selects_cmip7_profile_automatically(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"wcrp_cmip7": ["1.0"]},
+    )
+
+    config = cli.prepare_run(
+        str(tmp_path / "unused"),
+        [
+            "-t",
+            "wcrp_cmip7:1.0",
+            "-o",
+            str(tmp_path / "output"),
+            str(input_dir),
+        ],
+    )
+
+    assert config.consistency_config.profile_name == "CMIP7"
+
+
+def test_resume_rejects_profile_metadata_mismatch(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    output_dir = tmp_path / "output"
+    monkeypatch.setattr(
+        cli,
+        "get_installed_checker_versions",
+        lambda: {"wcrp_cmip7": ["1.0"]},
+    )
+    cli.prepare_run(
+        str(tmp_path / "unused"),
+        ["-t", "wcrp_cmip7:1.0", "-o", str(output_dir), str(input_dir)],
+    )
+    resume_path = output_dir / ".resume_info"
+    resume_info = json.loads(resume_path.read_text())
+    resume_info["consistency_config"]["profile"] = "not-cmip7"
+    resume_path.write_text(json.dumps(resume_info))
+
+    with pytest.raises(ValueError, match="name or version"):
+        cli.prepare_run(str(tmp_path / "unused"), ["-r", "-o", str(output_dir)])

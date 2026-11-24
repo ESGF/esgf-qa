@@ -9,10 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from esgf_qa import checker_registry, cli, run_qa, workflow
-from esgf_qa._constants import (
-    checker_dict,
-    checker_supporting_consistency_checks,
-)
+from esgf_qa._constants import checker_dict, checker_supporting_consistency_checks
 from esgf_qa.checker_registry import (
     CheckerMetadata,
     format_checker_version,
@@ -20,6 +17,7 @@ from esgf_qa.checker_registry import (
     normalize_checker_specs,
 )
 from esgf_qa.cli import parse_options, prepare_run
+from esgf_qa.consistency_config import load_consistency_config
 from esgf_qa.discovery import (
     _checker_options_for_file,
     discover_files,
@@ -35,6 +33,39 @@ from esgf_qa.resume import (
     verify_options_dict,
 )
 from esgf_qa.run_qa import get_default_result_dir
+
+
+def test_result_metadata_records_consistency_profile(monkeypatch, tmp_path):
+    consistency_config = load_consistency_config(checkers=["cc6"])
+    config = SimpleNamespace(
+        checkers=["cc6"],
+        parent_dir="/input",
+        info="",
+        result_dir=str(tmp_path),
+        consistency_config=consistency_config,
+    )
+    inventory = SimpleNamespace(
+        files=["/input/file.nc"],
+        dataset_files={"dataset": ["/input/file.nc"]},
+    )
+    monkeypatch.setattr(
+        workflow,
+        "get_checker_metadata",
+        lambda checkers: {"cc6": CheckerMetadata("latest")},
+    )
+
+    workflow.write_results(
+        config,
+        inventory,
+        workflow.QAResultAggregator(),
+        {},
+        "20260101-000000000000",
+        "20260101-0000",
+        "2026-01-01 00:00",
+    )
+
+    report = json.loads(next(tmp_path.glob("qa_result_*.cluster.json")).read_text())
+    assert report["info"]["consistency_config"] == consistency_config.metadata
 
 
 def test_main_enables_cf_appendix_a_checks(monkeypatch, tmp_path):
@@ -401,6 +432,16 @@ def test_load_resume_info_rejects_non_object_roots(tmp_path, root):
         ("whitelist", [""]),
         ("blacklist", "broken"),
         ("blacklist", [1]),
+        ("consistency_config", {"file": "wrong.toml"}),
+        (
+            "consistency_config",
+            {
+                "file": "consistency_config.toml",
+                "profile": "default",
+                "version": "1",
+                "sha256": "not-a-hash",
+            },
+        ),
     ],
 )
 def test_load_resume_info_rejects_invalid_field_types(tmp_path, field, value):
@@ -1020,6 +1061,58 @@ def test_checker_options_for_file_uses_consistency_checker_registry(tmp_path):
     assert cli_options["wcrp_cmip7"]["consistency_output"] == "/wrong/output.json"
 
 
+def test_checker_options_omit_consistency_output_when_no_check_consumes_it(tmp_path):
+    (tmp_path / "tables").mkdir()
+
+    options = _checker_options_for_file(
+        "/input/first.nc",
+        "/input/first.nc",
+        str(tmp_path / "unused.json"),
+        str(tmp_path),
+        {},
+        time_checks_only=False,
+        resume=False,
+        consistency_output_required=False,
+    )
+
+    assert all(
+        "consistency_output" not in options.get(checker, {})
+        for checker in checker_supporting_consistency_checks
+    )
+
+
+def test_cf_only_discovery_does_not_require_consistency_output_for_resume(tmp_path):
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    input_file = input_dir / "tas_2000-2001.nc"
+    input_file.touch()
+    result_dir = tmp_path / "output"
+    result_dir.mkdir()
+    (result_dir / "tables").mkdir()
+    config = SimpleNamespace(
+        parent_dir=str(input_dir),
+        result_dir=str(result_dir),
+        whitelist=[],
+        blacklist=[],
+        checkers=["cf"],
+        checker_options=defaultdict(dict),
+        time_checks_only=False,
+        resume=False,
+        processed_files=set(),
+        processed_datasets=set(),
+    )
+
+    inventory = discover_files(config)
+    details = inventory.file_details[str(input_file)]
+    with open(details["result_file"], "w") as result_file:
+        json.dump({"cf": {"errors": {}}}, result_file)
+
+    assert details["consistency_output_required"] is False
+    assert get_reusable_file_result(["cf"], details, was_processed=True) == {
+        "cf": {"errors": {}}
+    }
+
+
 def test_discovery_filters_literal_path_fragments_with_blacklist_precedence(
     tmp_path,
 ):
@@ -1505,6 +1598,55 @@ def test_resolve_checker_specs_rejects_invalid_selections(
 
     with pytest.raises(error_type, match=re.escape(message)):
         cli.resolve_checker_specs(tests, defaultdict(dict, checker_options))
+
+
+@pytest.mark.parametrize(
+    "tests",
+    [
+        ["wcrp_cmip6", "wcrp_cmip7"],
+        ["wcrp_cmip6", "wcrp_cmip6plus"],
+        ["cc6", "wcrp_cmip7"],
+        ["wcrp_cordex_cmip6", "wcrp_cmip6"],
+    ],
+)
+def test_resolve_checker_specs_rejects_multiple_major_projects(monkeypatch, tests):
+    installed = {
+        "cc6": ["latest"],
+        "wcrp_cordex_cmip6": ["1.0", "latest"],
+        "wcrp_cmip6": ["1.0", "latest"],
+        "wcrp_cmip6plus": ["1.0", "latest"],
+        "wcrp_cmip7": ["1.0", "latest"],
+    }
+    monkeypatch.setattr(cli, "get_installed_checker_versions", lambda: installed)
+
+    with pytest.raises(ValueError, match="multiple major projects"):
+        cli.resolve_checker_specs(tests, defaultdict(dict))
+
+
+@pytest.mark.parametrize(
+    "tests",
+    [
+        ["cc6", "wcrp_cordex_cmip6"],
+        ["wcrp_cmip6", "cf"],
+        ["wcrp_cmip7", "cf", "ugrid"],
+    ],
+)
+def test_resolve_checker_specs_allows_one_project_with_other_checkers(
+    monkeypatch, tests
+):
+    installed = {
+        "cc6": ["latest"],
+        "wcrp_cordex_cmip6": ["1.0", "latest"],
+        "wcrp_cmip6": ["1.0", "latest"],
+        "wcrp_cmip7": ["1.0", "latest"],
+        "cf": ["1.11", "latest"],
+        "ugrid": ["1.0", "latest"],
+    }
+    monkeypatch.setattr(cli, "get_installed_checker_versions", lambda: installed)
+
+    resolved = cli.resolve_checker_specs(tests, defaultdict(dict))
+
+    assert {checker.split(":", 1)[0] for checker in resolved} == set(tests)
 
 
 @pytest.mark.parametrize("checker", ["cc6", "mip"])

@@ -250,7 +250,9 @@ def process_file(
                 _format_compliance_checker_runtime_error(check_method, error_details)
             )
 
-    if not os.path.isfile(consistency_file):
+    if file_details.get("consistency_output_required", True) and not os.path.isfile(
+        consistency_file
+    ):
         for checker in (
             checker.split(":", 1)[0]
             for checker in checkers

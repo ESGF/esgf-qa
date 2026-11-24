@@ -21,6 +21,12 @@ def test_transform_keys_basic():
                 "CF-Conventions cf:1.11 (compliance-checker 5.4.2)",
                 "CMIP7 wcrp_cmip7:1.0 (cc-plugin-wcrp 2.3.4)",
             ],
+            "consistency_config": {
+                "profile": "CMIP7",
+                "version": "1.0",
+                "file": "consistency_config.toml",
+                "sha256": "a" * 64,
+            },
         },
         "fail": {3: {"test1": ["file1.nc"]}},
         "pass": {3: {"test2": ["file2.nc"]}},
@@ -33,6 +39,7 @@ def test_transform_keys_basic():
     assert "Runtime Errors" in result
     assert result["Info"]["Dataset-ID"] == "DS1"
     assert result["Info"]["Applied Checkers"] == data["info"]["checkers"]
+    assert result["Info"]["Consistency Check Configuration"]["profile"] == "CMIP7"
     assert result["Failed Checks"]["Required"]["test1"] == ["file1.nc"]
 
 

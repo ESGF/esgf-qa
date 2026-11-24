@@ -38,6 +38,21 @@ def verify_check_filters(filters):
     )
 
 
+def verify_consistency_config_metadata(metadata):
+    """Return whether archived consistency-profile metadata is well formed."""
+    if metadata == {}:
+        return True
+    required = {"file", "profile", "version", "sha256"}
+    return (
+        isinstance(metadata, dict)
+        and set(metadata) == required
+        and all(isinstance(metadata[key], str) and metadata[key] for key in required)
+        and metadata["file"] == "consistency_config.toml"
+        and len(metadata["sha256"]) == 64
+        and all(character in "0123456789abcdef" for character in metadata["sha256"])
+    )
+
+
 @dataclass
 class ResumeInfo:
     """Configuration persisted alongside a resumable QA run."""
@@ -51,6 +66,7 @@ class ResumeInfo:
     include_consistency_checks: bool = False
     whitelist: list[str] = field(default_factory=list)
     blacklist: list[str] = field(default_factory=list)
+    consistency_config: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data, result_dir):
@@ -84,6 +100,7 @@ class ResumeInfo:
                 isinstance(fragment, str) and fragment
                 for fragment in data.get("blacklist", [])
             )
+            and verify_consistency_config_metadata(data.get("consistency_config", {}))
         ):
             raise Exception(
                 f"Invalid .resume_info file in '{result_dir}'. 'parent_dir' and "
@@ -92,7 +109,8 @@ class ResumeInfo:
                 "'include_checks' and 'skip_checks' should map checker names to "
                 "lists of non-empty strings. "
                 "'include_consistency_checks' should be a boolean. 'whitelist' "
-                "and 'blacklist' should be lists of non-empty strings."
+                "and 'blacklist' should be lists of non-empty strings, and "
+                "'consistency_config' should contain valid archived-profile metadata."
             )
         return cls(
             parent_dir=data["parent_dir"],
@@ -104,6 +122,7 @@ class ResumeInfo:
             include_consistency_checks=data.get("include_consistency_checks", False),
             whitelist=data.get("whitelist", []),
             blacklist=data.get("blacklist", []),
+            consistency_config=data.get("consistency_config", {}),
         )
 
     def to_dict(self):
@@ -124,6 +143,8 @@ class ResumeInfo:
             data["whitelist"] = self.whitelist
         if self.blacklist:
             data["blacklist"] = self.blacklist
+        if self.consistency_config:
+            data["consistency_config"] = self.consistency_config
         return data
 
 
@@ -298,10 +319,12 @@ def get_reusable_file_result(checkers, file_details, was_processed):
     """Return a valid cached result, or ``None`` when the file must be checked."""
     result_file = file_details["result_file"]
     consistency_file = file_details["consistency_file"]
-    consistency_output_required = any(
-        checker.split(":", 1)[0] in checker_supporting_consistency_checks
-        for checker in checkers
-    )
+    consistency_output_required = file_details.get("consistency_output_required")
+    if consistency_output_required is None:
+        consistency_output_required = any(
+            checker.split(":", 1)[0] in checker_supporting_consistency_checks
+            for checker in checkers
+        )
     if (
         not was_processed
         or not os.path.isfile(result_file)

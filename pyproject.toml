@@ -35,6 +35,7 @@ dependencies = [
   "packaging",
   "pandas",
   "textual",
+  "toml>=0.10.2",
   "xarray",
   "cc-plugin-cc6>=0.4.3",
   "cc-plugin-wcrp>=2.3.0"
@@ -125,7 +126,8 @@ lines-after-imports = 1
 [tool.setuptools.package-data]
 esgf_qa = [
   "resources/*.html",
-  "resources/fonts/*.woff2"
+  "resources/fonts/*.woff2",
+  "resources/consistency/*.toml"
 ]
 
 [tool.setuptools.packages.find]

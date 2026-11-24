@@ -10,6 +10,7 @@ dependencies:
   - packaging
   - pandas
   - textual
+  - toml>=0.10.2
   - xarray
   - pip
   - pip:

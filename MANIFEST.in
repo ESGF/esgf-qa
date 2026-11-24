@@ -1,9 +1,11 @@
 include LICENSE
 include README.md
 include HISTORY.rst
+include instruction.md
+include schema.md
 
 recursive-include tests *.py
-recursive-include esgf_qa/resources *.html *.woff2
+recursive-include esgf_qa/resources *.html *.woff2 *.toml
 
 global-exclude __pycache__ *.py[co]
 

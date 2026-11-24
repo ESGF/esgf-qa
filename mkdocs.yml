@@ -15,6 +15,7 @@ nav:
       - QA Results Viewer: reference/esgf_qa_qaviewer.md
       - QA Results Aggregator: reference/esgf_qa_cluster_results.md
       - esgf-qa Checks: reference/esgf_qa_con_checks.md
+      - Consistency Configuration: reference/esgf_qa_consistency_config.md
 
 plugins:
   - search
