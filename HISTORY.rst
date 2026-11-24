@@ -1,6 +1,13 @@
 Unreleased
 ----------
 
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+* Dropped Python 3.10 support following its end of life. Python 3.11 or newer
+  is now required. Python 3.14 is tested in a non-blocking exploratory CI job;
+  it is not yet advertised as supported.
+
 New Features
 ^^^^^^^^^^^^
 
