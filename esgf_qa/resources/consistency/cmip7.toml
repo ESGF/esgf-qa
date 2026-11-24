@@ -15,12 +15,22 @@ attributes = [
 on_missing = "separate"
 
 [checks.within_group.selected_global_attributes]
-compare_only = ["branding_suffix", "grid_label"]
+compare_only = ["branding_suffix", "grid_label", "nominal_resolution"]
+
+# Some variables need external cell measures while others do not.
+[checks.across_all.global_attribute_types]
+allow_differences = ["external_variables"]
 
 # Grouping attributes may differ between groups without becoming collection-wide
 # consistency failures.
 [checks.across_all.required_global_attributes]
 allow_differences = [
+    "nominal_resolution",
+    "branded_variable",
+    "temporal_label",
+    "vertical_label",
+    "horizontal_label",
+    "area_label",
     "branding_suffix",
     "creation_date",
     "history",
@@ -37,6 +47,12 @@ allow_differences = [
 
 [checks.across_all.non_required_global_attributes]
 allow_differences = [
+    "nominal_resolution",
+    "branded_variable",
+    "temporal_label",
+    "vertical_label",
+    "horizontal_label",
+    "area_label",
     "branding_suffix",
     "creation_date",
     "history",

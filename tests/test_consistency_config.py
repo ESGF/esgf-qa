@@ -42,6 +42,7 @@ def test_cmip7_profile_groups_by_branding_suffix_and_grid_label():
     assert config.check("within_group", "selected_global_attributes").compare_only == (
         "branding_suffix",
         "grid_label",
+        "nominal_resolution",
     )
     assert (
         "branding_suffix"
@@ -90,6 +91,15 @@ severity = "H"
 def test_profile_selection_rejects_multiple_major_projects():
     with pytest.raises(ConsistencyConfigError, match="multiple major projects"):
         load_consistency_config(checkers=["wcrp_cmip6", "wcrp_cmip7:1.0"])
+
+
+@pytest.mark.parametrize("check", ["required_global_attributes", "non_required_global_attributes"])
+def test_cmip7_variable_identity_may_differ_across_datasets(check):
+    config = load_consistency_config(checkers=["wcrp_cmip7"])
+    attributes = {"branded_variable", "temporal_label", "vertical_label",
+                  "horizontal_label", "area_label", "nominal_resolution"}
+    assert attributes <= set(config.check("across_all", check).allow_differences)
+    assert not attributes.intersection(config.check("within_dataset", check).allow_differences)
 
 
 def test_custom_profile_extends_default_and_overrides_rules(tmp_path):

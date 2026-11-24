@@ -19,7 +19,8 @@ compare_only = ["domain_id", "domain", "grid"]
 
 [checks.within_group.coordinates]
 # Different variables can use different scalar heights or pressure levels.
-# Compare only shared non-scalar coordinates; within-dataset checks stay strict.
+# Without coordinate IDs, compare only shared non-scalar coordinates. Matching
+# IDs also permit scalar comparisons; within-dataset checks stay strict.
 shared_non_scalar_only = true
 
 # Different domains may occur in one simulation-level QA run. Domain metadata

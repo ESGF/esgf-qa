@@ -814,6 +814,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     }
 
     scalar_names = {}
+    coordinate_references = {}
 
     def get_scalar_names(data):
         dataset_id = next(key for key, value in consistency_data.items() if value is data)
@@ -847,14 +848,37 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                 current_values,
                 exclude_keys=rule.allow_differences,
             )
-        elif name == "coordinates" and rule.shared_non_scalar_only:
-            shared = reference["coordinates"].keys() & current["coordinates"].keys()
-            shared -= get_scalar_names(reference) | get_scalar_names(current)
-            diff_keys = compare_dicts(
-                _selected_dict(reference["coordinates"], shared),
-                _selected_dict(current["coordinates"], shared),
-                exclude_keys=rule.allow_differences,
+        elif name == "coordinates":
+            # A coordinate absent from the group's first dataset still needs
+            # its own reference. IDs distinguish, for example, different uses
+            # of 'sector', and allow matching coordinates with different names.
+            references = coordinate_references.setdefault(
+                (scope, rule.group, group_label), {}
             )
+            ids = current.get("coordinate_ids") or {}
+            diff_keys = []
+            for coordinate, checksum in sorted(current["coordinates"].items()):
+                if coordinate in rule.allow_differences:
+                    continue
+                identity = ids.get(coordinate) or None
+                for (ref_name, ref_id), (ref_data, ref_checksum) in references.items():
+                    if identity is not None and ref_id is not None:
+                        if identity != ref_id:
+                            continue
+                    else:
+                        if coordinate != ref_name:
+                            continue
+                        # Legacy summaries cannot distinguish scalar meanings.
+                        # With matching IDs, even scalar values are comparable.
+                        if rule.shared_non_scalar_only and (
+                            coordinate in get_scalar_names(current)
+                            or ref_name in get_scalar_names(ref_data)
+                        ):
+                            continue
+                    if checksum != ref_checksum:
+                        diff_keys.append(coordinate)
+                        break
+                references.setdefault((coordinate, identity), (current, checksum))
         elif name in {"variable_attributes", "variable_attribute_types"}:
             diff_keys = compare_nested_dicts(
                 reference[data_keys[name]],
@@ -904,8 +928,10 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     if enabled_across:
         main_reference = dataset_ids[0]
         reference_datasets["general_reference"] = main_reference
-        for dataset_id in dataset_ids[1:]:
+        for dataset_id in dataset_ids:
             for name, rule in enabled_across.items():
+                if dataset_id == main_reference and name != "coordinates":
+                    continue
                 run_comparison(
                     "across_all",
                     name,
@@ -931,9 +957,11 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             grouped_ids = grouped[key]
             reference_id = grouped_ids[0]
             references[group_labels[key]] = reference_id
-            for dataset_id in grouped_ids[1:]:
+            for dataset_id in grouped_ids:
                 for name, rule in enabled_group_rules.items():
                     if rule.group != group_name:
+                        continue
+                    if dataset_id == reference_id and name != "coordinates":
                         continue
                     run_comparison(
                         "within_group",

@@ -345,6 +345,141 @@ shared_non_scalar_only = {str(shared_only).lower()}
         assert any("height" in message for message in finding["msgs"])
 
 
+@pytest.mark.parametrize("scope", ["within_group", "across_all"])
+@pytest.mark.parametrize(
+    "names,ids,expected",
+    [
+        (("height", "height"), ("height2m", "height2m"), True),
+        (("height", "height"), ("height2m", "height10m"), False),
+        (("height", "altitude"), ("height2m", "height2m"), True),
+        (("height", "height"), (None, None), False),
+        (("height", "height"), ("height2m", None), False),
+        (("height", "height"), (None, "height2m"), False),
+    ],
+)
+def test_coordinate_ids_with_scalar_fallback(tmp_path, scope, names, ids, expected):
+    """IDs enable scalar comparisons; missing IDs retain CORDEX's fallback."""
+    profile = tmp_path / "profile.toml"
+    profile.write_text(f'''
+schema_version = 1
+[profile]
+name = "ids"
+version = "1.0"
+[groups.project]
+attributes = [["grid"]]
+on_missing = "separate"
+[checks.{scope}.coordinates]
+enabled = true
+severity = "M"
+{ 'group = "project"' if scope == 'within_group' else '' }
+shared_non_scalar_only = true
+''')
+    datasets, files = {}, {}
+    # The first dataset deliberately lacks this coordinate: it must not
+    # prevent the two later datasets from being compared with each other.
+    for index in range(3):
+        path = str(tmp_path / f"ds{index}.nc")
+        data = {"global_attributes": {"grid": "same"}, "coordinates": {}}
+        with cc.Dataset(path, "w") as dataset:
+            if index:
+                name, identity = names[index - 1], ids[index - 1]
+                dataset.createVariable(name, "f8").assignValue(index)
+                data["coordinates"][name] = str(index)
+                if identity:
+                    data["coordinate_ids"] = {name: identity}
+        summary = tmp_path / f"ds{index}.json"
+        summary.write_text(json.dumps(data))
+        datasets[f"ds{index}"] = [path]
+        files[path] = {"consistency_file": str(summary)}
+    results, _ = cc.inter_dataset_consistency_checks(
+        datasets, files, load_consistency_config(path=profile)
+    )
+    assert not results["ds1"].get("Coordinates (Inter-Dataset)")
+    assert bool(results["ds2"].get("Coordinates (Inter-Dataset)")) == expected
+
+
+@pytest.mark.parametrize(
+    "case,expected_datasets",
+    [
+        ("different_meanings", set()),
+        ("same_meaning", {"ds2"}),
+        ("equal_values", set()),
+        ("renamed_coordinate", {"ds2"}),
+        ("different_groups", set()),
+        ("excluded", set()),
+        ("legacy_reference", {"ds2"}),
+        ("legacy_current", {"ds2"}),
+        ("late_coordinate", {"ds2"}),
+    ],
+)
+def test_coordinate_identity_reference_matrix(tmp_path, monkeypatch, case, expected_datasets):
+    """Independent coordinate references must not mix meanings or grid groups."""
+    profile = tmp_path / "identities.toml"
+    profile.write_text('''
+schema_version = 1
+[profile]
+name = "identities"
+version = "1.0"
+[groups.project]
+attributes = [["grid_label"]]
+on_missing = "separate"
+[checks.within_group.coordinates]
+enabled = true
+severity = "M"
+group = "project"
+''' + ('allow_differences = ["sector"]\n' if case == "excluded" else ''))
+
+    # The first dataset has soil pools; later datasets have basin labels.
+    # A single reference for the whole group would miss the ds1/ds2 difference.
+    records = [
+        {"coordinates": {"sector": "soil-checksum"}, "coordinate_ids": {"sector": "soilpools"}},
+        {"coordinates": {"sector": "basin-checksum"}, "coordinate_ids": {"sector": "basin"}},
+        {"coordinates": {"sector": "changed-checksum"}, "coordinate_ids": {"sector": "basin"}},
+    ]
+    if case == "different_meanings":
+        records[2]["coordinate_ids"]["sector"] = "vegetationtype"
+    elif case == "equal_values":
+        records[2]["coordinates"]["sector"] = "basin-checksum"
+    elif case == "renamed_coordinate":
+        records[2] = {"coordinates": {"labels": "changed-checksum"}, "coordinate_ids": {"labels": "basin"}}
+    elif case in {"legacy_reference", "legacy_current", "late_coordinate"}:
+        records[0] = {"coordinates": {}}
+        if case == "legacy_reference":
+            records[1].pop("coordinate_ids")
+        elif case == "legacy_current":
+            records[2].pop("coordinate_ids")
+
+    datasets, files = {}, {}
+    for index, record in enumerate(records):
+        record["global_attributes"] = {
+            "grid_label": "other" if case == "different_groups" and index == 2 else "g142"
+        }
+        summary = tmp_path / f"ds{index}.json"
+        summary.write_text(json.dumps(record))
+        path = str(tmp_path / f"ds{index}.nc")
+        datasets[f"ds{index}"] = [path]
+        files[path] = {"consistency_file": str(summary)}
+
+    def unexpected_read(*args, **kwargs):
+        pytest.fail("Identity comparisons must work from summaries without NetCDF reads")
+
+    monkeypatch.setattr(cc, "Dataset", unexpected_read)
+    results, _ = cc.inter_dataset_consistency_checks(
+        datasets, files, load_consistency_config(path=profile)
+    )
+    findings = {
+        dataset_id: result["Coordinates (Inter-Dataset)"]
+        for dataset_id, result in results.items()
+        if result.get("Coordinates (Inter-Dataset)")
+    }
+    assert set(findings) == expected_datasets
+    for finding in findings.values():
+        assert finding["weight"] == 2
+        assert len(finding["msgs"]) == 1
+        name = "labels" if case == "renamed_coordinate" else "sector"
+        assert next(iter(finding["msgs"])).endswith(": " + name)
+
+
 class TestConChecks:
     def test_cordex_scalar_changes_within_dataset_still_fail(
         self, temp_files, ds_map, files_to_check_dict
