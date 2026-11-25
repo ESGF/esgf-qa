@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 import os
 import tempfile
 from datetime import timedelta
@@ -480,7 +481,173 @@ group = "project"
         assert next(iter(finding["msgs"])).endswith(": " + name)
 
 
+@pytest.mark.parametrize("case,expected", [
+    ("different_ids", False), ("same_ids", True), ("renamed", True),
+    ("legacy", True), ("padding", False), ("missing", False),
+])
+def test_dimension_id_comparison(tmp_path, case, expected):
+    profile = tmp_path / "dimensions.toml"
+    profile.write_text('''
+schema_version = 1
+[profile]
+name = "dimensions"
+version = "1.0"
+[checks.across_all.dimensions]
+enabled = true
+severity = "M"
+''')
+    records = [
+        {"dimensions": {}},
+        {"dimensions": {"type": 3, "label_width": 16},
+         "dimension_ids": {"type": "basin"}, "string_length_dimensions": ["label_width"]},
+        {"dimensions": {"type": 5, "label_width": 32},
+         "dimension_ids": {"type": "basin"}, "string_length_dimensions": ["label_width"]},
+    ]
+    if case == "different_ids":
+        records[2]["dimension_ids"]["type"] = "soilpools"
+    elif case == "renamed":
+        records[2]["dimensions"]["categories"] = records[2]["dimensions"].pop("type")
+        records[2]["dimension_ids"] = {"categories": "basin"}
+    elif case == "legacy":
+        records[2].pop("dimension_ids")
+    elif case == "padding":
+        records[2]["dimensions"]["type"] = 3
+    elif case == "missing":
+        records[2] = {"dimensions": {}}
+    datasets, files = {}, {}
+    for index, record in enumerate(records):
+        path = str(tmp_path / f"ds{index}.json")
+        Path(path).write_text(json.dumps(record))
+        datasets[f"ds{index}"] = [path]
+        files[path] = {"consistency_file": path}
+    results, _ = cc.inter_dataset_consistency_checks(
+        datasets, files, load_consistency_config(path=profile)
+    )
+    assert not results["ds1"].get("Dimensions (Inter-Dataset)")
+    finding = results["ds2"].get("Dimensions (Inter-Dataset)")
+    assert bool(finding) == expected
+    if finding:
+        assert all("label_width" not in message for message in finding["msgs"])
+
+
+@pytest.mark.parametrize("checker", ["wcrp_cmip7", "wcrp_cmip6", "wcrp_cordex_cmip6"])
+@pytest.mark.parametrize("case,expected", [
+    ("same_table", True), ("different_tables", False),
+    ("missing_table", False), ("missing_info", False), ("equal_info", False),
+])
+def test_optional_table_info_group(tmp_path, checker, case, expected):
+    config = load_consistency_config(checkers=[checker])
+    # Restrict execution to the table rule while retaining its shipped policy.
+    profile = tmp_path / "table.toml"
+    profile.write_text('''
+schema_version = 1
+[profile]
+name = "table"
+version = "1.0"
+[groups.table]
+attributes = [["table_id"]]
+on_missing = "separate"
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = true
+severity = "L"
+group = "table"
+compare_only = ["table_info"]
+compare_only_when_present = true
+''')
+    rule = config.check("within_group", "selected_global_attributes:table")
+    assert rule.enabled and rule.severity == 1 and rule.group == "table"
+    for name in ("required_global_attributes", "non_required_global_attributes", "global_attribute_types"):
+        assert "table_info" in config.check("across_all", name).allow_differences
+    records = [
+        {"table_id": "Amon"},  # No info in the first dataset must not hide later differences.
+        {"table_id": "Amon", "table_info": "version one"},
+        {"table_id": "Amon", "table_info": "version two"},
+    ]
+    if case == "different_tables":
+        records[2]["table_id"] = "Omon"
+    elif case == "missing_table":
+        for record in records:
+            record.pop("table_id")
+    elif case == "missing_info":
+        records[2].pop("table_info")
+    elif case == "equal_info":
+        records[2]["table_info"] = "version one"
+    datasets, files = {}, {}
+    for index, attributes in enumerate(records):
+        path = str(tmp_path / f"ds{index}.json")
+        Path(path).write_text(json.dumps({"global_attributes_non_required": attributes}))
+        datasets[f"ds{index}"] = [path]
+        files[path] = {"consistency_file": path}
+    results, _ = cc.inter_dataset_consistency_checks(
+        datasets, files, load_consistency_config(path=profile)
+    )
+    finding = results["ds2"].get("Group-specific global attributes (Inter-Dataset) [table]")
+    assert bool(finding) == expected
+    if finding:
+        assert finding["weight"] == 1
+        assert all(message.endswith(": table_info") for message in finding["msgs"])
+
+
 class TestConChecks:
+    @pytest.mark.parametrize("table_enabled", [True, False])
+    def test_named_attribute_instances_run_independently(self, tmp_path, table_enabled):
+        profile = tmp_path / "instances.toml"
+        profile.write_text(f'''
+schema_version = 1
+[profile]
+name = "instances"
+version = "1.0"
+[groups.grid]
+attributes = [["grid_label"]]
+on_missing = "separate"
+[groups.table]
+attributes = [["table_id"]]
+on_missing = "separate"
+[checks.within_group.selected_global_attributes]
+severity = "H"
+group = "grid"
+compare_only = ["nominal_resolution"]
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = {str(table_enabled).lower()}
+severity = "L"
+group = "table"
+compare_only = ["table_info"]
+compare_only_when_present = true
+''')
+        datasets, files = {}, {}
+        for index in range(3):
+            attrs = {"grid_label": "g142", "table_id": "Amon", "nominal_resolution": str(index)}
+            if index:
+                attrs["table_info"] = f"version {index}"
+            path = str(tmp_path / f"ds{index}.json")
+            Path(path).write_text(json.dumps({"global_attributes": attrs}))
+            datasets[f"ds{index}"] = [path]
+            files[path] = {"consistency_file": path}
+        results, _ = cc.inter_dataset_consistency_checks(
+            datasets, files, load_consistency_config(path=profile)
+        )
+        unnamed = "Group-specific global attributes (Inter-Dataset)"
+        named = unnamed + " [table]"
+        assert results["ds2"][unnamed]["weight"] == 3
+        assert not results["ds1"].get(named)
+        assert bool(results["ds2"].get(named)) == table_enabled
+        if table_enabled:
+            assert results["ds2"][named]["weight"] == 1
+            assert all("table_info" in message for message in results["ds2"][named]["msgs"])
+
+    def test_string_width_changes_within_dataset_remain_strict(
+        self, temp_files, ds_map, files_to_check_dict
+    ):
+        for index, path in enumerate(temp_files["ds1"]):
+            data = json.loads(Path(path).read_text())
+            data["dimensions"]["label_width"] = 16 + index
+            data["string_length_dimensions"] = ["label_width"]
+            Path(path).write_text(json.dumps(data))
+        results = cc.consistency_checks(
+            "ds1", ds_map, files_to_check_dict, load_consistency_config(checkers=["cc6"])
+        )
+        assert any("label_width" in message for message in results["Dimensions"]["msgs"])
+
     def test_cordex_scalar_changes_within_dataset_still_fail(
         self, temp_files, ds_map, files_to_check_dict
     ):

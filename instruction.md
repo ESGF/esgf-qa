@@ -115,3 +115,16 @@ in `.resume_info`. Resume uses that archived profile, even if your original TOML
 changes or disappears. Do not edit the archived file: its hash is checked.
 To apply configuration changes, start a new run in a new output directory;
 `--resume --rerun-all` also retains the archived configuration.
+
+# Coordinate and dimension identities
+
+cc-plugin-wcrp summaries can include `coordinate_ids`, `dimension_ids`, and
+`string_length_dimensions`. Inter-dataset comparisons match scientific IDs when
+both sides provide them, otherwise falling back to names. Each identity gets its
+own reference within the group. Missing coordinates or dimensions in another
+dataset are not considered inconsistent. Identified character-string storage
+widths are excluded from inter-dataset dimension comparisons, irrespective of
+their names. Within-dataset comparisons remain strict.
+
+CORDEX's `shared_non_scalar_only` setting excludes scalars only when matching
+coordinate IDs are unavailable.

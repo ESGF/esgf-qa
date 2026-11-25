@@ -12,6 +12,18 @@ attributes = [
 ]
 on_missing = "together"
 
+# Table metadata is optional, and only comparable within the same table.
+[groups.table]
+attributes = [["table_id"]]
+on_missing = "separate"
+
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = true
+severity = "L"
+group = "table"
+compare_only = ["table_info"]
+compare_only_when_present = true
+
 [checks.within_dataset.required_global_attributes]
 enabled = true
 severity = "H"
@@ -91,6 +103,7 @@ allow_differences = [
     "frequency",
     "external_variables",
     "table_id",
+    "table_info",
     "grid",
     "grid_label",
     "realm",
@@ -108,6 +121,7 @@ allow_differences = [
     "frequency",
     "external_variables",
     "table_id",
+    "table_info",
     "grid",
     "grid_label",
     "realm",
@@ -117,6 +131,7 @@ allow_differences = [
 [checks.across_all.global_attribute_types]
 enabled = true
 severity = "M"
+allow_differences = ["table_info"]
 
 [checks.across_all.time_coverage]
 enabled = true

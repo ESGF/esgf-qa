@@ -30,6 +30,76 @@ def test_default_profile_preserves_existing_rules():
     assert config.check("across_all", "time_coverage").enabled is True
 
 
+def test_named_attribute_instances_inheritance_and_roundtrip(tmp_path):
+    path = write_profile(tmp_path, '''
+schema_version = 1
+[profile]
+name = "custom"
+version = "1.0"
+extends = "cmip7"
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = false
+[checks.across_all.selected_global_attributes.instances.model]
+severity = "H"
+compare_only = ["source_id"]
+compare_only_when_present = true
+''')
+    config = load_consistency_config(path=path)
+    assert config.enabled("within_group", "selected_global_attributes")
+    assert not config.enabled("within_group", "selected_global_attributes:table")
+    assert config.check("within_group", "selected_global_attributes:table").compare_only == ("table_info",)
+    assert config.any_enabled("across_all", {"selected_global_attributes"})
+    assert config.requires_consistency_output
+    archived = tmp_path / "resolved.json"
+    archived.write_text(config.serialized)
+    restored = load_resolved_consistency_config(archived)
+    assert restored.serialized == config.serialized
+    assert restored.check("across_all", "selected_global_attributes:model").severity == 3
+
+
+@pytest.mark.parametrize("scope", ["within_group", "across_all"])
+def test_named_instance_alone_requires_summary_and_survives_reload(tmp_path, scope):
+    group_setting = 'group = "table"' if scope == "within_group" else ""
+    path = write_profile(tmp_path, f'''
+schema_version = 1
+[profile]
+name = "named-only"
+version = "1.0"
+[groups.table]
+attributes = [["table_id"]]
+[checks.{scope}.selected_global_attributes.instances.table]
+{group_setting}
+compare_only = ["table_info"]
+compare_only_when_present = true
+''')
+    config = load_consistency_config(path=path)
+    assert not config.enabled(scope, "selected_global_attributes")
+    assert config.any_enabled(scope, {"selected_global_attributes"})
+    assert config.requires_consistency_output
+    archived = tmp_path / "resolved.json"
+    archived.write_text(config.serialized)
+    assert load_resolved_consistency_config(archived).serialized == config.serialized
+
+
+@pytest.mark.parametrize("section,settings", [
+    ("within_dataset.selected_global_attributes.instances.bad", 'compare_only = ["x"]'),
+    ("across_all.dimensions.instances.bad", 'severity = "M"'),
+    ("across_all.selected_global_attributes", 'compare_only = ["x"]\ncompare_only_when_present = "yes"'),
+    ("across_all.dimensions", 'compare_only_when_present = true'),
+])
+def test_invalid_named_attribute_configuration(tmp_path, section, settings):
+    path = write_profile(tmp_path, f'''
+schema_version = 1
+[profile]
+name = "invalid"
+version = "1.0"
+[checks.{section}]
+{settings}
+''')
+    with pytest.raises(ConsistencyConfigError):
+        load_consistency_config(path=path)
+
+
 def test_cmip7_profile_groups_by_branding_suffix_and_grid_label():
     config = load_consistency_config(checkers=["cf", "wcrp_cmip7:1.0"])
 

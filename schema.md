@@ -119,7 +119,8 @@ Every check table accepts the following fields, subject to the restrictions belo
 | `severity` | string | `"M"` | `H`, `M`, `L`, or `HIGH`, `MEDIUM`, `LOW`, case-insensitively. |
 | `group` | non-empty string | none | Only for `within_group`; required when that check is enabled and must reference an existing group. |
 | `allow_differences` | array of unique, non-empty strings | `[]` | Only for metadata comparison checks. |
-| `compare_only` | array of unique, non-empty strings | `[]` | Only for `selected_global_attributes`; required and non-empty when that check is enabled. |
+| `compare_only` | array of unique, non-empty strings | `[]` | For `selected_global_attributes`; required and non-empty when enabled. |
+| `compare_only_when_present` | Boolean | `false` | Cross-dataset `selected_global_attributes` only; skips missing attributes instead of reporting their absence. |
 
 `allow_differences` contains exact names omitted from comparison. For global
 attribute, dimension, and coordinate checks these are the corresponding names;
@@ -147,6 +148,29 @@ Only `within_dataset` additionally supports:
 Only `within_group` and `across_all` additionally support:
 
 - `time_coverage`
+
+### Named selected-attribute comparisons
+
+Cross-dataset `selected_global_attributes` supports independently configured
+instances alongside the existing unnamed check. Each instance has its own
+group, severity, enabled flag and selected attributes; settings are not inherited
+from the unnamed check. Profile inheritance can override an individual instance.
+
+```toml
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = true
+severity = "L"
+group = "table"
+compare_only = ["table_info"]
+compare_only_when_present = true
+```
+
+The group must be declared separately. Bundled profiles define `table` using
+`table_id`, keeping datasets with missing IDs separate. With
+`compare_only_when_present = true`, each selected attribute gets its own
+reference, so an absent value in the first dataset does not prevent later
+comparisons. This policy concerns comparison behavior, not whether the project
+requires the attribute.
 
 Unknown scopes, check names, and fields are rejected. `allow_differences` and
 `compare_only` cannot be assigned to continuity, compatibility, or coverage

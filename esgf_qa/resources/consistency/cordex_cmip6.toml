@@ -28,7 +28,7 @@ shared_non_scalar_only = true
 [checks.across_all.required_global_attributes]
 allow_differences = [
     "creation_date", "history", "tracking_id", "variable_id", "frequency",
-    "external_variables", "table_id", "grid", "grid_label",
+    "external_variables", "table_id", "table_info", "grid", "grid_label",
     "domain_id", "domain",
 ]
 

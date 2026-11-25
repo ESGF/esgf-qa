@@ -779,9 +779,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     results = defaultdict(level0_factory)
     config = _config(checker_options)
     if not any(
-        config.enabled(scope, name)
+        config.any_enabled(scope, COMPARISON_CHECKS)
         for scope in ("within_group", "across_all")
-        for name in COMPARISON_CHECKS
     ):
         return results, {}
     try:
@@ -830,13 +829,17 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     def run_comparison(
         scope, name, rule, reference, current, dataset_id, group_label=None
     ):
+        rule_key = name
+        name, _, instance = name.partition(":")
         test = f"{labels[name]} (Inter-Dataset)"
-        if scope == "within_group" and config.enabled("across_all", name):
+        if scope == "within_group" and config.any_enabled("across_all", {name}):
             test = f"{labels[name]} (Inter-Dataset, Group)"
-        elif scope == "across_all" and config.enabled("within_group", name):
+        elif scope == "across_all" and config.any_enabled("within_group", {name}):
             test = f"{labels[name]} (Inter-Dataset, All)"
+        if instance:
+            test += f" [{instance}]"
 
-        if name == "selected_global_attributes":
+        if name == "selected_global_attributes" and not rule.compare_only_when_present:
             reference_values = _selected_dict(
                 _combined_global_attributes(reference), rule.compare_only
             )
@@ -848,17 +851,33 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                 current_values,
                 exclude_keys=rule.allow_differences,
             )
-        elif name == "coordinates":
+        elif name == "selected_global_attributes":
+            references = coordinate_references.setdefault(
+                (scope, rule.group, group_label, rule_key), {}
+            )
+            diff_keys = []
+            attributes = _combined_global_attributes(current)
+            for attribute in rule.compare_only:
+                if attribute in rule.allow_differences or attribute not in attributes:
+                    continue
+                value = attributes[attribute]
+                if value == "unset":
+                    continue
+                if attribute in references and references[attribute] != value:
+                    diff_keys.append(attribute)
+                references.setdefault(attribute, value)
+        elif name in {"coordinates", "dimensions"}:
             # A coordinate absent from the group's first dataset still needs
             # its own reference. IDs distinguish, for example, different uses
             # of 'sector', and allow matching coordinates with different names.
             references = coordinate_references.setdefault(
-                (scope, rule.group, group_label), {}
+                (scope, rule.group, group_label, name), {}
             )
-            ids = current.get("coordinate_ids") or {}
+            ids = current.get("coordinate_ids" if name == "coordinates" else "dimension_ids") or {}
+            ignored_dimensions = set(current.get("string_length_dimensions") or []) if name == "dimensions" else set()
             diff_keys = []
-            for coordinate, checksum in sorted(current["coordinates"].items()):
-                if coordinate in rule.allow_differences:
+            for coordinate, checksum in sorted(current[name].items()):
+                if coordinate in rule.allow_differences or coordinate in ignored_dimensions:
                     continue
                 identity = ids.get(coordinate) or None
                 for (ref_name, ref_id), (ref_data, ref_checksum) in references.items():
@@ -870,7 +889,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                             continue
                         # Legacy summaries cannot distinguish scalar meanings.
                         # With matching IDs, even scalar values are comparable.
-                        if rule.shared_non_scalar_only and (
+                        if name == "coordinates" and rule.shared_non_scalar_only and (
                             coordinate in get_scalar_names(current)
                             or ref_name in get_scalar_names(ref_data)
                         ):
@@ -920,8 +939,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
 
     enabled_across = {
         name: config.check("across_all", name)
-        for name in sorted(COMPARISON_CHECKS)
-        if config.enabled("across_all", name)
+        for name in sorted(config.checks["across_all"])
+        if name.split(":", 1)[0] in COMPARISON_CHECKS and config.enabled("across_all", name)
     }
     reference_datasets = {}
     dataset_ids = sorted(consistency_data)
@@ -930,7 +949,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
         reference_datasets["general_reference"] = main_reference
         for dataset_id in dataset_ids:
             for name, rule in enabled_across.items():
-                if dataset_id == main_reference and name != "coordinates":
+                if dataset_id == main_reference and name not in {"coordinates", "dimensions"} and not rule.compare_only_when_present:
                     continue
                 run_comparison(
                     "across_all",
@@ -944,8 +963,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     group_references = {}
     enabled_group_rules = {
         name: config.check("within_group", name)
-        for name in sorted(COMPARISON_CHECKS)
-        if config.enabled("within_group", name)
+        for name in sorted(config.checks["within_group"])
+        if name.split(":", 1)[0] in COMPARISON_CHECKS and config.enabled("within_group", name)
     }
     for group_name in sorted({rule.group for rule in enabled_group_rules.values()}):
         group = config.groups[group_name]
@@ -961,7 +980,7 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                 for name, rule in enabled_group_rules.items():
                     if rule.group != group_name:
                         continue
-                    if dataset_id == reference_id and name != "coordinates":
+                    if dataset_id == reference_id and name not in {"coordinates", "dimensions"} and not rule.compare_only_when_present:
                         continue
                     run_comparison(
                         "within_group",

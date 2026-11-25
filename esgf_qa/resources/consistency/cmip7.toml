@@ -19,7 +19,7 @@ compare_only = ["branding_suffix", "grid_label", "nominal_resolution"]
 
 # Some variables need external cell measures while others do not.
 [checks.across_all.global_attribute_types]
-allow_differences = ["external_variables"]
+allow_differences = ["external_variables", "table_info"]
 
 # Grouping attributes may differ between groups without becoming collection-wide
 # consistency failures.
@@ -39,6 +39,7 @@ allow_differences = [
     "frequency",
     "external_variables",
     "table_id",
+    "table_info",
     "grid",
     "grid_label",
     "realm",
@@ -61,6 +62,7 @@ allow_differences = [
     "frequency",
     "external_variables",
     "table_id",
+    "table_info",
     "grid",
     "grid_label",
     "realm",

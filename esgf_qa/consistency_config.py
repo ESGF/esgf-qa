@@ -67,6 +67,7 @@ class CheckRule:
     allow_differences: tuple[str, ...] = ()
     compare_only: tuple[str, ...] = ()
     shared_non_scalar_only: bool = False
+    compare_only_when_present: bool = False
 
 
 @dataclass(frozen=True)
@@ -91,7 +92,7 @@ class ConsistencyConfig:
         """Return whether any configured check in a scope is enabled."""
         selected = self.checks.get(scope, {})
         if names is not None:
-            selected = {name: selected.get(name, CheckRule()) for name in names}
+            selected = {name: rule for name, rule in selected.items() if name.split(":", 1)[0] in names}
         return any(rule.enabled for rule in selected.values())
 
     @property
@@ -239,7 +240,7 @@ def _validate_check(scope, name, data, groups):
         )
     _check_unknown_keys(
         data,
-        {"enabled", "severity", "group", "allow_differences", "compare_only", "shared_non_scalar_only"},
+        {"enabled", "severity", "group", "allow_differences", "compare_only", "shared_non_scalar_only", "compare_only_when_present"},
         f"check 'checks.{scope}.{name}'",
     )
     enabled = data.get("enabled", True)
@@ -295,6 +296,11 @@ def _validate_check(scope, name, data, groups):
         raise ConsistencyConfigError(
             f"checks.{scope}.{name} must define a non-empty compare_only list."
         )
+    present_only = data.get("compare_only_when_present", False)
+    if not isinstance(present_only, bool):
+        raise ConsistencyConfigError("compare_only_when_present must be true or false.")
+    if "compare_only_when_present" in data and (name != "selected_global_attributes" or scope == "within_dataset"):
+        raise ConsistencyConfigError("compare_only_when_present is only supported for cross-dataset selected_global_attributes.")
     shared_non_scalar_only = data.get("shared_non_scalar_only", False)
     if not isinstance(shared_non_scalar_only, bool):
         raise ConsistencyConfigError("shared_non_scalar_only must be true or false.")
@@ -310,6 +316,7 @@ def _validate_check(scope, name, data, groups):
         allow_differences=allow_differences,
         compare_only=compare_only,
         shared_non_scalar_only=shared_non_scalar_only,
+        compare_only_when_present=present_only,
     )
 
 
@@ -325,8 +332,9 @@ def _resolved_config_data(profile, groups, checks):
     resolved_checks = {}
     for scope in SCOPES:
         scope_checks = {}
-        for name in sorted(CHECKS_BY_SCOPE[scope]):
-            rule = checks[scope].get(name, CheckRule())
+        for key in sorted(checks[scope]):
+            name, _, instance = key.partition(":")
+            rule = checks[scope][key]
             data = {
                 "enabled": rule.enabled,
                 "severity": {3: "H", 2: "M", 1: "L"}[rule.severity],
@@ -337,9 +345,14 @@ def _resolved_config_data(profile, groups, checks):
                 data["allow_differences"] = list(rule.allow_differences)
             if name == "selected_global_attributes":
                 data["compare_only"] = list(rule.compare_only)
+                if scope != "within_dataset":
+                    data["compare_only_when_present"] = rule.compare_only_when_present
             if name == "coordinates" and scope != "within_dataset":
                 data["shared_non_scalar_only"] = rule.shared_non_scalar_only
-            scope_checks[name] = data
+            if instance:
+                scope_checks.setdefault(name, {}).setdefault("instances", {})[instance] = data
+            else:
+                scope_checks[name] = data
         resolved_checks[scope] = scope_checks
     return {
         "schema_version": 1,
@@ -380,14 +393,26 @@ def _validate_config(data):
         scope_data = checks_data.get(scope, {})
         if not isinstance(scope_data, dict):
             raise ConsistencyConfigError(f"[checks.{scope}] must contain check tables.")
-        configured_checks[scope] = {
-            name: _validate_check(scope, name, value, groups)
-            for name, value in scope_data.items()
-        }
+        configured_checks[scope] = {}
+        for name, value in scope_data.items():
+            if isinstance(value, dict) and "instances" in value:
+                if name != "selected_global_attributes" or scope == "within_dataset":
+                    raise ConsistencyConfigError("Named instances are supported for cross-dataset selected_global_attributes only.")
+                value = dict(value)
+                instances = value.pop("instances")
+                if not isinstance(instances, dict):
+                    raise ConsistencyConfigError("instances must contain named check tables.")
+                for instance, instance_data in instances.items():
+                    if not instance or ":" in instance:
+                        raise ConsistencyConfigError("Instance names must be non-empty and contain no colon.")
+                    configured_checks[scope][f"{name}:{instance}"] = _validate_check(scope, name, instance_data, groups)
+                if not value:
+                    continue
+            configured_checks[scope][name] = _validate_check(scope, name, value, groups)
     checks = {
         scope: {
             name: configured_checks[scope].get(name, CheckRule())
-            for name in sorted(CHECKS_BY_SCOPE[scope])
+            for name in sorted(CHECKS_BY_SCOPE[scope] | configured_checks[scope].keys())
         }
         for scope in SCOPES
     }
