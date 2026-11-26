@@ -122,24 +122,26 @@ version = "1.0"
         load_consistency_config(path=path)
 
 
-def test_cmip7_profile_groups_by_branding_suffix_and_grid_label():
+def test_cmip7_profile_groups_by_branding_suffix_grid_label_and_region():
     config = load_consistency_config(checkers=["cf", "wcrp_cmip7:1.0"])
 
     assert config.profile_name == "CMIP7"
     assert config.groups["project"].attributes == (
         ("branding_suffix",),
         ("grid_label",),
+        ("region",),
     )
     assert config.groups["project"].on_missing == "separate"
     assert config.check("within_group", "selected_global_attributes").compare_only == (
         "branding_suffix",
         "grid_label",
+        "region",
         "nominal_resolution",
     )
-    assert (
-        "branding_suffix"
-        in config.check("across_all", "required_global_attributes").allow_differences
-    )
+    for check in ("required_global_attributes", "non_required_global_attributes"):
+        allowed = config.check("across_all", check).allow_differences
+        for attribute in ("branding_suffix", "grid_label", "region"):
+            assert attribute in allowed
 
 
 @pytest.mark.parametrize(
@@ -263,7 +265,7 @@ name = "cmip7-trial"
 version = "1"
 extends = "cmip7"
 [groups.project]
-attributes = [["branding_suffix"], ["grid_label"], ["region"]]
+attributes = [["branding_suffix"], ["grid_label"], ["region"], ["nominal_resolution"]]
 """,
     )
 
@@ -273,6 +275,7 @@ attributes = [["branding_suffix"], ["grid_label"], ["region"]]
         ("branding_suffix",),
         ("grid_label",),
         ("region",),
+        ("nominal_resolution",),
     )
     assert config.groups["project"].on_missing == "separate"
 

@@ -1065,7 +1065,7 @@ enabled = false
         assert isinstance(ref_ds, dict)
         assert "general_reference" in ref_ds
 
-    def test_cmip7_grouping_uses_branding_suffix_and_grid_label(
+    def test_cmip7_grouping_uses_branding_suffix_grid_label_and_region(
         self, temp_files, ds_map, files_to_check_dict
     ):
         for dataset_id, branding_suffix in (("ds1", "brand-a"), ("ds2", "brand-b")):
@@ -1075,6 +1075,7 @@ enabled = false
             data["global_attributes"].update(
                 branding_suffix=branding_suffix,
                 grid_label="gn",
+                region="glb",
             )
             if dataset_id == "ds2":
                 data["dimensions"]["lat"] = 6
@@ -1088,14 +1089,28 @@ enabled = false
 
         assert "Dimensions (Inter-Dataset)" not in results["ds2"]
         assert references["group_references"]["project"] == {
-            "brand-a/gn": "ds1",
-            "brand-b/gn": "ds2",
+            "brand-a/gn/glb": "ds1",
+            "brand-b/gn/glb": "ds2",
         }
 
         second_reference = temp_files["ds2"][0]
         with open(second_reference) as stream:
             data = json.load(stream)
-        data["global_attributes"]["branding_suffix"] = "brand-a"
+        data["global_attributes"].update(branding_suffix="brand-a", region="30S-90S")
+        with open(second_reference, "w") as stream:
+            json.dump(data, stream)
+
+        results, references = cc.inter_dataset_consistency_checks(
+            ds_map, files_to_check_dict, config
+        )
+
+        assert "Dimensions (Inter-Dataset)" not in results["ds2"]
+        assert references["group_references"]["project"] == {
+            "brand-a/gn/glb": "ds1",
+            "brand-a/gn/30S-90S": "ds2",
+        }
+
+        data["global_attributes"]["region"] = "glb"
         with open(second_reference, "w") as stream:
             json.dump(data, stream)
 
@@ -1104,7 +1119,7 @@ enabled = false
         )
 
         assert results["ds2"]["Dimensions (Inter-Dataset)"]["weight"] == 2
-        assert references["group_references"]["project"] == {"brand-a/gn": "ds1"}
+        assert references["group_references"]["project"] == {"brand-a/gn/glb": "ds1"}
 
     def test_time_coverage_can_be_limited_to_configured_groups(
         self, tmp_path, temp_files, ds_map, files_to_check_dict

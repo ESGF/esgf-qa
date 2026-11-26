@@ -5,17 +5,19 @@ name = "CMIP7"
 version = "1.0"
 extends = "default"
 
-# CMIP7 datasets are initially grouped only by branding suffix and grid label.
+# CMIP7 datasets are initially grouped only by branding suffix, grid label and
+# region.
 # This can be refined as experience with real project data accumulates.
 [groups.project]
 attributes = [
     ["branding_suffix"],
     ["grid_label"],
+    ["region"],
 ]
 on_missing = "separate"
 
 [checks.within_group.selected_global_attributes]
-compare_only = ["branding_suffix", "grid_label", "nominal_resolution"]
+compare_only = ["branding_suffix", "grid_label", "region", "nominal_resolution"]
 
 # Some variables need external cell measures while others do not.
 [checks.across_all.global_attribute_types]
@@ -42,6 +44,7 @@ allow_differences = [
     "table_info",
     "grid",
     "grid_label",
+    "region",
     "realm",
     "modeling_realm",
 ]
@@ -65,6 +68,7 @@ allow_differences = [
     "table_info",
     "grid",
     "grid_label",
+    "region",
     "realm",
     "modeling_realm",
 ]

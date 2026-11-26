@@ -22,7 +22,8 @@ New Features
 * Added validated TOML profiles for configuring ESGF-QA consistency, continuity,
   coverage, and compatibility checks, including per-check severity and disabling,
   allowed metadata differences, and project-specific dataset comparison groups.
-  CMIP7 datasets are initially grouped by ``branding_suffix`` and ``grid_label``.
+  CMIP7 datasets are initially grouped by ``branding_suffix``, ``grid_label``
+  and ``region``.
   Resolved profiles are archived and hashed for reproducible resume runs. Checker
   combinations spanning multiple major projects are rejected, while checkers for
   the same project and generic checks such as CF or UGRID remain composable.

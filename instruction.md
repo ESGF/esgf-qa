@@ -21,6 +21,7 @@ extends = "cmip7"  # Or "default" for the general baseline.
 attributes = [
     ["branding_suffix"],
     ["grid_label"],
+    ["region"],
     # ["source_id"],  # Uncomment to further subdivide comparison groups.
 ]
 on_missing = "separate"

@@ -170,7 +170,7 @@ ESGF-QA's own dataset-level checks are controlled by a TOML profile. Without an
 explicit profile, the packaged `default.toml` reproduces the established checks,
 severity levels, allowed differences, and realm/grid grouping. Selecting
 `wcrp_cmip7` automatically uses the packaged CMIP7 profile, which currently groups
-datasets by `branding_suffix` and `grid_label`. Similarly, selecting `wcrp_cordex_cmip6`
+datasets by `branding_suffix`, `grid_label` and `region`. Similarly, selecting `wcrp_cordex_cmip6`
 or/and `cc6` automatically uses the CORDEX-CMIP6 profile.
 It groups datasets by `domain_id` and the exact free-text `grid` description.
 For CORDEX-CMIP6, scalar coordinates remain subject to within-dataset consistency checks.
