@@ -1,8 +1,8 @@
 import json
-from pathlib import Path
 import os
 import tempfile
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 
@@ -254,22 +254,33 @@ def ds_map(temp_files):
     return dict(temp_files)
 
 
-@pytest.mark.parametrize("different_grid,changed_lat", [(False, False), (False, True), (True, True)])
+@pytest.mark.parametrize(
+    "different_grid,changed_lat", [(False, False), (False, True), (True, True)]
+)
 def test_cordex_shared_non_scalar_coordinates(tmp_path, different_grid, changed_lat):
     ds_map, files = {}, {}
     for index in range(2):
         path = str(tmp_path / f"ds{index}.nc")
         with cc.Dataset(path, "w") as dataset:
             dataset.createDimension("lat", 1)
-            dataset.createVariable("lat", "f8", ("lat",))[:] = index if changed_lat else 0
+            dataset.createVariable("lat", "f8", ("lat",))[:] = (
+                index if changed_lat else 0
+            )
             dataset.createVariable("height", "f8").assignValue(2 if index == 0 else 10)
         summary = tmp_path / f"ds{index}.json"
         data = {
-            "global_attributes": {"domain_id": "EUR-12", "grid": f"grid-{index if different_grid else 0}"},
-            "global_attributes_non_required": {}, "global_attributes_dtypes": {},
+            "global_attributes": {
+                "domain_id": "EUR-12",
+                "grid": f"grid-{index if different_grid else 0}",
+            },
+            "global_attributes_non_required": {},
+            "global_attributes_dtypes": {},
             "dimensions": {"lat": 1},
-            "coordinates": {"lat": str(index if changed_lat else 0), "height": str(index),
-                            f"only_in_{index}": "checksum"},
+            "coordinates": {
+                "lat": str(index if changed_lat else 0),
+                "height": str(index),
+                f"only_in_{index}": "checksum",
+            },
         }
         summary.write_text(json.dumps(data))
         ds_map[f"ds{index}"] = [path]
@@ -279,7 +290,10 @@ def test_cordex_shared_non_scalar_coordinates(tmp_path, different_grid, changed_
     findings = results["ds1"].get("Coordinates (Inter-Dataset)")
     assert bool(findings) == (changed_lat and not different_grid)
     if findings:
-        assert all("height" not in message and "only_in" not in message for message in findings["msgs"])
+        assert all(
+            "height" not in message and "only_in" not in message
+            for message in findings["msgs"]
+        )
 
 
 @pytest.mark.parametrize(
@@ -299,7 +313,8 @@ def test_coordinate_comparison_scalar_policy(
     from hashlib import md5
 
     profile = tmp_path / "profile.toml"
-    profile.write_text(f'''
+    profile.write_text(
+        f"""
 schema_version = 1
 [profile]
 name = "coordinate-policy-test"
@@ -312,7 +327,8 @@ enabled = true
 severity = "M"
 group = "project"
 shared_non_scalar_only = {str(shared_only).lower()}
-''')
+"""
+    )
     ds_map, files = {}, {}
     for index in range(2):
         path = str(tmp_path / f"file{index}.nc")
@@ -323,17 +339,23 @@ shared_non_scalar_only = {str(shared_only).lower()}
             coordinate[...] = 2 if index == 0 else 10
             checksum = md5(coordinate[:].tobytes()).hexdigest()
         summary = tmp_path / f"file{index}.json"
-        summary.write_text(json.dumps({
-            "global_attributes": {"domain_id": "EUR-12", "grid": "same grid"},
-            "coordinates": {"height": checksum},
-        }))
+        summary.write_text(
+            json.dumps(
+                {
+                    "global_attributes": {"domain_id": "EUR-12", "grid": "same grid"},
+                    "coordinates": {"height": checksum},
+                }
+            )
+        )
         ds_map[f"ds{index}"] = [path]
         files[path] = {"consistency_file": str(summary)}
 
     # Without the new option, comparisons must still work from summaries alone.
     if not shared_only:
+
         def unexpected_metadata_read(*args, **kwargs):
             pytest.fail("Disabled scalar policy must not open NetCDF files")
+
         monkeypatch.setattr(cc, "Dataset", unexpected_metadata_read)
 
     results, _ = cc.inter_dataset_consistency_checks(
@@ -361,7 +383,8 @@ shared_non_scalar_only = {str(shared_only).lower()}
 def test_coordinate_ids_with_scalar_fallback(tmp_path, scope, names, ids, expected):
     """IDs enable scalar comparisons; missing IDs retain CORDEX's fallback."""
     profile = tmp_path / "profile.toml"
-    profile.write_text(f'''
+    profile.write_text(
+        f"""
 schema_version = 1
 [profile]
 name = "ids"
@@ -374,7 +397,8 @@ enabled = true
 severity = "M"
 { 'group = "project"' if scope == 'within_group' else '' }
 shared_non_scalar_only = true
-''')
+"""
+    )
     datasets, files = {}, {}
     # The first dataset deliberately lacks this coordinate: it must not
     # prevent the two later datasets from being compared with each other.
@@ -413,10 +437,13 @@ shared_non_scalar_only = true
         ("late_coordinate", {"ds2"}),
     ],
 )
-def test_coordinate_identity_reference_matrix(tmp_path, monkeypatch, case, expected_datasets):
+def test_coordinate_identity_reference_matrix(
+    tmp_path, monkeypatch, case, expected_datasets
+):
     """Independent coordinate references must not mix meanings or grid groups."""
     profile = tmp_path / "identities.toml"
-    profile.write_text('''
+    profile.write_text(
+        """
 schema_version = 1
 [profile]
 name = "identities"
@@ -428,21 +455,35 @@ on_missing = "separate"
 enabled = true
 severity = "M"
 group = "project"
-''' + ('allow_differences = ["sector"]\n' if case == "excluded" else ''))
+"""
+        + ('allow_differences = ["sector"]\n' if case == "excluded" else "")
+    )
 
     # The first dataset has soil pools; later datasets have basin labels.
     # A single reference for the whole group would miss the ds1/ds2 difference.
     records = [
-        {"coordinates": {"sector": "soil-checksum"}, "coordinate_ids": {"sector": "soilpools"}},
-        {"coordinates": {"sector": "basin-checksum"}, "coordinate_ids": {"sector": "basin"}},
-        {"coordinates": {"sector": "changed-checksum"}, "coordinate_ids": {"sector": "basin"}},
+        {
+            "coordinates": {"sector": "soil-checksum"},
+            "coordinate_ids": {"sector": "soilpools"},
+        },
+        {
+            "coordinates": {"sector": "basin-checksum"},
+            "coordinate_ids": {"sector": "basin"},
+        },
+        {
+            "coordinates": {"sector": "changed-checksum"},
+            "coordinate_ids": {"sector": "basin"},
+        },
     ]
     if case == "different_meanings":
         records[2]["coordinate_ids"]["sector"] = "vegetationtype"
     elif case == "equal_values":
         records[2]["coordinates"]["sector"] = "basin-checksum"
     elif case == "renamed_coordinate":
-        records[2] = {"coordinates": {"labels": "changed-checksum"}, "coordinate_ids": {"labels": "basin"}}
+        records[2] = {
+            "coordinates": {"labels": "changed-checksum"},
+            "coordinate_ids": {"labels": "basin"},
+        }
     elif case in {"legacy_reference", "legacy_current", "late_coordinate"}:
         records[0] = {"coordinates": {}}
         if case == "legacy_reference":
@@ -453,7 +494,9 @@ group = "project"
     datasets, files = {}, {}
     for index, record in enumerate(records):
         record["global_attributes"] = {
-            "grid_label": "other" if case == "different_groups" and index == 2 else "g142"
+            "grid_label": (
+                "other" if case == "different_groups" and index == 2 else "g142"
+            )
         }
         summary = tmp_path / f"ds{index}.json"
         summary.write_text(json.dumps(record))
@@ -462,7 +505,9 @@ group = "project"
         files[path] = {"consistency_file": str(summary)}
 
     def unexpected_read(*args, **kwargs):
-        pytest.fail("Identity comparisons must work from summaries without NetCDF reads")
+        pytest.fail(
+            "Identity comparisons must work from summaries without NetCDF reads"
+        )
 
     monkeypatch.setattr(cc, "Dataset", unexpected_read)
     results, _ = cc.inter_dataset_consistency_checks(
@@ -481,13 +526,21 @@ group = "project"
         assert next(iter(finding["msgs"])).endswith(": " + name)
 
 
-@pytest.mark.parametrize("case,expected", [
-    ("different_ids", False), ("same_ids", True), ("renamed", True),
-    ("legacy", True), ("padding", False), ("missing", False),
-])
+@pytest.mark.parametrize(
+    "case,expected",
+    [
+        ("different_ids", False),
+        ("same_ids", True),
+        ("renamed", True),
+        ("legacy", True),
+        ("padding", False),
+        ("missing", False),
+    ],
+)
 def test_dimension_id_comparison(tmp_path, case, expected):
     profile = tmp_path / "dimensions.toml"
-    profile.write_text('''
+    profile.write_text(
+        """
 schema_version = 1
 [profile]
 name = "dimensions"
@@ -495,13 +548,20 @@ version = "1.0"
 [checks.across_all.dimensions]
 enabled = true
 severity = "M"
-''')
+"""
+    )
     records = [
         {"dimensions": {}},
-        {"dimensions": {"type": 3, "label_width": 16},
-         "dimension_ids": {"type": "basin"}, "string_length_dimensions": ["label_width"]},
-        {"dimensions": {"type": 5, "label_width": 32},
-         "dimension_ids": {"type": "basin"}, "string_length_dimensions": ["label_width"]},
+        {
+            "dimensions": {"type": 3, "label_width": 16},
+            "dimension_ids": {"type": "basin"},
+            "string_length_dimensions": ["label_width"],
+        },
+        {
+            "dimensions": {"type": 5, "label_width": 32},
+            "dimension_ids": {"type": "basin"},
+            "string_length_dimensions": ["label_width"],
+        },
     ]
     if case == "different_ids":
         records[2]["dimension_ids"]["type"] = "soilpools"
@@ -531,15 +591,22 @@ severity = "M"
 
 
 @pytest.mark.parametrize("checker", ["wcrp_cmip7", "wcrp_cmip6", "wcrp_cordex_cmip6"])
-@pytest.mark.parametrize("case,expected", [
-    ("same_table", True), ("different_tables", False),
-    ("missing_table", False), ("missing_info", False), ("equal_info", False),
-])
+@pytest.mark.parametrize(
+    "case,expected",
+    [
+        ("same_table", True),
+        ("different_tables", False),
+        ("missing_table", False),
+        ("missing_info", False),
+        ("equal_info", False),
+    ],
+)
 def test_optional_table_info_group(tmp_path, checker, case, expected):
     config = load_consistency_config(checkers=[checker])
     # Restrict execution to the table rule while retaining its shipped policy.
     profile = tmp_path / "table.toml"
-    profile.write_text('''
+    profile.write_text(
+        """
 schema_version = 1
 [profile]
 name = "table"
@@ -553,13 +620,20 @@ severity = "L"
 group = "table"
 compare_only = ["table_info"]
 compare_only_when_present = true
-''')
+"""
+    )
     rule = config.check("within_group", "selected_global_attributes:table")
     assert rule.enabled and rule.severity == 1 and rule.group == "table"
-    for name in ("required_global_attributes", "non_required_global_attributes", "global_attribute_types"):
+    for name in (
+        "required_global_attributes",
+        "non_required_global_attributes",
+        "global_attribute_types",
+    ):
         assert "table_info" in config.check("across_all", name).allow_differences
     records = [
-        {"table_id": "Amon"},  # No info in the first dataset must not hide later differences.
+        {
+            "table_id": "Amon"
+        },  # No info in the first dataset must not hide later differences.
         {"table_id": "Amon", "table_info": "version one"},
         {"table_id": "Amon", "table_info": "version two"},
     ]
@@ -575,13 +649,17 @@ compare_only_when_present = true
     datasets, files = {}, {}
     for index, attributes in enumerate(records):
         path = str(tmp_path / f"ds{index}.json")
-        Path(path).write_text(json.dumps({"global_attributes_non_required": attributes}))
+        Path(path).write_text(
+            json.dumps({"global_attributes_non_required": attributes})
+        )
         datasets[f"ds{index}"] = [path]
         files[path] = {"consistency_file": path}
     results, _ = cc.inter_dataset_consistency_checks(
         datasets, files, load_consistency_config(path=profile)
     )
-    finding = results["ds2"].get("Group-specific global attributes (Inter-Dataset) [table]")
+    finding = results["ds2"].get(
+        "Group-specific global attributes (Inter-Dataset) [table]"
+    )
     assert bool(finding) == expected
     if finding:
         assert finding["weight"] == 1
@@ -592,7 +670,8 @@ class TestConChecks:
     @pytest.mark.parametrize("table_enabled", [True, False])
     def test_named_attribute_instances_run_independently(self, tmp_path, table_enabled):
         profile = tmp_path / "instances.toml"
-        profile.write_text(f'''
+        profile.write_text(
+            f"""
 schema_version = 1
 [profile]
 name = "instances"
@@ -613,10 +692,15 @@ severity = "L"
 group = "table"
 compare_only = ["table_info"]
 compare_only_when_present = true
-''')
+"""
+        )
         datasets, files = {}, {}
         for index in range(3):
-            attrs = {"grid_label": "g142", "table_id": "Amon", "nominal_resolution": str(index)}
+            attrs = {
+                "grid_label": "g142",
+                "table_id": "Amon",
+                "nominal_resolution": str(index),
+            }
             if index:
                 attrs["table_info"] = f"version {index}"
             path = str(tmp_path / f"ds{index}.json")
@@ -633,7 +717,9 @@ compare_only_when_present = true
         assert bool(results["ds2"].get(named)) == table_enabled
         if table_enabled:
             assert results["ds2"][named]["weight"] == 1
-            assert all("table_info" in message for message in results["ds2"][named]["msgs"])
+            assert all(
+                "table_info" in message for message in results["ds2"][named]["msgs"]
+            )
 
     def test_string_width_changes_within_dataset_remain_strict(
         self, temp_files, ds_map, files_to_check_dict
@@ -644,9 +730,14 @@ compare_only_when_present = true
             data["string_length_dimensions"] = ["label_width"]
             Path(path).write_text(json.dumps(data))
         results = cc.consistency_checks(
-            "ds1", ds_map, files_to_check_dict, load_consistency_config(checkers=["cc6"])
+            "ds1",
+            ds_map,
+            files_to_check_dict,
+            load_consistency_config(checkers=["cc6"]),
         )
-        assert any("label_width" in message for message in results["Dimensions"]["msgs"])
+        assert any(
+            "label_width" in message for message in results["Dimensions"]["msgs"]
+        )
 
     def test_cordex_scalar_changes_within_dataset_still_fail(
         self, temp_files, ds_map, files_to_check_dict

@@ -92,7 +92,11 @@ class ConsistencyConfig:
         """Return whether any configured check in a scope is enabled."""
         selected = self.checks.get(scope, {})
         if names is not None:
-            selected = {name: rule for name, rule in selected.items() if name.split(":", 1)[0] in names}
+            selected = {
+                name: rule
+                for name, rule in selected.items()
+                if name.split(":", 1)[0] in names
+            }
         return any(rule.enabled for rule in selected.values())
 
     @property
@@ -240,7 +244,15 @@ def _validate_check(scope, name, data, groups):
         )
     _check_unknown_keys(
         data,
-        {"enabled", "severity", "group", "allow_differences", "compare_only", "shared_non_scalar_only", "compare_only_when_present"},
+        {
+            "enabled",
+            "severity",
+            "group",
+            "allow_differences",
+            "compare_only",
+            "shared_non_scalar_only",
+            "compare_only_when_present",
+        },
         f"check 'checks.{scope}.{name}'",
     )
     enabled = data.get("enabled", True)
@@ -299,12 +311,18 @@ def _validate_check(scope, name, data, groups):
     present_only = data.get("compare_only_when_present", False)
     if not isinstance(present_only, bool):
         raise ConsistencyConfigError("compare_only_when_present must be true or false.")
-    if "compare_only_when_present" in data and (name != "selected_global_attributes" or scope == "within_dataset"):
-        raise ConsistencyConfigError("compare_only_when_present is only supported for cross-dataset selected_global_attributes.")
+    if "compare_only_when_present" in data and (
+        name != "selected_global_attributes" or scope == "within_dataset"
+    ):
+        raise ConsistencyConfigError(
+            "compare_only_when_present is only supported for cross-dataset selected_global_attributes."
+        )
     shared_non_scalar_only = data.get("shared_non_scalar_only", False)
     if not isinstance(shared_non_scalar_only, bool):
         raise ConsistencyConfigError("shared_non_scalar_only must be true or false.")
-    if "shared_non_scalar_only" in data and (name != "coordinates" or scope == "within_dataset"):
+    if "shared_non_scalar_only" in data and (
+        name != "coordinates" or scope == "within_dataset"
+    ):
         raise ConsistencyConfigError(
             "shared_non_scalar_only is only supported for cross-dataset coordinates."
         )
@@ -350,7 +368,9 @@ def _resolved_config_data(profile, groups, checks):
             if name == "coordinates" and scope != "within_dataset":
                 data["shared_non_scalar_only"] = rule.shared_non_scalar_only
             if instance:
-                scope_checks.setdefault(name, {}).setdefault("instances", {})[instance] = data
+                scope_checks.setdefault(name, {}).setdefault("instances", {})[
+                    instance
+                ] = data
             else:
                 scope_checks[name] = data
         resolved_checks[scope] = scope_checks
@@ -397,15 +417,23 @@ def _validate_config(data):
         for name, value in scope_data.items():
             if isinstance(value, dict) and "instances" in value:
                 if name != "selected_global_attributes" or scope == "within_dataset":
-                    raise ConsistencyConfigError("Named instances are supported for cross-dataset selected_global_attributes only.")
+                    raise ConsistencyConfigError(
+                        "Named instances are supported for cross-dataset selected_global_attributes only."
+                    )
                 value = dict(value)
                 instances = value.pop("instances")
                 if not isinstance(instances, dict):
-                    raise ConsistencyConfigError("instances must contain named check tables.")
+                    raise ConsistencyConfigError(
+                        "instances must contain named check tables."
+                    )
                 for instance, instance_data in instances.items():
                     if not instance or ":" in instance:
-                        raise ConsistencyConfigError("Instance names must be non-empty and contain no colon.")
-                    configured_checks[scope][f"{name}:{instance}"] = _validate_check(scope, name, instance_data, groups)
+                        raise ConsistencyConfigError(
+                            "Instance names must be non-empty and contain no colon."
+                        )
+                    configured_checks[scope][f"{name}:{instance}"] = _validate_check(
+                        scope, name, instance_data, groups
+                    )
                 if not value:
                     continue
             configured_checks[scope][name] = _validate_check(scope, name, value, groups)
@@ -431,7 +459,11 @@ def _resolve_profile(data):
     if extends is None:
         resolved = deepcopy(data)
     else:
-        if not isinstance(extends, str) or extends not in {"default", "cmip7", "cordex_cmip6"}:
+        if not isinstance(extends, str) or extends not in {
+            "default",
+            "cmip7",
+            "cordex_cmip6",
+        }:
             raise ConsistencyConfigError(
                 "profile.extends supports 'default', 'cmip7', or 'cordex_cmip6'."
             )

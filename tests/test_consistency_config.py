@@ -31,7 +31,9 @@ def test_default_profile_preserves_existing_rules():
 
 
 def test_named_attribute_instances_inheritance_and_roundtrip(tmp_path):
-    path = write_profile(tmp_path, '''
+    path = write_profile(
+        tmp_path,
+        """
 schema_version = 1
 [profile]
 name = "custom"
@@ -43,24 +45,31 @@ enabled = false
 severity = "H"
 compare_only = ["source_id"]
 compare_only_when_present = true
-''')
+""",
+    )
     config = load_consistency_config(path=path)
     assert config.enabled("within_group", "selected_global_attributes")
     assert not config.enabled("within_group", "selected_global_attributes:table")
-    assert config.check("within_group", "selected_global_attributes:table").compare_only == ("table_info",)
+    assert config.check(
+        "within_group", "selected_global_attributes:table"
+    ).compare_only == ("table_info",)
     assert config.any_enabled("across_all", {"selected_global_attributes"})
     assert config.requires_consistency_output
     archived = tmp_path / "resolved.json"
     archived.write_text(config.serialized)
     restored = load_resolved_consistency_config(archived)
     assert restored.serialized == config.serialized
-    assert restored.check("across_all", "selected_global_attributes:model").severity == 3
+    assert (
+        restored.check("across_all", "selected_global_attributes:model").severity == 3
+    )
 
 
 @pytest.mark.parametrize("scope", ["within_group", "across_all"])
 def test_named_instance_alone_requires_summary_and_survives_reload(tmp_path, scope):
     group_setting = 'group = "table"' if scope == "within_group" else ""
-    path = write_profile(tmp_path, f'''
+    path = write_profile(
+        tmp_path,
+        f"""
 schema_version = 1
 [profile]
 name = "named-only"
@@ -71,7 +80,8 @@ attributes = [["table_id"]]
 {group_setting}
 compare_only = ["table_info"]
 compare_only_when_present = true
-''')
+""",
+    )
     config = load_consistency_config(path=path)
     assert not config.enabled(scope, "selected_global_attributes")
     assert config.any_enabled(scope, {"selected_global_attributes"})
@@ -81,21 +91,33 @@ compare_only_when_present = true
     assert load_resolved_consistency_config(archived).serialized == config.serialized
 
 
-@pytest.mark.parametrize("section,settings", [
-    ("within_dataset.selected_global_attributes.instances.bad", 'compare_only = ["x"]'),
-    ("across_all.dimensions.instances.bad", 'severity = "M"'),
-    ("across_all.selected_global_attributes", 'compare_only = ["x"]\ncompare_only_when_present = "yes"'),
-    ("across_all.dimensions", 'compare_only_when_present = true'),
-])
+@pytest.mark.parametrize(
+    "section,settings",
+    [
+        (
+            "within_dataset.selected_global_attributes.instances.bad",
+            'compare_only = ["x"]',
+        ),
+        ("across_all.dimensions.instances.bad", 'severity = "M"'),
+        (
+            "across_all.selected_global_attributes",
+            'compare_only = ["x"]\ncompare_only_when_present = "yes"',
+        ),
+        ("across_all.dimensions", "compare_only_when_present = true"),
+    ],
+)
 def test_invalid_named_attribute_configuration(tmp_path, section, settings):
-    path = write_profile(tmp_path, f'''
+    path = write_profile(
+        tmp_path,
+        f"""
 schema_version = 1
 [profile]
 name = "invalid"
 version = "1.0"
 [checks.{section}]
 {settings}
-''')
+""",
+    )
     with pytest.raises(ConsistencyConfigError):
         load_consistency_config(path=path)
 
@@ -120,30 +142,42 @@ def test_cmip7_profile_groups_by_branding_suffix_and_grid_label():
     )
 
 
-@pytest.mark.parametrize("checkers", [
-    ["cc6"], ["wcrp_cordex_cmip6:1.0"],
-    ["cf", "cc6", "wcrp_cordex_cmip6"],
-])
+@pytest.mark.parametrize(
+    "checkers",
+    [
+        ["cc6"],
+        ["wcrp_cordex_cmip6:1.0"],
+        ["cf", "cc6", "wcrp_cordex_cmip6"],
+    ],
+)
 def test_cordex_profile_selection_and_rules(checkers):
     config = load_consistency_config(checkers=checkers)
     assert config.profile_name == "CORDEX-CMIP6"
     assert config.groups["project"].attributes == (
-        ("domain_id",), ("grid",),
+        ("domain_id",),
+        ("grid",),
     )
     assert config.groups["project"].on_missing == "separate"
-    assert "grid" in config.check("within_group", "selected_global_attributes").compare_only
+    assert (
+        "grid"
+        in config.check("within_group", "selected_global_attributes").compare_only
+    )
     assert config.check("within_group", "coordinates").shared_non_scalar_only
     assert not config.check("within_dataset", "coordinates").shared_non_scalar_only
     for scope in ("required_global_attributes", "non_required_global_attributes"):
         assert "domain_id" in config.check("across_all", scope).allow_differences
-        assert "domain_id" not in config.check("within_dataset", scope).allow_differences
+        assert (
+            "domain_id" not in config.check("within_dataset", scope).allow_differences
+        )
     assert config.check("within_dataset", "dimensions").severity == 3
     assert config.check("within_group", "coordinates").severity == 2
     assert config.check("across_all", "time_coverage").severity == 1
 
 
 def test_custom_profile_extends_cordex(tmp_path):
-    path = write_profile(tmp_path, '''
+    path = write_profile(
+        tmp_path,
+        """
 schema_version = 1
 [profile]
 name = "custom-cordex"
@@ -151,7 +185,8 @@ version = "1"
 extends = "cordex_cmip6"
 [checks.within_group.coordinates]
 severity = "H"
-''')
+""",
+    )
     config = load_consistency_config(path=path, checkers=["cc6"])
     assert config.profile_name == "custom-cordex"
     assert config.groups["project"].attributes[0] == ("domain_id",)
@@ -163,13 +198,23 @@ def test_profile_selection_rejects_multiple_major_projects():
         load_consistency_config(checkers=["wcrp_cmip6", "wcrp_cmip7:1.0"])
 
 
-@pytest.mark.parametrize("check", ["required_global_attributes", "non_required_global_attributes"])
+@pytest.mark.parametrize(
+    "check", ["required_global_attributes", "non_required_global_attributes"]
+)
 def test_cmip7_variable_identity_may_differ_across_datasets(check):
     config = load_consistency_config(checkers=["wcrp_cmip7"])
-    attributes = {"branded_variable", "temporal_label", "vertical_label",
-                  "horizontal_label", "area_label", "nominal_resolution"}
+    attributes = {
+        "branded_variable",
+        "temporal_label",
+        "vertical_label",
+        "horizontal_label",
+        "area_label",
+        "nominal_resolution",
+    }
     assert attributes <= set(config.check("across_all", check).allow_differences)
-    assert not attributes.intersection(config.check("within_dataset", check).allow_differences)
+    assert not attributes.intersection(
+        config.check("within_dataset", check).allow_differences
+    )
 
 
 def test_custom_profile_extends_default_and_overrides_rules(tmp_path):

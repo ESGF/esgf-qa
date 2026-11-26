@@ -816,12 +816,15 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     coordinate_references = {}
 
     def get_scalar_names(data):
-        dataset_id = next(key for key, value in consistency_data.items() if value is data)
+        dataset_id = next(
+            key for key, value in consistency_data.items() if value is data
+        )
         if dataset_id not in scalar_names:
             # Metadata only: do not load any coordinate or data arrays.
             with Dataset(filedict[dataset_id]) as dataset:
                 scalar_names[dataset_id] = {
-                    name for name, variable in dataset.variables.items()
+                    name
+                    for name, variable in dataset.variables.items()
                     if not variable.dimensions
                 }
         return scalar_names[dataset_id]
@@ -873,11 +876,23 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
             references = coordinate_references.setdefault(
                 (scope, rule.group, group_label, name), {}
             )
-            ids = current.get("coordinate_ids" if name == "coordinates" else "dimension_ids") or {}
-            ignored_dimensions = set(current.get("string_length_dimensions") or []) if name == "dimensions" else set()
+            ids = (
+                current.get(
+                    "coordinate_ids" if name == "coordinates" else "dimension_ids"
+                )
+                or {}
+            )
+            ignored_dimensions = (
+                set(current.get("string_length_dimensions") or [])
+                if name == "dimensions"
+                else set()
+            )
             diff_keys = []
             for coordinate, checksum in sorted(current[name].items()):
-                if coordinate in rule.allow_differences or coordinate in ignored_dimensions:
+                if (
+                    coordinate in rule.allow_differences
+                    or coordinate in ignored_dimensions
+                ):
                     continue
                 identity = ids.get(coordinate) or None
                 for (ref_name, ref_id), (ref_data, ref_checksum) in references.items():
@@ -889,9 +904,13 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                             continue
                         # Legacy summaries cannot distinguish scalar meanings.
                         # With matching IDs, even scalar values are comparable.
-                        if name == "coordinates" and rule.shared_non_scalar_only and (
-                            coordinate in get_scalar_names(current)
-                            or ref_name in get_scalar_names(ref_data)
+                        if (
+                            name == "coordinates"
+                            and rule.shared_non_scalar_only
+                            and (
+                                coordinate in get_scalar_names(current)
+                                or ref_name in get_scalar_names(ref_data)
+                            )
                         ):
                             continue
                     if checksum != ref_checksum:
@@ -940,7 +959,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     enabled_across = {
         name: config.check("across_all", name)
         for name in sorted(config.checks["across_all"])
-        if name.split(":", 1)[0] in COMPARISON_CHECKS and config.enabled("across_all", name)
+        if name.split(":", 1)[0] in COMPARISON_CHECKS
+        and config.enabled("across_all", name)
     }
     reference_datasets = {}
     dataset_ids = sorted(consistency_data)
@@ -949,7 +969,11 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
         reference_datasets["general_reference"] = main_reference
         for dataset_id in dataset_ids:
             for name, rule in enabled_across.items():
-                if dataset_id == main_reference and name not in {"coordinates", "dimensions"} and not rule.compare_only_when_present:
+                if (
+                    dataset_id == main_reference
+                    and name not in {"coordinates", "dimensions"}
+                    and not rule.compare_only_when_present
+                ):
                     continue
                 run_comparison(
                     "across_all",
@@ -964,7 +988,8 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
     enabled_group_rules = {
         name: config.check("within_group", name)
         for name in sorted(config.checks["within_group"])
-        if name.split(":", 1)[0] in COMPARISON_CHECKS and config.enabled("within_group", name)
+        if name.split(":", 1)[0] in COMPARISON_CHECKS
+        and config.enabled("within_group", name)
     }
     for group_name in sorted({rule.group for rule in enabled_group_rules.values()}):
         group = config.groups[group_name]
@@ -980,7 +1005,11 @@ def inter_dataset_consistency_checks(ds_map, files_to_check_dict, checker_option
                 for name, rule in enabled_group_rules.items():
                     if rule.group != group_name:
                         continue
-                    if dataset_id == reference_id and name not in {"coordinates", "dimensions"} and not rule.compare_only_when_present:
+                    if (
+                        dataset_id == reference_id
+                        and name not in {"coordinates", "dimensions"}
+                        and not rule.compare_only_when_present
+                    ):
                         continue
                     run_comparison(
                         "within_group",
