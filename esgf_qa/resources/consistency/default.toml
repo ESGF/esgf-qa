@@ -128,10 +128,12 @@ allow_differences = [
     "modeling_realm",
 ]
 
+# external_variables is absent from datasets without external cell measures,
+# e.g. the fx cell measure variables (areacella, areacello) themselves.
 [checks.across_all.global_attribute_types]
 enabled = true
 severity = "M"
-allow_differences = ["table_info"]
+allow_differences = ["external_variables", "table_info"]
 
 [checks.across_all.time_coverage]
 enabled = true

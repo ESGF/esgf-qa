@@ -592,6 +592,67 @@ severity = "M"
 
 @pytest.mark.parametrize("checker", ["wcrp_cmip7", "wcrp_cmip6", "wcrp_cordex_cmip6"])
 @pytest.mark.parametrize(
+    "areacella_types,expected",
+    [
+        # fx areacella has no external_variables, which is allowed.
+        ({"Conventions": "str", "license": "str"}, False),
+        # Other attributes are still flagged when missing or of another type.
+        ({"external_variables": "str", "license": "str"}, True),
+        ({"Conventions": "int", "license": "str"}, True),
+    ],
+    ids=["missing_external_variables", "missing_other", "changed_type"],
+)
+def test_inter_dataset_types_allow_missing_external_variables(
+    tmp_path, checker, areacella_types, expected
+):
+    rule = load_consistency_config(checkers=[checker]).check(
+        "across_all", "global_attribute_types"
+    )
+    assert rule.enabled and "external_variables" in rule.allow_differences
+    # Restrict execution to the type rule with the shipped policy.
+    profile = tmp_path / "types.toml"
+    profile.write_text(
+        f"""
+schema_version = 1
+[profile]
+name = "types"
+version = "1.0"
+[checks.across_all.global_attribute_types]
+enabled = true
+severity = "M"
+allow_differences = {json.dumps(list(rule.allow_differences))}
+"""
+    )
+    records = {
+        "tas": {"Conventions": "str", "external_variables": "str", "license": "str"},
+        "pr": {"Conventions": "str", "external_variables": "str", "license": "str"},
+        "areacella": areacella_types,
+    }
+    datasets, files = {}, {}
+    for name, dtypes in records.items():
+        path = str(tmp_path / f"{name}.json")
+        Path(path).write_text(json.dumps({"global_attributes_dtypes": dtypes}))
+        datasets[name] = [path]
+        files[path] = {"consistency_file": path}
+
+    results, _ = cc.inter_dataset_consistency_checks(
+        datasets, files, load_consistency_config(path=profile)
+    )
+
+    # Which dataset is the reference is chosen automatically; check all.
+    findings = [
+        tests["Global attributes data types (Inter-Dataset)"]
+        for tests in results.values()
+        if tests.get("Global attributes data types (Inter-Dataset)")
+    ]
+    assert bool(findings) == expected
+    for finding in findings:
+        assert finding["weight"] == 2
+        assert all(message.endswith(": Conventions") for message in finding["msgs"])
+
+
+@pytest.mark.parametrize("checker", ["wcrp_cmip7", "wcrp_cmip6", "wcrp_cordex_cmip6"])
+@pytest.mark.parametrize(
     "case,expected",
     [
         ("same_table", True),
