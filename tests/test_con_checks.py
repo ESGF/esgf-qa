@@ -1,4 +1,6 @@
 import json
+import warnings
+from contextlib import contextmanager
 import os
 import tempfile
 from datetime import timedelta
@@ -725,6 +727,43 @@ compare_only_when_present = true
     if finding:
         assert finding["weight"] == 1
         assert all(message.endswith(": table_info") for message in finding["msgs"])
+
+
+@pytest.mark.parametrize("fail_open", [False, True])
+def test_compatibility_suppresses_only_time_range_fallback(monkeypatch, fail_open):
+    message = (
+        "Unable to decode time axis into full numpy.datetime64[ns] objects, "
+        "continuing using cftime.datetime objects instead, reason: dates out of range. "
+        "To silence this warning use a coarser resolution 'time_unit' or specify 'use_cftime=True'."
+    )
+    calls = []
+
+    @contextmanager
+    def open_dataset(*args, **kwargs):
+        calls.append(kwargs["compat"])
+        warnings.warn(message, cc.xr.SerializationWarning)
+        warnings.warn("Another serialization issue", cc.xr.SerializationWarning)
+        warnings.warn(message, UserWarning)
+        if fail_open:
+            raise ValueError("Invalid time units")
+        yield None
+
+    monkeypatch.setattr(cc.xr, "open_mfdataset", open_dataset)
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always")
+        results = cc.compatibility_checks("dataset", {"dataset": ["file.nc"]}, {}, {})
+        # The suppression must not escape the compatibility checks.
+        warnings.warn(message, cc.xr.SerializationWarning)
+    assert calls == ["override", "no_conflicts"]
+    assert len(recorded) == 5
+    assert sum(str(item.message) == "Another serialization issue" for item in recorded) == 2
+    assert sum(item.category is UserWarning for item in recorded) == 2
+    assert str(recorded[-1].message) == message
+    for result in results.values():
+        if fail_open:
+            assert result["msgs"] == {"Invalid time units": ["file.nc"]}
+        else:
+            assert not result.get("msgs")
 
 
 class TestConChecks:

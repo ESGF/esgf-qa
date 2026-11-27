@@ -1,6 +1,8 @@
 import json
 import os
+import warnings
 from collections import ChainMap, OrderedDict, defaultdict
+from contextlib import contextmanager
 from functools import lru_cache
 
 import cftime
@@ -471,6 +473,23 @@ def continuity_checks(ds, ds_map, files_to_check_dict, checker_options):
     return results
 
 
+@contextmanager
+def _silence_time_range_fallback():
+    # Climate dates outside NumPy's range can still be decoded with cftime.
+    # Keep all other warnings, and restore the caller's filters afterwards.
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=(
+                r"Unable to decode time axis into full numpy\.datetime64\[ns\] "
+                r"objects, continuing using cftime\.datetime objects instead, "
+                r"reason: dates out of range\."
+            ),
+            category=xr.SerializationWarning,
+        )
+        yield
+
+
 def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
     """
     Compatibility checks for a dataset.
@@ -506,7 +525,7 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
         test = "xarray open_mfdataset (compat='override', join='outer')"
         results[test]["weight"] = rule.severity
         try:
-            with xr.open_mfdataset(
+            with _silence_time_range_fallback(), xr.open_mfdataset(
                 filelist,
                 coords="minimal",
                 compat="override",
@@ -523,7 +542,7 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
         test = "xarray open_mfdataset (compat='no_conflicts', join='exact')"
         results[test]["weight"] = rule.severity
         try:
-            with xr.open_mfdataset(
+            with _silence_time_range_fallback(), xr.open_mfdataset(
                 filelist,
                 coords="minimal",
                 compat="no_conflicts",
