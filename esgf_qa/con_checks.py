@@ -525,13 +525,16 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
         test = "xarray open_mfdataset (compat='override', join='outer')"
         results[test]["weight"] = rule.severity
         try:
-            with _silence_time_range_fallback(), xr.open_mfdataset(
-                filelist,
-                coords="minimal",
-                compat="override",
-                data_vars="all",
-                join="outer",
-            ) as ds:
+            with (
+                _silence_time_range_fallback(),
+                xr.open_mfdataset(
+                    filelist,
+                    coords="minimal",
+                    compat="override",
+                    data_vars="all",
+                    join="outer",
+                ) as ds,
+            ):
                 pass
         except Exception as e:
             results[test]["msgs"][str(e)].extend(filelist)
@@ -542,13 +545,16 @@ def compatibility_checks(ds, ds_map, files_to_check_dict, checker_options):
         test = "xarray open_mfdataset (compat='no_conflicts', join='exact')"
         results[test]["weight"] = rule.severity
         try:
-            with _silence_time_range_fallback(), xr.open_mfdataset(
-                filelist,
-                coords="minimal",
-                compat="no_conflicts",
-                data_vars="all",
-                join="exact",
-            ) as ds:
+            with (
+                _silence_time_range_fallback(),
+                xr.open_mfdataset(
+                    filelist,
+                    coords="minimal",
+                    compat="no_conflicts",
+                    data_vars="all",
+                    join="exact",
+                ) as ds,
+            ):
                 pass
         except Exception as e:
             results[test]["msgs"][str(e)].extend(filelist)

@@ -1,8 +1,8 @@
 import json
-import warnings
-from contextlib import contextmanager
 import os
 import tempfile
+import warnings
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 
@@ -756,7 +756,10 @@ def test_compatibility_suppresses_only_time_range_fallback(monkeypatch, fail_ope
         warnings.warn(message, cc.xr.SerializationWarning)
     assert calls == ["override", "no_conflicts"]
     assert len(recorded) == 5
-    assert sum(str(item.message) == "Another serialization issue" for item in recorded) == 2
+    assert (
+        sum(str(item.message) == "Another serialization issue" for item in recorded)
+        == 2
+    )
     assert sum(item.category is UserWarning for item in recorded) == 2
     assert str(recorded[-1].message) == message
     for result in results.values():
