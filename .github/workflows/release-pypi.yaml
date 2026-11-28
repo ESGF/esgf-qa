@@ -60,7 +60,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install dist/esgf_qa*.whl
-          python -c "from importlib.resources import files; import esgf_qa; resources = files('esgf_qa').joinpath('resources'); assert resources.joinpath('display_qc_results.html').is_file(); assert resources.joinpath('fonts/Inter-Regular.woff2').is_file(); assert resources.joinpath('fonts/Inter-SemiBold.woff2').is_file(); print(esgf_qa.__version__)"
+          python -c "from importlib.resources import files; import esgf_qa; resources = files('esgf_qa').joinpath('resources'); assert resources.joinpath('display_qc_results.html').is_file(); assert resources.joinpath('fonts/Inter-Regular.woff2').is_file(); assert resources.joinpath('fonts/Inter-SemiBold.woff2').is_file(); assert resources.joinpath('consistency/default.toml').is_file(); assert resources.joinpath('consistency/cmip7.toml').is_file(); assert resources.joinpath('consistency/cordex_cmip6.toml').is_file(); print(esgf_qa.__version__)"
           esgqa --help
           esgqaviewer --help
 

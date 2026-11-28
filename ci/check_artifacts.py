@@ -9,7 +9,11 @@ PACKAGE_RESOURCES = {
     "esgf_qa/resources/display_qc_results.html",
     "esgf_qa/resources/fonts/Inter-Regular.woff2",
     "esgf_qa/resources/fonts/Inter-SemiBold.woff2",
+    "esgf_qa/resources/consistency/default.toml",
+    "esgf_qa/resources/consistency/cmip7.toml",
+    "esgf_qa/resources/consistency/cordex_cmip6.toml",
 }
+SDIST_DOCUMENTATION = {"instruction.md", "schema.md"}
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -68,7 +72,7 @@ def check_sdist(sdist_path):
         path.relative_to(REPOSITORY_ROOT).as_posix()
         for path in REPOSITORY_ROOT.joinpath("tests").rglob("*.py")
     }
-    required = PACKAGE_RESOURCES | source_tests
+    required = PACKAGE_RESOURCES | SDIST_DOCUMENTATION | source_tests
     missing = required - relative_names
     if missing:
         raise RuntimeError(f"Source distribution is missing: {sorted(missing)}")

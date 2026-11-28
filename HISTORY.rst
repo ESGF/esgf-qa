@@ -1,3 +1,41 @@
+Unreleased
+----------
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+* Dropped Python 3.10 support following its end of life. Python 3.11 or newer
+  is now required. Python 3.14 is tested in a non-blocking exploratory CI job;
+  it is not yet advertised as supported.
+
+New Features
+^^^^^^^^^^^^
+
+* Added repeatable ``-s/--skip-checks`` and ``-I/--include-checks`` filters for
+  Compliance Checker methods, with optional checker prefixes. Skip filters also
+  support ``:M`` and ``:L`` severity thresholds. Settings are retained on resume.
+  Avoid applying these filters to ``cc-plugin-wcrp`` checks: external filtering can
+  bypass its plugins' prerequisite ownership and fallback reporting, producing
+  incomplete or unexpected results. Use the plugin's own TOML configuration to
+  enable or disable its checks instead.
+
+* Added validated TOML profiles for configuring ESGF-QA consistency, continuity,
+  coverage, and compatibility checks, including per-check severity and disabling,
+  allowed metadata differences, and project-specific dataset comparison groups.
+  CMIP7 datasets are initially grouped by ``branding_suffix``, ``grid_label``
+  and ``region``.
+  Resolved profiles are archived and hashed for reproducible resume runs. Checker
+  combinations spanning multiple major projects are rejected, while checkers for
+  the same project and generic checks such as CF or UGRID remain composable.
+  Reports now include the applied consistency profile’s name, version and hash when available.
+
+Bug Fixes
+^^^^^^^^^
+
+* Time coverage now accepts single-part time labels and no longer subtracts a
+  year for identical January start/end labels. Other January-end adjustments
+  are kept to avoid false positive time coverage findings.
+
 0.6.0 (2026-08-16)
 ------------------
 

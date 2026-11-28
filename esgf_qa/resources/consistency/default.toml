@@ -1,0 +1,140 @@
+schema_version = 1
+
+[profile]
+name = "default"
+version = "1.0"
+
+# Alternative names in one inner list are fallbacks for the same grouping key.
+[groups.project]
+attributes = [
+    ["realm", "modeling_realm"],
+    ["grid_label", "grid"],
+]
+on_missing = "together"
+
+# Table metadata is optional, and only comparable within the same table.
+[groups.table]
+attributes = [["table_id"]]
+on_missing = "separate"
+
+[checks.within_group.selected_global_attributes.instances.table]
+enabled = true
+severity = "L"
+group = "table"
+compare_only = ["table_info"]
+compare_only_when_present = true
+
+[checks.within_dataset.required_global_attributes]
+enabled = true
+severity = "H"
+allow_differences = ["creation_date", "history", "tracking_id"]
+
+[checks.within_dataset.non_required_global_attributes]
+enabled = true
+severity = "L"
+allow_differences = ["creation_date", "history", "tracking_id"]
+
+[checks.within_dataset.global_attribute_types]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.variable_attributes]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.variable_attribute_types]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.dimensions]
+enabled = true
+severity = "H"
+allow_differences = ["time"]
+
+[checks.within_dataset.coordinates]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.time_continuity]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.compatibility_override]
+enabled = true
+severity = "H"
+
+[checks.within_dataset.compatibility_exact]
+enabled = true
+severity = "H"
+
+[checks.within_group.selected_global_attributes]
+enabled = true
+severity = "M"
+group = "project"
+compare_only = ["grid", "grid_label", "realm", "modeling_realm"]
+
+[checks.within_group.dimensions]
+enabled = true
+severity = "M"
+group = "project"
+allow_differences = ["time", "depth", "lev"]
+
+[checks.within_group.coordinates]
+enabled = true
+severity = "M"
+group = "project"
+allow_differences = [
+    "depth",
+    "depth_bnds",
+    "lev",
+    "lev_bnds",
+    "plev",
+    "height",
+]
+
+[checks.across_all.required_global_attributes]
+enabled = true
+severity = "M"
+allow_differences = [
+    "creation_date",
+    "history",
+    "tracking_id",
+    "variable_id",
+    "frequency",
+    "external_variables",
+    "table_id",
+    "table_info",
+    "grid",
+    "grid_label",
+    "realm",
+    "modeling_realm",
+]
+
+[checks.across_all.non_required_global_attributes]
+enabled = true
+severity = "L"
+allow_differences = [
+    "creation_date",
+    "history",
+    "tracking_id",
+    "variable_id",
+    "frequency",
+    "external_variables",
+    "table_id",
+    "table_info",
+    "grid",
+    "grid_label",
+    "realm",
+    "modeling_realm",
+]
+
+# external_variables is absent from datasets without external cell measures,
+# e.g. the fx cell measure variables (areacella, areacello) themselves.
+[checks.across_all.global_attribute_types]
+enabled = true
+severity = "M"
+allow_differences = ["external_variables", "table_info"]
+
+[checks.across_all.time_coverage]
+enabled = true
+severity = "L"

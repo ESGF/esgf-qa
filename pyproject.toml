@@ -18,13 +18,13 @@ authors = [
 maintainers = [
   {name = "Martin Schupfner", email = "schupfner@dkrz.de"}
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13"
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14"
 ]
 dependencies = [
   "cftime",
@@ -35,6 +35,7 @@ dependencies = [
   "packaging",
   "pandas",
   "textual",
+  "toml>=0.10.2",
   "xarray",
   "cc-plugin-cc6>=0.4.3",
   "cc-plugin-wcrp>=2.3.0"
@@ -72,7 +73,6 @@ repository = "https://github.com/ESGF/esgf-qa"
 
 [tool.black]
 target-version = [
-  "py310",
   "py311",
   "py312",
   "py313"
@@ -104,7 +104,7 @@ filterwarnings = [
 [tool.ruff]
 src = ["esgf_qa"]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.format]
 line-ending = "auto"
@@ -125,7 +125,8 @@ lines-after-imports = 1
 [tool.setuptools.package-data]
 esgf_qa = [
   "resources/*.html",
-  "resources/fonts/*.woff2"
+  "resources/fonts/*.woff2",
+  "resources/consistency/*.toml"
 ]
 
 [tool.setuptools.packages.find]

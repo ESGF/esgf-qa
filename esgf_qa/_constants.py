@@ -22,6 +22,19 @@ checker_dict_ext = {
     "comp": "Compatibility",
     **checker_dict,
 }
+
+# Checkers bound to one major data project. Generic checkers such as CF, UGRID,
+# and the table-driven MIP checker are intentionally absent. A run may combine
+# several checkers mapped to the same project, but not checkers from different
+# projects, because ESGF-QA applies one consistency profile to the complete run.
+checker_projects = {
+    "cc6": "CORDEX-CMIP6",
+    "wcrp_cordex_cmip6": "CORDEX-CMIP6",
+    "wcrp_cmip6": "CMIP6",
+    "wcrp_cmip6plus": "CMIP6Plus",
+    "wcrp_cmip7": "CMIP7",
+}
+
 # Checkers for which consistency checks should be run
 checker_supporting_consistency_checks = [
     "wcrp_cmip7",

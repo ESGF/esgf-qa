@@ -543,6 +543,19 @@ class TestDummyQA:
             error_msg
         ]["dataset1"] == [dummy_nc_file]
 
+    def test_process_file_does_not_require_disabled_consistency_output(
+        self, fake_check_suite, tmp_env, dummy_nc_file
+    ):
+        details = {
+            "result_file": str(tmp_env["results"] / "res.json"),
+            "consistency_file": str(tmp_env["results"] / "unused.json"),
+            "consistency_output_required": False,
+        }
+
+        _, result = process_file(dummy_nc_file, ["cc6"], {}, details, False)
+
+        assert "consistency_output" not in result["cc6"]["errors"]
+
     def test_process_file_cached_result(self, fake_check_suite, tmp_env, dummy_nc_file):
         """Should read from disk if result already exists and no errors."""
         result_file = tmp_env["results"] / "res.json"

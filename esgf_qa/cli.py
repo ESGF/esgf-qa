@@ -13,6 +13,13 @@ from esgf_qa.checker_registry import (
     get_installed_checker_versions,
     normalize_checker_specs,
 )
+from esgf_qa.consistency_config import (
+    ConsistencyConfig,
+    load_consistency_config,
+    load_resolved_consistency_config,
+    validate_project_checker_selection,
+    write_resolved_consistency_config,
+)
 from esgf_qa.resume import (
     ResumeInfo,
     load_resume_info,
@@ -48,6 +55,7 @@ class RunConfig:
     whitelist: list[str] = field(default_factory=list)
     blacklist: list[str] = field(default_factory=list)
     rerun_all: bool = False
+    consistency_config: ConsistencyConfig | None = None
 
 
 def _nonempty_path_fragment(value):
@@ -258,6 +266,15 @@ def build_parser(default_result_dir):
         help="Include consistency checks when the selected checker lacks support.",
     )
     parser.add_argument(
+        "--consistency-config",
+        type=str,
+        metavar="FILE",
+        help=(
+            "Project-specific TOML configuration for ESGF-QA consistency, "
+            "continuity, coverage, and compatibility checks."
+        ),
+    )
+    parser.add_argument(
         "-P",
         "--parallel_processes",
         type=int,
@@ -370,6 +387,9 @@ def resolve_checker_specs(tests, checker_options):
         raise Exception(
             "ERROR: Cannot run both 'mip' and its 'eerie' alias at the same time."
         )
+
+    validate_project_checker_selection(checker_names)
+
     mip_tables = checker_options.get("mip", {}).get("tables")
     if mip_explicitly_requested and (not isinstance(mip_tables, str) or not mip_tables):
         raise Exception(
@@ -410,6 +430,7 @@ def prepare_run(default_result_dir, argv=None):
 
     prepare_result_directory(result_dir, args.resume, progress_file, resume_info_file)
     include_consistency_checks = args.include_consistency_checks
+    stored = None
     if args.resume:
         print(f"Resuming previous QA run in '{result_dir}'")
         stored = load_resume_info(resume_info_file, result_dir)
@@ -464,6 +485,7 @@ def prepare_run(default_result_dir, argv=None):
         # Resume metadata describes the effective configuration. Avoid retaining
         # a redundant flag and repeating this warning on every future resume.
         include_consistency_checks = False
+
     if parent_dir is None:
         parser.error("Missing required argument <parent_dir>.")
     if not os.path.exists(parent_dir):
@@ -471,6 +493,42 @@ def prepare_run(default_result_dir, argv=None):
     if not os.path.isdir(parent_dir):
         raise NotADirectoryError(
             f"The specified <parent_dir> '{parent_dir}' is not a directory."
+        )
+
+    archived_config = Path(result_dir, "consistency_config.toml")
+    if args.resume and stored.consistency_config:
+        consistency_config = load_resolved_consistency_config(
+            archived_config,
+            expected_sha256=stored.consistency_config["sha256"],
+        )
+        if (
+            consistency_config.profile_name != stored.consistency_config["profile"]
+            or consistency_config.profile_version
+            != stored.consistency_config["version"]
+        ):
+            raise ValueError(
+                "The consistency profile name or version in .resume_info does not "
+                "match the archived consistency_config.toml."
+            )
+    elif args.resume and archived_config.is_file():
+        # Transitional runs may have archived a profile before its metadata was
+        # added to .resume_info. Prefer that exact profile over a new default.
+        consistency_config = load_resolved_consistency_config(archived_config)
+    else:
+        consistency_config = load_consistency_config(
+            path=args.consistency_config,
+            checkers=checkers,
+        )
+    consistency_config_metadata = write_resolved_consistency_config(
+        consistency_config, result_dir
+    )
+    if args.consistency_config and not (
+        supports_consistency or include_consistency_checks
+    ):
+        warnings.warn(
+            "--consistency-config was supplied, but the selected checkers do not "
+            "enable ESGF-QA consistency checks. The profile will not be applied.",
+            stacklevel=2,
         )
 
     write_resume_info(
@@ -485,6 +543,7 @@ def prepare_run(default_result_dir, argv=None):
             include_consistency_checks=include_consistency_checks,
             whitelist=whitelist,
             blacklist=blacklist,
+            consistency_config=consistency_config_metadata,
         ),
     )
 
@@ -520,6 +579,7 @@ def prepare_run(default_result_dir, argv=None):
         whitelist=whitelist,
         blacklist=blacklist,
         rerun_all=args.rerun_all,
+        consistency_config=consistency_config,
     )
 
 

@@ -1,0 +1,40 @@
+schema_version = 1
+
+[profile]
+name = "CORDEX-CMIP6"
+version = "1.0"
+extends = "default"
+
+# Compare datasets on the same domain with exactly the same grid description.
+# CORDEX has no grid_label; changing the free-text grid description splits groups.
+[groups.project]
+attributes = [
+    ["domain_id"],
+    ["grid"],
+]
+on_missing = "separate"
+
+[checks.within_group.selected_global_attributes]
+compare_only = ["domain_id", "domain", "grid"]
+
+[checks.within_group.coordinates]
+# Different variables can use different scalar heights or pressure levels.
+# Without coordinate IDs, compare only shared non-scalar coordinates. Matching
+# IDs also permit scalar comparisons; within-dataset checks stay strict.
+shared_non_scalar_only = true
+
+# Different domains may occur in one simulation-level QA run. Domain metadata
+# is compared within each group instead of across unrelated domains.
+[checks.across_all.required_global_attributes]
+allow_differences = [
+    "creation_date", "history", "tracking_id", "variable_id", "frequency",
+    "external_variables", "table_id", "table_info", "grid", "grid_label",
+    "domain_id", "domain",
+]
+
+[checks.across_all.non_required_global_attributes]
+allow_differences = [
+    "creation_date", "history", "tracking_id", "variable_id", "frequency",
+    "external_variables", "table_id", "table_info", "grid", "grid_label",
+    "realm", "modeling_realm", "domain_id", "domain", "comment",
+]

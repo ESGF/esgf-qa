@@ -24,6 +24,7 @@ def transform_keys(data):
         "datasets": "# Datasets",
         "cc_version": "Compliance Checker Version",
         "checkers": "Applied Checkers",
+        "consistency_config": "Consistency Check Configuration",
         "inter_ds_con_checks_ref": "Reference Datasets (inter-dataset consistency checks)",
     }
 

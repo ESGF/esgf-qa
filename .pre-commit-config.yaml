@@ -6,7 +6,7 @@ repos:
     rev: v3.21.0
     hooks:
     -   id: pyupgrade
-        args: [ '--py310-plus' ]
+        args: [ '--py311-plus' ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -20,6 +20,8 @@ repos:
     rev: v0.24.3
     hooks:
       - id: toml-sort-fix
+        # Consistency profiles are ordered for readability (profile, groups, checks).
+        exclude: ^esgf_qa/resources/consistency/
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 25.9.0
     hooks:

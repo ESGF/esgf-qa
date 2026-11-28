@@ -357,7 +357,11 @@
             const checkerLines = appliedCheckers.length
                 ? `\nApplied Checkers:\n${appliedCheckers.map(checker => `  • ${checker}`).join('\n')}`
                 : '';
-            document.getElementById("subtitle").textContent = `IOOS Compliance Checker (${info.cc_version})${checkerLines}`;
+            const consistencyConfig = info.consistency_config;
+            const configLine = consistencyConfig
+                ? `\nConsistency Configuration: ${consistencyConfig.profile} ${consistencyConfig.version} (${consistencyConfig.sha256.substring(0, 12)}…)`
+                : '';
+            document.getElementById("subtitle").textContent = `IOOS Compliance Checker (${info.cc_version})${checkerLines}${configLine}`;
             document.getElementById("subtitle2").textContent = `  -= checked ${info.datasets} datasets & ${info.files} files  =-`;
 
             // Check if "inter_ds_con_checks_ref" key exists in the info dictionary
@@ -398,6 +402,30 @@
                         }
 
                         listItem.appendChild(exceptionsList);
+                    } else if (value && typeof value === 'object') {
+                        const nestedLabel = document.createElement('strong');
+                        nestedLabel.textContent = key;
+                        listItem.appendChild(nestedLabel);
+                        const nestedList = document.createElement('ul');
+                        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+                            const nestedItem = document.createElement('li');
+                            if (nestedValue && typeof nestedValue === 'object') {
+                                const innerLabel = document.createElement('strong');
+                                innerLabel.textContent = nestedKey;
+                                nestedItem.appendChild(innerLabel);
+                                const innerList = document.createElement('ul');
+                                for (const [innerKey, innerValue] of Object.entries(nestedValue)) {
+                                    const innerItem = document.createElement('li');
+                                    innerItem.textContent = `${innerKey}: ${innerValue}`;
+                                    innerList.appendChild(innerItem);
+                                }
+                                nestedItem.appendChild(innerList);
+                            } else {
+                                nestedItem.textContent = `${nestedKey}: ${nestedValue}`;
+                            }
+                            nestedList.appendChild(nestedItem);
+                        }
+                        listItem.appendChild(nestedList);
                     } else if (key.includes('/')) {
                         const [strPart1, strPart2] = key.split('/');
                         const shortenedStrPart2 = strPart2.length > 25 ? `${strPart2.substring(0, 10)}...${strPart2.substring(strPart2.length - 10)}` : strPart2;
